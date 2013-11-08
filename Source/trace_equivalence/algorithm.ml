@@ -79,7 +79,9 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
         let left_csys,j = Constraint_system.Matrix.find_in_row_between_col_index i 1 (index_right_process - 1) (fun csys -> not (Constraint_system.is_bottom csys)) matrix in
       
         if Constraint_system.Matrix.exists_in_row_between_col_index i index_right_process nb_column (fun csys -> not (Constraint_system.is_bottom csys)) matrix
-        then ()
+        then (* () *)
+
+          (** Begin Lucca **)
         (*
           TODO: We should test here if the leaf satisfies all dependency constraints by
           1) fetching those constraints
@@ -87,7 +89,24 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
           2) apply the mgu of all equality constraints to dependency constraints
           3) for each dep. constraint that is ground: test whether it could be satisfied
         *)
-        else 
+          (* QUESTIONS:
+             Comment supprimer une des cases de la matrice? Un flag à cocher????
+             
+          *)
+          (* try *)
+          (*   Printf.printf "##### The current trace is:\n   %s\n" (Process.display_trace (List.nth left_set 0)) *)
+          (* with *)
+          (*     _ -> (try *)
+          (*             Printf.printf "## The current trace (NOT UNIFIED) is:\n   %s\n" (Process.display_trace_no_unif (List.nth left_set 0)) *)
+          (*       with *)
+          (*         | Term.Not_unifiable -> Printf.printf "Failed to unify\n" *)
+          (* ) *)
+          let new_list = List.map (Process.generate_dependency_constraints) left_set in
+          let new_list = List.map (Process.generate_dependency_constraints) right_set in
+          ()
+        (** End Lucca **)
+
+        else
           let symb_proc = List.nth left_set (j-1) in
           let symb_proc' = Process.replace_constraint_system left_csys symb_proc in
           raise (Not_equivalent_left (symb_proc'))

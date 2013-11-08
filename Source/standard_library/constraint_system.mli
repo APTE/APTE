@@ -123,7 +123,6 @@ val get_message_equations : constraint_system -> (Term.term * Term.term) list
     of equations between recipes in [csys]. 
     @raise Internal_error if [csys] is the bottom constraint system.*)
 val get_recipe_equations : constraint_system -> (Recipe.recipe * Recipe.recipe) list
-(* TODO: contient l'info de la subst. via mgu dans unification.ml *)
 
 (** [get_maximal_support csys] returns maximal support of the frame of [csys].
     @raise Internal_error if [csys] is the bottom constraint system.*)

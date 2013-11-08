@@ -39,7 +39,11 @@ type sub_csys =
     
     (* Conjunction of inequation with possible universal variables *)
     conjunction_message_neq : message_inequation list;
-    
+
+    (* A list of constraints of the form: X_1 ... X_n |DEP| ax1 ... axn meaning that
+    at least one Xi should depends on at least one axj *)
+    dependency_constraints : (Recipe.variable list * Recipe.axiom list) list;
+
     (** Help for the strategy *)
     semi_normal_form : bool;
     no_more_universal_var : bool;
@@ -60,6 +64,7 @@ let empty =
       conjunction_message_eq = [];
       conjunction_recipe_eq = [];
       conjunction_message_neq = [];
+      dependency_constraints = [];
       semi_normal_form = false;
       no_more_universal_var = false;
       map_term_to_recipe = Term.VariableMap.empty;

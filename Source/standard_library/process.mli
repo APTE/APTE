@@ -90,3 +90,9 @@ val apply_output : (symbolic_process -> unit) -> Recipe.variable -> symbolic_pro
 (** {3 Optimisation} *)
 
 val is_same_input_output : symbolic_process -> symbolic_process -> bool
+
+(** {4 Optimisation: Reduced semantics} **)
+
+(**  [generate_dependency_constraints symP] add to the set of dependency constrants
+     of symP the dependency constraint for the last action of the trace.  **)
+val generate_dependency_constraints : symbolic_process -> symbolic_process

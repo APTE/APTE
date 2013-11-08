@@ -308,7 +308,13 @@ let is_name t = match t with
 let is_name_status s t = match t with
   | Name(n) when n.status = s -> true
   | _ -> false
-  
+
+exception Not_a_name  
+
+let get_id_of_name t = match t with
+  | Name name -> name.id_n
+  | _ -> raise Not_a_name
+
 let is_function t = match t with
   | Func(_,_) -> true
   | _ -> false
