@@ -1,0 +1,19 @@
+free c.
+
+# Padding of senc
+
+length senc [ constant = 4.; arguments = 0. ,0.].
+
+let P_1 = new n; new k; 
+	out(c,senc(((n,n),n),k)).
+
+let P_2 = new n; new k; 
+	out(c,senc(n,k)).
+	
+let P_3 = new n; new k; 
+	out(c,senc((n,(n,n)),k)).
+
+equivalence length P_1 and P_2.
+
+equivalence length P_1 and P_3.
+
