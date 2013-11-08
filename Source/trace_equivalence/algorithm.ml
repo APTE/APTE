@@ -80,7 +80,6 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
       
         if Constraint_system.Matrix.exists_in_row_between_col_index i index_right_process nb_column (fun csys -> not (Constraint_system.is_bottom csys)) matrix
         then ()
-        (* TODO: nouv. test *)
         else 
           let symb_proc = List.nth left_set (j-1) in
           let symb_proc' = Process.replace_constraint_system left_csys symb_proc in
@@ -167,7 +166,6 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
   (* First step : apply the internal transitition *)
   (* We assume for the moment that the internal communication are applied *)  
   
-  (* todo: trace partielle *)
   let left_symb_proc_l' = List.map Process.instanciate_trace left_symb_proc_l
   and right_symb_proc_l' = List.map Process.instanciate_trace right_symb_proc_l in
   
