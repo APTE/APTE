@@ -234,7 +234,7 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
   (* Fourth step : apply the input traDnsition *)
   
   left_set := [];
-  right_set := [];D
+  right_set := [];
   
   let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
   and var_r_t = Recipe.fresh_free_variable_from_id "Y" support in
