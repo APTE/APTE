@@ -85,6 +85,15 @@ let display_assoc_table = function
   | None -> "Bot"
   | Some(r_formula) -> Recipe.display_formula r_formula
     
+let rec display_dependency_cst = function
+  | [] -> Printf.sprintf "]\n"
+  | (recipes, axioms) :: l -> String.concat "" (
+    [Printf.sprintf "(" ] @
+    List.map (fun r -> Printf.sprintf "%s," (Recipe.display_variable r)) recipes @
+    [Printf.sprintf " D- "] @
+    List.map (fun r -> Printf.sprintf "%s," (Recipe.display_axiom r)) axioms @
+    [Printf.sprintf ")"] @
+    [display_dependency_cst l])
 
 let display = function
   | Bot -> "Bot"
@@ -96,11 +105,12 @@ let display = function
         (display_conjunction (fun (t1,t2) -> Printf.sprintf "%s = %s" (Term.display_term t1) (Term.display_term t2)) 
         sub_csys.conjunction_message_eq) in
       
+      let dep_cst = Printf.sprintf "Dependency_constraints = [%s" (display_dependency_cst sub_csys.dependency_constraints) in
       let formula = Printf.sprintf "Formula = %s" (display_conjunction (fun neq -> (Term.display_formula neq.message_neq)^"("^(display_assoc_table neq.assoc_table)^")") sub_csys.conjunction_message_neq) in
       (* Do More *)
       let endline = ")\n" in
       
-      Printf.sprintf "%s%s\n%s\n%s\n%s\n%s" line1 frame cons_set formula conj_mess_eq endline
+      Printf.sprintf "%s%s\n%s\n%s\n%s\n%s\n%s" line1 frame cons_set dep_cst formula conj_mess_eq endline
   
 (******** Addition functions ********)
 
@@ -132,7 +142,13 @@ let add_new_deducibility_constraint csys var_r term = match csys with
       let cons = Constraint.Deducibility.create var_r (Recipe.get_support var_r) term in
       let new_constraints_set = Constraint.add Constraint.Deducibility.get_support cons sub_csys.constraints_set in
       Csys({ sub_csys with constraints_set = new_constraints_set })
-            
+
+let add_new_dependency_constraint csys recipes axioms = match csys with
+  | Bot -> Debug.internal_error "[constraint_system.ml >> add_new_dependency_constraint] A dependency constraint cannot be added to a bottom constraint system"
+  | Csys(sub_csys) ->
+    let new_dep_constraints = (recipes, axioms) :: sub_csys.dependency_constraints in
+      Csys({ sub_csys with dependency_constraints = new_dep_constraints })
+
 let add_new_axiom csys term = match csys with
   | Bot -> Debug.internal_error "[constraint_system.ml >> add_axiom] An axiom cannot be added to a bottom constraint system"
   | Csys(sub_csys) ->
@@ -178,12 +194,16 @@ let get_frame = function
   | Csys(sub_csys) -> sub_csys.frame
 
 let get_message_equations = function
-  | Bot -> Debug.internal_error "[Constraint_system.ml >> get_recipe_equations] The constraint system is bottom"
+  | Bot -> Debug.internal_error "[Constraint_system.ml >> get_message_equations] The constraint system is bottom"
   | Csys(sub_csys) -> sub_csys.conjunction_message_eq
 
 let get_recipe_equations = function
   | Bot -> Debug.internal_error "[Constraint_system.ml >> get_recipe_equations] The constraint system is bottom"
   | Csys(sub_csys) -> sub_csys.conjunction_recipe_eq
+
+let get_dependency_constraints = function
+  | Bot -> Debug.internal_error "[Constraint_system.ml >> get_dependency_constraints] The constraint system is bottom"
+  | Csys(sub_csys) -> sub_csys.dependency_constraints
   
 let get_maximal_support = function 
   | Bot -> Debug.internal_error "[Constraint_system.ml >> get_maximal_support] The constraint system is bottom"

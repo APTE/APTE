@@ -103,7 +103,9 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
           (* ) *)
           let new_list = List.map (Process.generate_dependency_constraints) left_set in
           let new_list = List.map (Process.generate_dependency_constraints) right_set in
-          ()
+          List.iter (fun p ->
+            let dep_cst = Constraint_system.display (Process.get_constraint_system p) in
+              Printf.printf "Process: %s\n" dep_cst) left_set
         (** End Lucca **)
 
         else

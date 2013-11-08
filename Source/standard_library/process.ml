@@ -770,6 +770,11 @@ let display_trace_no_unif symb_proc =
   
   Printf.sprintf "%s\n%s\n" trace (Constraint_system.display symb_proc.constraint_system)
 
+let add_dependency_constraint sys variables axioms =
+  let old = sys.constraint_system in
+  let new_cst_system = Constraint_system.add_new_dependency_constraint old variables axioms in
+  { sys with  constraint_system = new_cst_system }
+
 (*************************************
 	     Optimisation
 **************************************)  
@@ -819,8 +824,8 @@ exception Channel_not_ground            (* a channel is not fully instantiated
 (* Type of a simpler trace containing the required information for the generation of 
    dependency constraints *)
 type simple_trace_label =
-  | SOutput of string * Recipe.axiom  (* channel_id, axiom of outputted message *)
-  | SInput of string * Recipe.recipe  (* channel_id, recipe of inputted message *)
+  | SOutput of string * Recipe.axiom        (* channel_id, axiom of outputted message *)
+  | SInput of string * Recipe.variable list (* channel_id, variables of inputted message *)
 
 (* Remark: For the moment, we first compute the entire simple trace associated
    to a symbolic process. In a less naive version, we should proceed the trace
@@ -835,27 +840,28 @@ let generate_simple_trace symP =
     try Term.get_id_of_name mChannel
     with | Term.Not_a_name -> raise Channel_not_ground in
   let apply_to_action m_subst = function
-    | Output (l, r_ch, m_ch, ax, t) ->
+    | Output (_, _, m_ch, ax, _) ->
       SOutput (extract_id_channel m_subst m_ch, ax)
-    | Input (l, r_ch, m_ch, recipe, t) ->
-      SInput (extract_id_channel m_subst m_ch, recipe) in
-
+    | Input (_, _, m_ch, recipe, _) -> let var_l = Recipe.get_variables_of_recipe recipe in
+      SInput (extract_id_channel m_subst m_ch, var_l) in
   let message_eq = Constraint_system.get_message_equations symP.constraint_system in
   let subst = Term.unify message_eq in
-  List.map (apply_to_action subst) symP.trace
+  List.map (apply_to_action subst)
+    (List.filter (function Comm _ -> false | _ -> true) symP.trace)
 
 (* For debugging purpose *)
 let display_simple_trace symP =
   let simple_trace = generate_simple_trace symP in
     List.iter (function
-      | SOutput (s, ax) -> Printf.printf "Output on %s whose axiom is %s.\n" s
+      | SOutput (s, ax) -> Printf.printf "Output on %s whose axiom is %s. -- " s
         (Recipe.display_axiom ax)
-      | SInput (s, r) -> Printf.printf "Input on %s whose recipe is %s\n" s
-        (Recipe.display_recipe r))
+      | SInput (s, vl) -> Printf.printf "Input on %s whose variables are %s -- " s
+        (String.concat ", " (List.map Recipe.display_variable vl)))
       simple_trace
 
-(* shortcut *)
-let cmp s1 s2 = String.compare s1 s2
+(* shortcuts *)
+let pp a = Printf.printf "error: %s\n" a
+let cmp s1 s2 = String.compare s1 s2 < 0
 
 type flagLabel = FIn | FOut           (* flag: last actions is eitehr an input or an output *)
 
@@ -863,22 +869,29 @@ type flagLabel = FIn | FOut           (* flag: last actions is eitehr an input o
    action of the pattern is on channel chan.
    If there is such a pattern, it outputs the list of Recipe.axioms of the pattern. *)
 let rec search_pattern first_channel acc last_flag last_channel = function
-  | [] -> raise No_pattern
+  | [] -> if cmp first_channel last_channel
+    then acc
+    else raise No_pattern
   | SOutput (ch, ax) :: l ->
     if last_channel != ch then raise No_pattern
     else search_pattern first_channel (ax::acc) FOut ch l
-  | SInput (ch, r) :: l ->
-    if last_flag == FIn && last_channel != ch then raise No_pattern
-    else search_pattern first_channel (acc) FIn ch l
+  | SInput (ch, _) :: l ->
+    if cmp first_channel last_channel
+    then acc
+    else if last_flag == FIn && last_channel != ch
+    then raise No_pattern
+    else if cmp ch first_channel
+    then search_pattern first_channel (acc) FIn ch l
+    else raise No_pattern
 
 let generate_dependency_constraints symP =
-  let debug () = display_simple_trace symP in
+  let debug () = Printf.printf "Simple trace: \n"; display_simple_trace symP; Printf.printf ".\n"; in
   let simple_trace = generate_simple_trace symP in
   (* We extract the recipes of the last inputs and output it with
   the remainder of the list and the channel of those inputs *)
-  let rec extract_list_recipes acc  = function
+  let rec extract_list_variables acc  = function
     | SOutput (ch, ax) :: l -> (acc, SOutput (ch, ax) :: l, None)
-    | SInput (ch, r) :: l-> let (acc2, tl, _) = extract_list_recipes (r ::acc) l in
+    | SInput (ch, lv) :: l-> let (acc2, tl, _) = extract_list_variables (lv @ acc) l in
                             (acc2, tl, Some ch)
     | [] -> (acc, [], None)in
 
@@ -889,8 +902,8 @@ let generate_dependency_constraints symP =
     try
       let list_axioms = search_pattern first_channel [] FIn first_channel simple_trace in
       (* add the correspondant dependency constraint *)
-      let dep_constraint = (list_recipes, list_axioms) in
-      symP
+      let new_sys  = add_dependency_constraint symP list_recipes list_axioms in
+      new_sys
     with
       | No_pattern -> symP
       | Channel_not_ground -> begin
@@ -898,7 +911,7 @@ let generate_dependency_constraints symP =
         symP;
       end in
 
-  match extract_list_recipes [] simple_trace with
+  match extract_list_variables [] simple_trace with
     | ([], _, _) -> debug (); symP      (* meaning that the last actions is actually an output *)
     | (list_recipes, trace, Some channel) -> construct_constraint list_recipes trace channel symP
     | _ -> Debug.internal_error "[process.ml >> generate_dependency_constraints] SHOULD NEVER HAPPEN. READ YOUR CODE MORE CAREFULLY!";symP
