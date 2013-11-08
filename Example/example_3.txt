@@ -1,0 +1,27 @@
+free c.
+
+let process_1 = 
+  new k_ab;
+  (
+    (new x; out(c,senc(x,k_ab)); in(c,y); if sdec(y,k_ab) = pk(x) then out(c,c))
+  |
+    (in(c,z); 
+    let x = sdec(z,k_ab) in 
+    out(c,senc(pk(x),k_ab)))
+  |
+    out(c,k_ab)
+  ).
+
+let process_2 = 
+  new k_ab;
+  (
+    (new x; out(c,senc(x,k_ab)); in(c,y); if sdec(y,k_ab) = pk(x) then out(c,c))
+  |
+    in(c,z); 
+    let x = sdec(z,k_ab) in 
+    out(c,senc(pk(x),k_ab))
+  |
+    new m; out(c,m)
+  ).
+
+equivalence process_1 and process_2.
