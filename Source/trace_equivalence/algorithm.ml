@@ -80,6 +80,13 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
       
         if Constraint_system.Matrix.exists_in_row_between_col_index i index_right_process nb_column (fun csys -> not (Constraint_system.is_bottom csys)) matrix
         then ()
+        (*
+          TODO: We should test here if the leaf satisfies all dependency constraints by
+          1) fetching those constraints
+          2) fetching equality over recipes from constraints
+          2) apply the mgu of all equality constraints to dependency constraints
+          3) for each dep. constraint that is ground: test whether it could be satisfied
+        *)
         else 
           let symb_proc = List.nth left_set (j-1) in
           let symb_proc' = Process.replace_constraint_system left_csys symb_proc in
@@ -229,7 +236,7 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
     (** End Debug **)
   
   
-  (* Fourth step : apply the input traDnsition *)
+  (* Fourth step : apply the input transition *)
   
   left_set := [];
   right_set := [];
@@ -293,6 +300,10 @@ and apply_strategy_for_constraint_system want_trace f_csys_strategy left_set rig
       (number_left_symb_proc + number_right_symb_proc)
       complete_csys_list
     )
+  (*
+    Todo (??):
+    Add here the genration of new dependency constraints (using trace)
+  *)
   in
  
   (*Debug.low_debugging (fun () ->
@@ -319,6 +330,7 @@ and apply_strategy_for_constraint_system want_trace f_csys_strategy left_set rig
       begin
         final_test_on_matrix index_right_process left_set right_set matrix_1;
         partionate_matrix (fun left_symb_proc_l right_symb_proc_l ->
+          (* Recursive call here *)
           apply_strategy want_trace support left_symb_proc_l right_symb_proc_l
         ) left_set right_set index_right_process matrix_1
       end

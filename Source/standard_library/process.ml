@@ -299,6 +299,10 @@ let refresh_label proc =
 	   Symbolic process
 **************************************)
 
+(* Todo:
+   Add a function that generates dependency constraints from ground
+   trace_label list.
+*)
 type trace_label =
   | Output of label * Recipe.recipe * Term.term * Recipe.axiom * Term.term
   | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term
