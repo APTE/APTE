@@ -33,7 +33,7 @@ let display_size_trace_cutted () =
     then result := Printf.sprintf "%s, %d size %d" !result size_trace_cutted.(i) i 
   done;
   !result
-  
+    
 let particular_trace = false
   
 (** [final_test_on_matrix] does nothing if the final test succeed otherwise it raise one of the two exception [Not_equivalent_left] and [Not_equivalent_right] *)
@@ -45,13 +45,13 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
   if (!final_test_count / 1000) * 1000 = !final_test_count then 
     begin
       (*Printf.printf "***********************\n";
-      Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
-      Printf.printf "Left set = \n";
-      List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) left_set;
-      Printf.printf "Right set = \n";
-      List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) right_set;
-      Printf.printf "\n\nMatrix = %s\n" (Constraint_system.Matrix.display matrix);
-      Printf.printf "\n****************\n";*)
+        Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
+        Printf.printf "Left set = \n";
+        List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) left_set;
+        Printf.printf "Right set = \n";
+        List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) right_set;
+        Printf.printf "\n\nMatrix = %s\n" (Constraint_system.Matrix.display matrix);
+        Printf.printf "\n****************\n";*)
       
       Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
       flush_all ()
@@ -77,7 +77,7 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
     else
       try
         let left_csys,j = Constraint_system.Matrix.find_in_row_between_col_index i 1 (index_right_process - 1) (fun csys -> not (Constraint_system.is_bottom csys)) matrix in
-      
+        
         if Constraint_system.Matrix.exists_in_row_between_col_index i index_right_process nb_column (fun csys -> not (Constraint_system.is_bottom csys)) matrix
         then ()
         else 
@@ -94,21 +94,21 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
           with Not_found -> ()
         end  
   done
-  
+    
 (****** Partition of the matrix ******)
-  
+    
 let rec add_left_in_partition bool_rep symb_proc = function
   | [] -> [bool_rep, [symb_proc], []]
   | (b_rep,left_symb,right_symb)::q when List.for_all2 (fun b1 b2 -> b1 = b2) b_rep bool_rep ->
-      (b_rep,symb_proc::left_symb,right_symb)::q
+    (b_rep,symb_proc::left_symb,right_symb)::q
   | rep::q -> rep::(add_left_in_partition bool_rep symb_proc q)
-  
+    
 let rec add_right_in_partition bool_rep symb_proc = function
   | [] -> Debug.internal_error "[algorithm.ml >> add_right_in_partition] A boolean representation must be found in the partition"
   | (b_rep,left_symb,right_symb)::q when List.for_all2 (fun b1 b2 -> b1 = b2) b_rep bool_rep ->
-      (b_rep,left_symb,symb_proc::right_symb)::q
+    (b_rep,left_symb,symb_proc::right_symb)::q
   | rep::q -> rep::(add_right_in_partition bool_rep symb_proc q)
-  
+    
 (** [partionate_matrix] partionate a matrix that successfully passed [final_test_on_matrix] *)
 let partionate_matrix function_next left_symb_proc right_symb_proc index_right_process  matrix = 
   let nb_column = Constraint_system.Matrix.get_number_column matrix in
@@ -149,12 +149,12 @@ let partionate_matrix function_next left_symb_proc right_symb_proc index_right_p
   
   List.iter (fun (_,left_symb,right_symb) -> function_next left_symb right_symb) !partition
     
-  
+    
 let rec erase_double = function 
   | [] -> []
   | symb_csys::q when List.exists (Process.is_same_input_output symb_csys) q -> erase_double q
   | symb_csys::q -> symb_csys::(erase_double q)
-  
+    
 let internal_communication = ref true
 
 type wanted_trace = 
@@ -163,24 +163,24 @@ type wanted_trace =
 
 (** We assume that the constraint systems in the symbolic processes are in solved form *)
 let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l = 
-  (* First step : apply the internal transitition *)
-  (* We assume for the moment that the internal communication are applied *)  
+    (* First step : apply the internal transitition *)
+    (* We assume for the moment that the internal communication are applied *)  
   
   let left_symb_proc_l' = List.map Process.instanciate_trace left_symb_proc_l
   and right_symb_proc_l' = List.map Process.instanciate_trace right_symb_proc_l in
   
-  (*Printf.printf "************ ENTRY apply_strategty ***************\n";
-  Printf.printf "Left set = \n";
-  List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) left_symb_proc_l';
-  Printf.printf "Right set = \n";
-  List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) right_symb_proc_l';
-  flush_all ();*)
+    (*Printf.printf "************ ENTRY apply_strategty ***************\n";
+      Printf.printf "Left set = \n";
+      List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) left_symb_proc_l';
+      Printf.printf "Right set = \n";
+      List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) right_symb_proc_l';
+      flush_all ();*)
   
-  (* Erase double *)
+    (* Erase double *)
   
   let left_symb_proc_list = erase_double left_symb_proc_l'
   and right_symb_proc_list = erase_double right_symb_proc_l' in
-  
+
   let left_internal = ref []
   and right_internal = ref [] in
   
@@ -196,6 +196,7 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
     ) symb_proc_1
   ) right_symb_proc_list;
   
+    (* Second step : apply the output transition *)
   let left_set = ref []
   and right_set = ref [] in
   
@@ -203,7 +204,7 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
   
   List.iter (fun symb_proc_1 ->
     Process.apply_output (fun symb_proc_2 -> 
-      (* At this point the constraint system in the symbolic_process are not simplified *)
+        (* At this point the constraint system in the symbolic_process are not simplified *)
       let simplified_symb_proc = Process.simplify symb_proc_2 in
       if not (Process.is_bottom simplified_symb_proc)
       then left_set := simplified_symb_proc::!left_set
@@ -212,74 +213,74 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
   
   List.iter (fun symb_proc_1 ->
     Process.apply_output (fun symb_proc_2 -> 
-      (* At this point the constraint system in the symbolic_process are not simplified *)
+        (* At this point the constraint system in the symbolic_process are not simplified *)
       let simplified_symb_proc = Process.simplify symb_proc_2 in
       if not (Process.is_bottom simplified_symb_proc)
       then right_set := simplified_symb_proc::!right_set
     ) var_r_ch symb_proc_1
   ) !right_internal;
   
-  (* Third step : apply the strategy on the output matrix *)
+    (* Third step : apply the strategy on the output matrix *)
   
   if !left_set <> [] || !right_set <> []
-  then 
-    (** Debug **)
+  then
+      (** Debug **)
     if not particular_trace || (want_trace <> [] && (List.hd want_trace = Output))
-    then apply_strategy_for_constraint_system (if particular_trace then List.tl want_trace else want_trace) Strategy.apply_strategy_output !left_set !right_set;
+    then begin
+      apply_strategy_for_constraint_system (if particular_trace then List.tl want_trace else want_trace) Strategy.apply_strategy_output !left_set !right_set;
     (** End Debug **)
-  
-  
-  (* Fourth step : apply the input traDnsition *)
-  
-  left_set := [];
-  right_set := [];
-  
-  let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
-  and var_r_t = Recipe.fresh_free_variable_from_id "Y" support in
-  
-  List.iter (fun symb_proc_1 ->
-    Process.apply_input (fun symb_proc_2 -> 
-      (* At this point the constraint system in the symbolic_process are not simplified *)
-      let simplified_symb_proc = Process.simplify symb_proc_2 in
-      if not (Process.is_bottom simplified_symb_proc)
-      then left_set := simplified_symb_proc::!left_set
-    ) var_r_ch var_r_t symb_proc_1
-  ) !left_internal;
-  
-  List.iter (fun symb_proc_1 ->
-    Process.apply_input (fun symb_proc_2 -> 
-      (* At this point the constraint system in the symbolic_process are not simplified *)
-      let simplified_symb_proc = Process.simplify symb_proc_2 in
-      if not (Process.is_bottom simplified_symb_proc)
-      then right_set := simplified_symb_proc::!right_set
-    ) var_r_ch var_r_t symb_proc_1
-  ) !right_internal;
-  
-  (* Fifth step : apply the strategy on the input matrix *)
-  
-  if !left_set <> [] || !right_set <> []
-  then 
-    (** Debug **)
-    if not particular_trace || (want_trace <> [] && (List.hd want_trace = Input))
-    then apply_strategy_for_constraint_system (if particular_trace then List.tl want_trace else want_trace) Strategy.apply_strategy_input !left_set !right_set
-    (** End Debug **)
-    
-  
-  
-and apply_strategy_for_constraint_system want_trace f_csys_strategy left_set right_set = 
+      
+      
+    (* Fourth step : apply the input transition *)
+      
+      left_set := [];
+      right_set := [];
+      
+      let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
+      and var_r_t = Recipe.fresh_free_variable_from_id "Y" support in
+      
+      List.iter (fun symb_proc_1 ->
+        Process.apply_input (fun symb_proc_2 -> 
+        (* At this point the constraint system in the symbolic_process are not simplified *)
+          let simplified_symb_proc = Process.simplify symb_proc_2 in
+          if not (Process.is_bottom simplified_symb_proc)
+          then left_set := simplified_symb_proc::!left_set
+        ) var_r_ch var_r_t symb_proc_1
+      ) !left_internal;
+      
+      List.iter (fun symb_proc_1 ->
+        Process.apply_input (fun symb_proc_2 -> 
+        (* At this point the constraint system in the symbolic_process are not simplified *)
+          let simplified_symb_proc = Process.simplify symb_proc_2 in
+          if not (Process.is_bottom simplified_symb_proc)
+          then right_set := simplified_symb_proc::!right_set
+        ) var_r_ch var_r_t symb_proc_1
+      ) !right_internal;
+      
+    (* Fifth step : apply the strategy on the input matrix *)
+      
+      if !left_set <> [] || !right_set <> []
+      then 
+      (** Debug **)
+        if not particular_trace || (want_trace <> [] && (List.hd want_trace = Input))
+        then apply_strategy_for_constraint_system (if particular_trace then List.tl want_trace else want_trace) Strategy.apply_strategy_input !left_set !right_set;
+      (** End Debug **)
+    end
+      
+and apply_strategy_for_constraint_system want_trace f_csys_strategy left_set right_set= 
   (* First step : Creation of the matrix of constraint system and application  *)
   (*
-  Printf.printf "************ ENTRY apply_strategty_for_constraint_system ***************\n";
-  Printf.printf "Left set = \n";
-  List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) left_set;
-  Printf.printf "Right set = \n";
-  List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) right_set;
-  flush_all ();
-     
+    Printf.printf "************ ENTRY apply_strategty_for_constraint_system ***************\n";
+    Printf.printf "Left set = \n";
+    List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) left_set;
+    Printf.printf "Right set = \n";
+    List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) right_set;
+    flush_all ();
+    
   *)
   let number_left_symb_proc = List.length left_set
   and number_right_symb_proc = List.length right_set in
-     
+  
   let index_right_process = number_left_symb_proc + 1 in
   
   let complete_csys_list = 
@@ -290,11 +291,11 @@ and apply_strategy_for_constraint_system want_trace f_csys_strategy left_set rig
   
   let matrix = Constraint_system.Matrix.matrix_of_row_matrix 
     (Constraint_system.Row.create
-      (number_left_symb_proc + number_right_symb_proc)
-      complete_csys_list
+       (number_left_symb_proc + number_right_symb_proc)
+       complete_csys_list
     )
   in
- 
+  
   (*Debug.low_debugging (fun () ->
     begin
     Printf.printf "******************\n";
@@ -306,7 +307,7 @@ and apply_strategy_for_constraint_system want_trace f_csys_strategy left_set rig
     Printf.printf "\n****************\n";
     flush_all ()
     end
-  );*)
+    );*)
   
   let support = Constraint_system.Matrix.get_maximal_support matrix in
   
@@ -323,8 +324,8 @@ and apply_strategy_for_constraint_system want_trace f_csys_strategy left_set rig
         ) left_set right_set index_right_process matrix_1
       end
   ) matrix  
-  
-  
+    
+    
 let decide_trace_equivalence process1 process2 =  
   (* We assume at this point that all name in the process are distinct *)
   
@@ -359,26 +360,22 @@ let decide_trace_equivalence process1 process2 =
   (* Creation of the two symbolic process *)
   let symb_proc1 = Process.create_symbolic assoc_axiom_free_names process1 csys
   and symb_proc2 = Process.create_symbolic assoc_axiom_free_names process2 csys in
-  
   (* Application of the strategy *)
-  try
-    apply_strategy [
+    try
+      apply_strategy [
       (* The first reader *)
-      Output;Input;Output;
+        Output;Input;Output;
       (* Normal sessions *)
-      Output;Input;
-      Output;Input;
-      Output;Input;Output ] nb_free_names [symb_proc1] [symb_proc2];
-    true
-  with
-    | Not_equivalent_left sym_proc ->
+        Output;Input;
+        Output;Input;
+        Output;Input;Output ] nb_free_names [symb_proc1] [symb_proc2];
+        true
+    with
+      | Not_equivalent_left sym_proc ->
         Printf.printf "Witness of non-equivalence on Process 1:\n%s"
           (Process.display_trace sym_proc);
         false
-    | Not_equivalent_right sym_proc ->
+      | Not_equivalent_right sym_proc ->
         Printf.printf "Witness of non-equivalence on Process 2:\n%s"
           (Process.display_trace sym_proc);
         false
-  
-  
-  
