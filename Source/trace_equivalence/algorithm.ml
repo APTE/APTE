@@ -155,7 +155,8 @@ let rec erase_double = function
   | symb_csys::q when List.exists (Process.is_same_input_output symb_csys) q -> erase_double q
   | symb_csys::q -> symb_csys::(erase_double q)
     
-let internal_communication = ref true
+(* Since we work with simple processes, we do not have to consider inetrnal communication *)
+let internal_communication = ref false
 
 type wanted_trace = 
   | Input
