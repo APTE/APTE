@@ -340,10 +340,19 @@ type symbolic_process =
 
 let null_last_action = {action = AInit; id = -1; improper_flag = false}
 
-let create_symbolic axiom_name_assoc proc csys = 
+let from_par_to_multiset proc =
+  let index = ref 0 in
+  let rec aux = function
+    | Par(p1,p2) :: q -> (aux [p1]) @ (aux [p2]) @ aux q
+    | Nil :: q -> aux q
+    | p :: q -> incr(index); (p, !index - 1) :: (aux q)
+    | [] -> [] in
+  aux [proc]
+
+let create_symbolic axiom_name_assoc proc csys =
   {
     axiom_name_assoc = axiom_name_assoc;
-    process = [(proc,0)];
+    process = from_par_to_multiset proc;
     constraint_system = csys;
     forbidden_comm = [];
     trace = [];
@@ -472,8 +481,6 @@ let apply_internal_transition_without_comm function_next symb_proc =
       go_through prev_proc csys ((p1,i)::(p2,i)::q)
     | (New(_,p,_),i)::q -> go_through prev_proc csys ((p,i)::q)
     | (Let(pat,t,proc,_),i)::q ->
-      if !debug_simple then
-        Debug.internal_error "[process.ml >> apply_one_internal_transition_without_comm] The process is not simple (Let).";
         let eq_to_unify = formula_from_pattern t pat in
         let proc' = Term.unify_and_apply eq_to_unify proc iter_term_process in
         go_through prev_proc csys ((proc',i)::q)      

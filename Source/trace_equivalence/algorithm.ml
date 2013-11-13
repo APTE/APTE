@@ -26,6 +26,8 @@ let final_test_count = ref 0
 let number_of_branches_cut = ref 0
 let size_trace_cutted = Array.make 100 0
 
+let improper_killed = ref 0
+
 let display_size_trace_cutted () =
   let result = ref "" in
   for i = 0 to 99 do
@@ -53,9 +55,9 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
         Printf.printf "\n\nMatrix = %s\n" (Constraint_system.Matrix.display matrix);
         Printf.printf "\n****************\n";*)
       
-      Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
+      Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\nImproper traces killed: %d.\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ()) (- !improper_killed);
       flush_all ();
-    end else if true then begin
+    end else if false then begin        (* HACK *)
       Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
       flush_all ();
     end;
@@ -186,8 +188,9 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
   let left_symb_proc_l_prop = List.filter filter_proper_blocks left_symb_proc_l'
   and right_symb_proc_l_prop = List.filter filter_proper_blocks right_symb_proc_l' in
   let size_after = List.length left_symb_proc_l_prop in
-  if size_after < size_before then
-    Printf.printf "Improper blocks killed %d processes.\n" (size_before - size_after);
+  improper_killed := !improper_killed + (size_after-size_before);
+  if size_after - size_before > 10 then
+    Printf.printf "BOUM Improper blocks killed %d processes.\n" (size_before - size_after);
 
   (* Erase double *)
   
@@ -369,6 +372,8 @@ let decide_trace_equivalence process1 process2 =
       (Recipe.recipe_of_axiom (Recipe.axiom i), Term.term_of_name n)::l,i+1
     ) ([],1) free_names
   in
+  
+  Printf.printf "Process to create: %s\n" (Process.display_process process1);
   
   (* Creation of the two symbolic process *)
   let symb_proc1 = Process.create_symbolic assoc_axiom_free_names process1 csys
