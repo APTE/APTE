@@ -676,6 +676,7 @@ let apply_output function_next ch_var_r symb_proc =
           constraint_system = new_csys_4;
           forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
           trace = (Output (label,ch_r,Term.term_of_variable y,Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),Term.term_of_variable x))::symb_proc.trace;
+          last_action = {action = AOut; id = last_index; improper_flag = false};
         }
       in
       

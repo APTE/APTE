@@ -181,9 +181,13 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
       flush_all ();*)
   
   (*  Lucca Hirschi: Erase processes that have already performed an improper block *)
-  let filter_proper_blocks symp_proc = Process.is_improper symp_proc in
+  let size_before = List.length left_symb_proc_l in
+  let filter_proper_blocks symp_proc = not(Process.is_improper symp_proc) in
   let left_symb_proc_l_prop = List.filter filter_proper_blocks left_symb_proc_l'
   and right_symb_proc_l_prop = List.filter filter_proper_blocks right_symb_proc_l' in
+  let size_after = List.length left_symb_proc_l_prop in
+  if size_after < size_before then
+    Printf.printf "Improper blocks killed %d processes.\n" (size_before - size_after);
 
   (* Erase double *)
   
@@ -235,46 +239,46 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
   then
       (** Debug **)
     if not particular_trace || (want_trace <> [] && (List.hd want_trace = Output))
-    then begin
-      apply_strategy_for_constraint_system (if particular_trace then List.tl want_trace else want_trace) Strategy.apply_strategy_output !left_set !right_set;
-    (** End Debug **)
-      
-      
-    (* Fourth step : apply the input transition *)
-      
-      left_set := [];
-      right_set := [];
-      
-      let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
-      and var_r_t = Recipe.fresh_free_variable_from_id "Y" support in
-      
-      List.iter (fun symb_proc_1 ->
-        Process.apply_input (fun symb_proc_2 -> 
-        (* At this point the constraint system in the symbolic_process are not simplified *)
-          let simplified_symb_proc = Process.simplify symb_proc_2 in
-          if not (Process.is_bottom simplified_symb_proc)
-          then left_set := simplified_symb_proc::!left_set
-        ) var_r_ch var_r_t symb_proc_1
-      ) !left_internal;
-      
-      List.iter (fun symb_proc_1 ->
-        Process.apply_input (fun symb_proc_2 -> 
-        (* At this point the constraint system in the symbolic_process are not simplified *)
-          let simplified_symb_proc = Process.simplify symb_proc_2 in
-          if not (Process.is_bottom simplified_symb_proc)
-          then right_set := simplified_symb_proc::!right_set
-        ) var_r_ch var_r_t symb_proc_1
-      ) !right_internal;
-      
-    (* Fifth step : apply the strategy on the input matrix *)
-      
-      if !left_set <> [] || !right_set <> []
-      then 
-      (** Debug **)
-        if not particular_trace || (want_trace <> [] && (List.hd want_trace = Input))
-        then apply_strategy_for_constraint_system (if particular_trace then List.tl want_trace else want_trace) Strategy.apply_strategy_input !left_set !right_set;
+    then apply_strategy_for_constraint_system (if particular_trace then List.tl want_trace else want_trace) Strategy.apply_strategy_output !left_set !right_set;
       (** End Debug **)
-    end
+  
+  
+      (* Fourth step : apply the input transition *)
+  
+  left_set := [];
+  right_set := [];
+  
+  let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
+  and var_r_t = Recipe.fresh_free_variable_from_id "Y" support in
+  
+  List.iter (fun symb_proc_1 ->
+    Process.apply_input (fun symb_proc_2 -> 
+          (* At this point the constraint system in the symbolic_process are not simplified *)
+      let simplified_symb_proc = Process.simplify symb_proc_2 in
+      if not (Process.is_bottom simplified_symb_proc)
+      then left_set := simplified_symb_proc::!left_set
+    ) var_r_ch var_r_t symb_proc_1
+  ) !left_internal;
+  
+  List.iter (fun symb_proc_1 ->
+    Process.apply_input (fun symb_proc_2 -> 
+          (* At this point the constraint system in the symbolic_process are not simplified *)
+      let simplified_symb_proc = Process.simplify symb_proc_2 in
+      if not (Process.is_bottom simplified_symb_proc)
+      then right_set := simplified_symb_proc::!right_set
+    ) var_r_ch var_r_t symb_proc_1
+  ) !right_internal;
+  
+
+      (* Fifth step : apply the strategy on the input matrix *)
+  
+  if !left_set <> [] || !right_set <> []
+  then
+        (** Debug **)
+    if not particular_trace || (want_trace <> [] && (List.hd want_trace = Input))
+    then apply_strategy_for_constraint_system (if particular_trace then List.tl want_trace else want_trace) Strategy.apply_strategy_input !left_set !right_set;
+    (** End Debug **)
+
       
 and apply_strategy_for_constraint_system want_trace f_csys_strategy left_set right_set= 
   (* First step : Creation of the matrix of constraint system and application  *)
