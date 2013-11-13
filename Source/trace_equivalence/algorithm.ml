@@ -54,7 +54,10 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
         Printf.printf "\n****************\n";*)
       
       Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
-      flush_all ()
+      flush_all ();
+    end else if true then begin
+      Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
+      flush_all ();
     end;
 
   for i = 1 to nb_line do
@@ -177,10 +180,15 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
       List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) right_symb_proc_l';
       flush_all ();*)
   
-    (* Erase double *)
+  (*  Lucca Hirschi: Erase processes that have already performed an improper block *)
+  let filter_proper_blocks symp_proc = Process.is_improper symp_proc in
+  let left_symb_proc_l_prop = List.filter filter_proper_blocks left_symb_proc_l'
+  and right_symb_proc_l_prop = List.filter filter_proper_blocks right_symb_proc_l' in
+
+  (* Erase double *)
   
-  let left_symb_proc_list = erase_double left_symb_proc_l'
-  and right_symb_proc_list = erase_double right_symb_proc_l' in
+  let left_symb_proc_list = erase_double left_symb_proc_l_prop
+  and right_symb_proc_list = erase_double right_symb_proc_l_prop in
 
   let left_internal = ref []
   and right_internal = ref [] in

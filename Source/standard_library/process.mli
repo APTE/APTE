@@ -90,3 +90,7 @@ val apply_output : (symbolic_process -> unit) -> Recipe.variable -> symbolic_pro
 (** {3 Optimisation} *)
 
 val is_same_input_output : symbolic_process -> symbolic_process -> bool
+
+(** [is_improper symP] return true if [symP] has not yet performed any improper block
+and false otherwise. *)
+val is_improper : symbolic_process -> bool

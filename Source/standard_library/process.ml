@@ -307,7 +307,7 @@ type trace_label =
   | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term
   | Comm of internal_communication
 
-(* Lucca Hirschi:
+(* Lucca Hirschi: NOTE - COMPRESSION
    To implement the first compression step of the optimization, we adopt the
    followinf method:
    1) Each process of the multiset has now a unique index: it is an UID of its channel
@@ -315,6 +315,10 @@ type trace_label =
    2) last_action contains all information we need concerning the last action that
    has been performed;
    3) ifproper_flag is set to true then the process can not perform any otehr action.
+   4) First version: we do not force maximal IO blocks. We do allow an input to be
+   performed after an output in any case even if the last output was not the final
+   one of its subprocess. But this subprocess will be disabled since it begins 
+   wih an output.
 *)
 type action = | AInp | AOut | AInit        (* init: no last action *)
 type last_action = {                    (* description of the last action *)
@@ -613,7 +617,7 @@ let apply_internal_transition with_comm function_next symb_proc =
 (* We assume in this function that all internal transitions have been applied *)  
 let apply_input function_next ch_var_r t_var_r symb_proc = 
   
-  let rec go_through prev_proc index = function
+  let rec go_through prev_proc last_action = function
     | [] -> ()
     | ((In(ch,v,sub_proc,label) as proc),i)::q ->
         let y = Term.fresh_variable_from_id Term.Free "y" in
@@ -625,35 +629,34 @@ let apply_input function_next ch_var_r t_var_r symb_proc =
         
         let ch_r = Recipe.recipe_of_variable ch_var_r
         and t_r = Recipe.recipe_of_variable t_var_r in
-        
+        let last_action' =
+          if last_action.id = i or (last_action.action = AOut) or (last_action.action = AInit)
+          then {action = AInp; id = i; improper_flag = false} (* proper block *)
+          else {action = AInp; id = i; improper_flag = true} in (* improper block *)
         let symb_proc' = 
           { symb_proc with
             process = ((sub_proc,i)::q)@prev_proc;
             constraint_system = new_csys_3;
             forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
             trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v))::symb_proc.trace;
-            last_action = {
-              action = AInp;
-              id = i;
-              improper_flag = false;
-            }
-
+            last_action = last_action';
           }
         in
         
         function_next symb_proc';
         
-        go_through ((proc,i)::prev_proc) (index+1) q
-     | proc::q -> go_through (proc::prev_proc) (index+1) q
+        go_through ((proc,i)::prev_proc) last_action q
+    | proc::q -> go_through (proc::prev_proc) last_action q
   in
   
-  go_through [] 0 symb_proc.process
+  go_through [] symb_proc.last_action symb_proc.process
   
 let apply_output function_next ch_var_r symb_proc = 
   
   let rec go_through prev_proc last_index = function
     | [] -> ()
     | ((Out(ch,t,sub_proc,label) as proc), last_index)::q ->
+      (* index of this subprocess must be last_index (block of outputs on same channel) *)
       let y = Term.fresh_variable_from_id Term.Free "y"
       and x = Term.fresh_variable_from_id Term.Free "x" in
       
@@ -673,12 +676,6 @@ let apply_output function_next ch_var_r symb_proc =
           constraint_system = new_csys_4;
           forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
           trace = (Output (label,ch_r,Term.term_of_variable y,Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),Term.term_of_variable x))::symb_proc.trace;
-        (* Todo: toRemove *)
-          (* last_action = { *)
-          (*   action = AOut; *)
-          (*   id = last_index; *)
-          (*   improper_flag = false; *)
-          (* } *)
         }
       in
       
@@ -855,3 +852,4 @@ let is_same_input_output symb_proc1 symb_proc2 =
   
   same_trace (symb_proc1.trace,symb_proc2.trace) && !switch_label_1 = !switch_label_2
  
+let is_improper symP = symP.last_action.improper_flag
