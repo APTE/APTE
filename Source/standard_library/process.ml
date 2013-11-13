@@ -303,17 +303,27 @@ type trace_label =
   | Output of label * Recipe.recipe * Term.term * Recipe.axiom * Term.term
   | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term
   | Comm of internal_communication
-  
-type symbolic_process = 
+
+type action = | AInp | AOut | AInit        (* init: no last action *)
+type last_action = {                    (* description of the last action *)
+  action : action;                      (* last action *)
+  id : int;                             (* index of the last process that has performed an action *)
+  improper_flag : bool;                 (* is the last block improper *)
+}
+
+type symbolic_process =
   {
     axiom_name_assoc : (Recipe.recipe * Term.term) list;
     process : process list; (* Represent a multiset of processes *)
     constraint_system : Constraint_system.constraint_system;
     forbidden_comm : internal_communication list;
     trace : trace_label list;
-    marked : bool
+    marked : bool;
+    last_action : last_action
   }
-  
+
+let null_last_action = {action = AInit; id = -1; improper_flag = false}
+
 let create_symbolic axiom_name_assoc proc csys = 
   {
     axiom_name_assoc = axiom_name_assoc;
@@ -321,9 +331,10 @@ let create_symbolic axiom_name_assoc proc csys =
     constraint_system = csys;
     forbidden_comm = [];
     trace = [];
-    marked = false
+    marked = false;
+    last_action = null_last_action;
   }
-  
+
 (******* Display *******)
 
 let display_trace_label r_subst m_subst recipe_term_assoc = function 
