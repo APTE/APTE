@@ -42,7 +42,7 @@ type sub_csys =
 
     (* A list of constraints of the form: X_1 ... X_n |DEP| ax1 ... axn meaning that
     at least one Xi should depends on at least one axj *)
-    dependency_constraints : (Recipe.variable list * Recipe.axiom list) list;
+    dependency_constraints : (Recipe.recipe list * Recipe.axiom list) list;
 
     (** Help for the strategy *)
     semi_normal_form : bool;
@@ -89,7 +89,7 @@ let rec display_dependency_cst = function
   | [] -> Printf.sprintf "]\n"
   | (recipes, axioms) :: l -> String.concat "" (
     [Printf.sprintf "(" ] @
-    List.map (fun r -> Printf.sprintf "%s," (Recipe.display_variable r)) recipes @
+    List.map (fun r -> Printf.sprintf "%s," (Recipe.display_recipe r)) recipes @
     [Printf.sprintf " D- "] @
     List.map (fun r -> Printf.sprintf "%s," (Recipe.display_axiom r)) axioms @
     [Printf.sprintf ")"] @
@@ -111,7 +111,12 @@ let display = function
       let endline = ")\n" in
       
       Printf.sprintf "%s%s\n%s\n%s\n%s\n%s\n%s" line1 frame cons_set dep_cst formula conj_mess_eq endline
-  
+
+let display_dependency_constraints = function
+  | Bot -> "Dependency constraints : [] (Bot)."
+  | Csys(sub_csys) -> Printf.sprintf "Dependency constraints = [%s"
+    (display_dependency_cst sub_csys.dependency_constraints)
+
 (******** Addition functions ********)
 
 let add_message_equation csys t1 t2 = match csys with

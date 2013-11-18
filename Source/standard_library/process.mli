@@ -63,11 +63,12 @@ val display_trace : symbolic_process -> string
 
 val display_trace_no_unif : symbolic_process -> string
 
-val add_dependency_constraint : symbolic_process -> Recipe.variable list -> Recipe.axiom list -> symbolic_process
+val add_dependency_constraint : symbolic_process -> Recipe.recipe list -> Recipe.axiom list -> symbolic_process
 
 (** {4 Testing} *)
 
 val is_bottom : symbolic_process -> bool
+
 
 (** {4 Access and modification} *)
 

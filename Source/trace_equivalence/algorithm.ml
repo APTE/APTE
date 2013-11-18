@@ -26,7 +26,9 @@ let final_test_count = ref 0
 let number_of_branches_cut = ref 0
 let size_trace_cutted = Array.make 100 0
 
-let improper_killed = ref 0
+let improper_killed = ref 0             (* count the number of roots of sub-executions
+                                           that have been remove by the compression
+                                           step of the optim (< removed states) *)
 
 let display_size_trace_cutted () =
   let result = ref "" in
@@ -44,7 +46,7 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
   
   let nb_line = Constraint_system.Matrix.get_number_line matrix in
   final_test_count := !final_test_count + 1;
-  if (!final_test_count / 1000) * 1000 = !final_test_count then 
+  if (!final_test_count / 1000) * 1000 = !final_test_count or true then 
     begin
       (*Printf.printf "***********************\n";
         Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
@@ -56,6 +58,11 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
         Printf.printf "\n****************\n";*)
       
       Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\nImproper traces killed: %d.\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ()) (- !improper_killed);
+      List.iter (fun p ->
+        let dep_cst = Constraint_system.display_dependency_constraints (Process.get_constraint_system p) in begin
+          Printf.printf "### Dependency constraints: %s\n" dep_cst;
+          Printf.printf "### Trace: %s\n" (Process.display_trace_no_unif p);
+        end ) left_set;
       flush_all ();
     end else if false then begin        (* HACK *)
       Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
@@ -108,9 +115,10 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
           (* ) *)
           let new_list = List.map (Process.generate_dependency_constraints) left_set in
           let new_list = List.map (Process.generate_dependency_constraints) right_set in
-          List.iter (fun p ->
-            let dep_cst = Constraint_system.display (Process.get_constraint_system p) in
-              Printf.printf "Process: %s\n" dep_cst) left_set
+          (* List.iter (fun p -> *)
+          (*   let dep_cst = Constraint_system.display (Process.get_constraint_system p) in *)
+          (*     Printf.printf "Process: %s\n" dep_cst) left_set *)
+          ()
         (** End Lucca **)
 
         else
