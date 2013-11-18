@@ -309,16 +309,12 @@ type trace_label =
 
 (* Lucca Hirschi: NOTE - COMPRESSION
    To implement the first compression step of the optimization, we adopt the
-   followinf method:
+   following method:
    1) Each process of the multiset has now a unique index: it is an UID of its channel
    if the whole process is simple;
    2) last_action contains all information we need concerning the last action that
    has been performed;
-   3) ifproper_flag is set to true then the process can not perform any otehr action.
-   4) First version: we do not force maximal IO blocks. We do allow an input to be
-   performed after an output in any case even if the last output was not the final
-   one of its subprocess. But this subprocess will be disabled since it begins 
-   wih an output.
+   3) ifproper_flag is set to true then the process can not perform any other action.
 *)
 type action = | AInp | AOut | AInit        (* init: no last action *)
 type last_action = {                    (* description of the last action *)
@@ -832,7 +828,7 @@ let add_dependency_constraint sys variables axioms =
   { sys with  constraint_system = new_cst_system }
 
 (*************************************
-	     Optimisation
+	     Optimization
 **************************************)  
 
 let is_same_input_output symb_proc1 symb_proc2 = 
