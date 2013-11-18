@@ -277,6 +277,13 @@ val is_name : term -> bool
 (** [is_name_status s t] returns [true] iff the term [t] is a name with status [s]. *)
 val is_name_status : name_status -> term -> bool
 
+(** Raised when the argument of the following function is not a name. *)
+exception Not_a_name
+
+(** [get_id_of_name t] raises Not_a_name if [t] is not a name and returns the id of
+[t] otherwise. *)
+val get_id_of_name : term -> string
+
 (** [is_function t] returns [true] iff the term [t] is a function symbol application. *)
 val is_function : term -> bool
 

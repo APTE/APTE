@@ -112,6 +112,11 @@ let variable_of_recipe = function
   | Var v -> v
   | _ -> Debug.internal_error "[recipe.ml >> variable_of_recipe] A variable was expected"
 
+let rec get_variables_of_recipe = function
+  | Var v -> [v]
+  | Axiom _ -> []
+  | Func (_, list) -> List.concat (List.map get_variables_of_recipe list)
+
 let apply_function symbol list_sons = 
   (***[BEGIN DEBUG]***)
   Debug.low_debugging (fun () ->
