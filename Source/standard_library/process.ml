@@ -632,26 +632,25 @@ let apply_input function_next ch_var_r t_var_r symb_proc =
         
         let ch_r = Recipe.recipe_of_variable ch_var_r
         and t_r = Recipe.recipe_of_variable t_var_r in
-        let last_action' =
-          if last_action.id = i or (last_action.action = AOut) or (last_action.action = AInit)
-          then {action = AInp; id = i; improper_flag = false} (* proper block *)
-          else {action = AInp; id = i; improper_flag = true} in (* improper block *)
-        let symb_proc' = 
-          { symb_proc with
-            process = ((sub_proc,i)::q)@prev_proc;
-            constraint_system = new_csys_3;
-            forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
-            trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v))::symb_proc.trace;
-            last_action = last_action';
-          }
-        in
-        
-        function_next symb_proc';
-        
+        if last_action.id = i or (last_action.action = AOut) or (last_action.action = AInit)
+        then begin                                          (* proper block *)
+          let last_action' = {action = AInp; id = i; improper_flag = false} in
+          let symb_proc' = 
+            { symb_proc with
+              process = ((sub_proc,i)::q)@prev_proc;
+              constraint_system = new_csys_3;
+              forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
+              trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v))::symb_proc.trace;
+              last_action = last_action';
+            }
+          in
+          function_next symb_proc';
+        end
+        else (); (* last block = improper block so this other input can not be performed *)
         go_through ((proc,i)::prev_proc) last_action q
     | proc::q -> go_through (proc::prev_proc) last_action q
   in
-  
+
   go_through [] symb_proc.last_action symb_proc.process
   
 let apply_output function_next ch_var_r symb_proc = 
