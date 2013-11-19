@@ -46,7 +46,7 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
   
   let nb_line = Constraint_system.Matrix.get_number_line matrix in
   final_test_count := !final_test_count + 1;
-  if (!final_test_count / 1000) * 1000 = !final_test_count or true then 
+  if (!final_test_count / 1000) * 1000 = !final_test_count then 
     begin
       (*Printf.printf "***********************\n";
         Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
@@ -58,12 +58,14 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
         Printf.printf "\n****************\n";*)
       
       Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\nImproper traces killed: %d.\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ()) (- !improper_killed);
-      List.iter (fun p ->
-        let dep_cst = Constraint_system.display_dependency_constraints (Process.get_constraint_system p) in begin
-          Printf.printf "### Dependency constraints: %s\n" dep_cst;
-          Printf.printf "### Trace: %s\n" (Process.display_trace_no_unif p);
-        end ) left_set;
-      flush_all ();
+      if false then begin
+        List.iter (fun p ->
+          let dep_cst = Constraint_system.display_dependency_constraints (Process.get_constraint_system p) in begin
+            Printf.printf "### Dependency constraints: %s\n" dep_cst;
+            Printf.printf "### Trace: %s\n" (Process.display_trace_no_unif p);
+          end ) left_set;
+        flush_all ();
+      end
     end else if false then begin        (* HACK *)
       Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
       flush_all ();
@@ -225,7 +227,7 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
   and right_symb_proc_l_prop = List.filter filter_proper_blocks right_symb_proc_l' in
   let size_after = List.length left_symb_proc_l_prop in
   improper_killed := !improper_killed + (size_after-size_before);
-  if size_after - size_before > 10 then
+  if size_after - size_before < -50 then
     Printf.printf "BOUM Improper blocks killed %d processes.\n" (size_before - size_after);
 
   (* Erase double *)
@@ -428,7 +430,9 @@ let decide_trace_equivalence process1 process2 =
         Output;Input;
         Output;Input;
         Output;Input;Output ] nb_free_names [symb_proc1] [symb_proc2];
-        true
+      Printf.printf "Number of final tests: %d.\n" (!final_test_count);
+      Printf.printf "Number of pruned roots thanks to compression: %d.\n" (- !improper_killed);
+      true
     with
       | Not_equivalent_left sym_proc ->
         Printf.printf "Witness of non-equivalence on Process 1:\n%s"

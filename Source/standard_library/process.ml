@@ -888,64 +888,81 @@ let pp a = Printf.printf "error: %s\n" a
 type flagLabel = FIn | FOut           (* flag: last actions is eitehr an input or an output *)
 
 (* Scan a simple trace backward looking for a well-formed pattern assuming that last
-   action of the pattern has been performed by first_perf. Initially, last_perf=first_perf.
+   action of the pattern has been performed by first_perf. Initially, last_perf=-1.
    If there is such a pattern, it outputs the list of Recipe.axioms of the pattern. *)
 let rec search_pattern first_perf acc last_flag last_perf = function
   | [] -> if first_perf < last_perf      (* end of a block and last_block > first_block *)
     then acc
     else raise No_pattern
   | Output (_,perf,_,_,ax,_) :: l ->
-    if last_perf != perf then begin (* not a possible (compressed) trace -> pattern*)
-      Debug.internal_error "[process.ml >> search_pattern] Not a simple process (out: it has not been detected yet!!!)."
-    end else ();
-    search_pattern first_perf (ax::acc) FOut perf l
-  | Input (_,perf,_,_,_,_) :: l ->
-    if last_flag == FOut                (* end of block *)
-    then begin
+    if last_flag == FIn
+    then begin                            (* end of block *)
       if first_perf < last_perf
       then acc                            (* enf of block and last_block > first_block -> pattern *)
-      else if perf < first_perf || (perf > first_perf)
-      then search_pattern first_perf (acc) FIn perf l
+      else if (last_perf == -1) || (perf < first_perf)
+          || (perf > first_perf)          (* either begining, inside or end of pattern *)
+      then search_pattern first_perf (ax :: acc) FOut perf l
       else raise No_pattern;
     end else                                (* inside a block *)
       if last_perf != perf then begin (* not a possible (compressed) trace*)
-        Debug.internal_error "[process.ml >> search_pattern] Not a simple process (in: it has not been detected yet!!!).";
-      end else search_pattern first_perf (acc) FIn perf l
+        Debug.internal_error "[process.ml >> search_pattern] Not a simple process (out: it has not been detected yet!!!).";
+      end else search_pattern first_perf (ax :: acc) FOut perf l
+  | Input (_,perf,_,_,_,_) :: l ->
+    if last_perf != perf then begin (* not a possible (compressed) trace -> pattern*)
+      Debug.internal_error "[process.ml >> search_pattern] Not a simple process (in: it has not been detected yet!!!)."
+    end else ();
+    search_pattern first_perf acc FIn perf l
+
   | Comm _ :: l -> search_pattern first_perf acc last_flag last_perf l
 
+let count = ref 0                       (* DEBUGGING purpose *)
+let debug_f = ref true                  (* "" *)
+
 let generate_dependency_constraints symP =
-  (* let debug () = Printf.printf "Simple trace: \n"; display_trace_no_unif symP; Printf.printf ".\n"; in *)
   (* We extract the recipes of the last inputs and output it with
      the remainder of the list and the index of those inputs.
      last_perf : index that has performed last action (init=-1) *)
   let rec extract_list_variables acc last_perf = function
-    | Output (_,_,_,_,_,_) :: l -> extract_list_variables acc last_perf l
-    | (Input (_, perf, _, _, r, _) as inp) :: l ->
-      if last_perf != -1 && perf != last_perf
-      then (acc, inp :: l, last_perf)             (* end of the first block *)
-      else extract_list_variables (r :: acc) perf l (* inside first block *)
+    | ((Output (_,perf,_,_,_,_) :: l) as rl) ->
+      if last_perf != -1 && perf != last_perf     (* TODO: two blocks on same channel? *)
+      then (acc, rl, last_perf)                   (* end of the first block *)
+      else extract_list_variables acc perf l      (* inside first block *)
+    | Input (_, perf, _, _, r, _) :: l ->
+      extract_list_variables (r::acc) perf l      (* perf instead of last_perf for improper blocks *)
     | Comm _ :: l -> extract_list_variables acc last_perf l
-    | [] -> (acc, [], last_perf)in
+    | [] -> (acc, [], last_perf) in
 
   (* Given the recipes of the first inputs, the remaining  trace and
   the index of those inputs, it outputs the updated symbolic process *)
-  let construct_constraint list_recipes trace_pattern first_index symP =
+  let construct_constraint list_recipes remaining_trace first_index symP =
     (* looking for a well-formed pattern *)
     try
-      let list_axioms = search_pattern first_index [] FOut first_index trace_pattern in
+      let list_axioms = search_pattern first_index [] FIn (-1) remaining_trace in
       (* add the correspondant dependency constraint *)
       let new_sys  = add_dependency_constraint symP list_recipes list_axioms in
+      (* BEGIN DEBUG *)
+      if !debug_f then begin
+        let dep_cst = Constraint_system.display_dependency_constraints
+          (get_constraint_system new_sys) in
+        Printf.printf "---------------------- A Dependency constraint HAS BEEN ADDED----------------------\n### Dependency constraints: %s\n" dep_cst;
+        Printf.printf "### Symbolic Process: %s\n" (display_trace_no_unif new_sys);
+      end;
+      (* END DEBUG *)
       new_sys
     with
       | No_pattern -> symP
-      | Channel_not_ground -> begin
-        Debug.internal_error "[process.ml >> generate_dependency_constraints] The process seems to be not simple. A channel is not fully instantied.";
-      end in
-
+  in
+  (* BEGIN DEBUG *)
+  incr(count);
+  (* Printf.printf "Count: %d\n" (!count); *)
+  if false && List .length (symP.trace) >= 4 then begin
+    debug_f := true;
+    Printf.printf "&&&&& Construct_dep: %s\n" (display_trace_no_unif symP);
+  end;
+  (* END DEBUG *)
   match extract_list_variables [] (-1) symP.trace with
-    | ([],_,_) -> (* debug (); *) symP    (* meaning that the last actions is actually an output *)
+    | ([],_,_) -> symP    (* meaning that the last actions is actually an output *)
     | (list_recipes, trace, perf) -> construct_constraint list_recipes trace perf symP
-    | _ -> Debug.internal_error "[process.ml >> generate_dependency_constraints] SHOULD NEVER HAPPEN. READ YOUR CODE MORE CAREFULLY!"
 
 (** End Lucca Hirschi **)
 
