@@ -98,8 +98,13 @@ val is_same_input_output : symbolic_process -> symbolic_process -> bool
 and false otherwise. *)
 val is_improper : symbolic_process -> bool
 
+
 (** {4 Optimisation: Reduced semantics} **)
 
+(**  [test_dependency_constraints symP] test whether dependency constraints of
+     [symP] hold. *)
+val test_dependency_constraints : symbolic_process -> bool
+
 (**  [generate_dependency_constraints symP] add to the set of dependency constrants
-     of symP the dependency constraint for the last action of the trace.  **)
+     of symP the dependency constraint for the last action of the trace.  *)
 val generate_dependency_constraints : symbolic_process -> symbolic_process

@@ -872,11 +872,37 @@ let is_improper symP = symP.last_action.improper_flag
 
 
       (** BEGIN Lucca Hirschi **)
-(* Todo:
-   Add a function that generates dependency constraints from ground
-   trace_label list.
-*)
 
+(* ********************************************************************** *)
+(*                 Test whether dependency constraints hold               *)
+(* ********************************************************************** *)
+let test_dependency_constraints symP =
+  (* Test whether one dep. cst hold *)
+  let rec test_cst = function
+    | (_, []) -> true
+    | ([], _::_) -> false
+    | (r::lr , la) -> if Recipe.get_variables_of_recipe r == []
+      (* It is better to first check that r :: lr do not contain any
+      non-ground recipes ? *)
+      then true                         (* cst is not ground *)
+      else (
+        if List.exists (fun ax -> Recipe.ax_occurs ax r) la
+        then true                     (* cst hold thanks to r *)
+        else test_cst (lr, la))
+  in
+  (* Scan the list of dep. csts*)
+  let rec scan_dep_csts = function
+    | [] -> true
+    | cst :: l ->
+      if test_cst cst
+      then scan_dep_csts l
+      else false in
+  scan_dep_csts (Constraint_system.get_dependency_constraints
+                   (get_constraint_system symP))
+
+(* ********************************************************************** *)
+(*                 Build dependency constraints given a symbolic process  *)
+(* ********************************************************************** *)
 exception No_pattern                    (* there is no well-formed pattern *)
 exception Channel_not_ground            (* a channel is not fully instantiated
                                            (not a simple process?) *)

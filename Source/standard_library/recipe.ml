@@ -142,6 +142,11 @@ let rec occurs var = function
   | Var{link = RLink t;_} -> occurs var t
   | Func(_,args) -> List.exists (occurs var) args
   | _ -> false
+
+let rec ax_occurs ax = function
+  | Axiom(a) when a == ax -> true
+  | Func(_,args) -> List.exists (ax_occurs ax) args
+  | _ -> false
   
 let is_equal_variable v1 v2 = v1 == v2  
 

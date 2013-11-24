@@ -28,7 +28,10 @@ let size_trace_cutted = Array.make 100 0
 
 let improper_killed = ref 0             (* count the number of roots of sub-executions
                                            that have been remove by the compression
-                                           step of the optim (< removed states) *)
+                                           step of the optim (<< removed states) *)
+let non_reduced_killed = ref 0          (* count the number of roots of sub-executions
+                                           that have been remove by the reduction
+                                           step of the optim (<< removed states) *)
 
 let display_size_trace_cutted () =
   let result = ref "" in
@@ -57,7 +60,7 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
         Printf.printf "\n\nMatrix = %s\n" (Constraint_system.Matrix.display matrix);
         Printf.printf "\n****************\n";*)
       
-      Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\nImproper traces killed: %d.\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ()) (- !improper_killed);
+      Printf.printf "Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\nImproper traces killed: %d -- non-reduced traces killed: %d.\n" nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ()) (- !improper_killed) (- !non_reduced_killed);
       if false then begin
         List.iter (fun p ->
           let dep_cst = Constraint_system.display_dependency_constraints (Process.get_constraint_system p) in begin
@@ -103,7 +106,7 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
             2) apply the mgu of all equality constraints to dependency constraints
             3) for each dep. constraint that is ground: test whether it could be satisfied
           *)
-        (* not the right place at all *)
+        (* NOOOOOOOOOOO: not the right place at all *)
         (** End Lucca **)
 
         else
@@ -212,6 +215,17 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
   improper_killed := !improper_killed + (size_after-size_before);
   if size_after - size_before < -50 then
     Printf.printf "BOUM Improper blocks killed %d processes.\n" (size_before - size_after);
+
+  (*  Lucca Hirschi: Erase processes that do not satisfy their dep. csts *)
+  (* Is it the best place???? *)
+  let size_before = List.length left_symb_proc_l_prop in
+  let filter_proper_blocks symp_proc = not(Process.test_dependency_constraints symp_proc) in
+  let left_symb_proc_l_prop = List.filter filter_proper_blocks left_symb_proc_l_prop
+  and right_symb_proc_l_prop = List.filter filter_proper_blocks right_symb_proc_l_prop in
+  let size_after = List.length left_symb_proc_l_prop in
+  non_reduced_killed := !non_reduced_killed + (size_after-size_before);
+  if size_after - size_before < -50 then
+    Printf.printf "BOUM Non_Reduced blocks killed %d processes.\n" (size_before - size_after);
 
   (* Erase double *)
   
