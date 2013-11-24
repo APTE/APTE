@@ -93,34 +93,17 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
         let left_csys,j = Constraint_system.Matrix.find_in_row_between_col_index i 1 (index_right_process - 1) (fun csys -> not (Constraint_system.is_bottom csys)) matrix in
         
         if Constraint_system.Matrix.exists_in_row_between_col_index i index_right_process nb_column (fun csys -> not (Constraint_system.is_bottom csys)) matrix
-        then (* () *)
+        then ()
 
           (** Begin Lucca **)
-        (*
-          TODO: We should test here if the leaf satisfies all dependency constraints by
-          1) fetching those constraints
-          2) fetching equality over recipes from constraints
-          2) apply the mgu of all equality constraints to dependency constraints
-          3) for each dep. constraint that is ground: test whether it could be satisfied
-        *)
-          (* QUESTIONS:
-             Comment supprimer une des cases de la matrice? Un flag à cocher????
-             
+          (*
+            TODO: We should test here if the leaf satisfies all dependency constraints by
+            1) fetching those constraints
+            2) fetching equality over recipes from constraints
+            2) apply the mgu of all equality constraints to dependency constraints
+            3) for each dep. constraint that is ground: test whether it could be satisfied
           *)
-          (* try *)
-          (*   Printf.printf "##### The current trace is:\n   %s\n" (Process.display_trace (List.nth left_set 0)) *)
-          (* with *)
-          (*     _ -> (try *)
-          (*             Printf.printf "## The current trace (NOT UNIFIED) is:\n   %s\n" (Process.display_trace_no_unif (List.nth left_set 0)) *)
-          (*       with *)
-          (*         | Term.Not_unifiable -> Printf.printf "Failed to unify\n" *)
-          (* ) *)
-          let new_list = List.map (Process.generate_dependency_constraints) left_set in
-          let new_list = List.map (Process.generate_dependency_constraints) right_set in
-          (* List.iter (fun p -> *)
-          (*   let dep_cst = Constraint_system.display (Process.get_constraint_system p) in *)
-          (*     Printf.printf "Process: %s\n" dep_cst) left_set *)
-          ()
+        (* not the right place at all *)
         (** End Lucca **)
 
         else
@@ -250,7 +233,21 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
     ) symb_proc_1
   ) right_symb_proc_list;
   
-    (* Second step : apply the output transition *)
+  (* Lucca Hirschi - Optimization via Reduction
+     We have to find a trade off here between:
+     1) the cost of looking for a pattern and build the dependency constraint
+     in the case we call Process.generate_dependency_constraints after each
+     Process.apply_input.
+     2) Other solution: call Process.generate_dependency_constraints after each
+     Process.apply_output + modify the generate of dep. csts so that it does
+     not generate anything if the end of the trace is not of the form
+     ...IN.OUT. In that case we do not remove non-reduced traces as soon as
+     possible.
+
+     For the moment I choose 1.
+  *)
+  
+    (* Second step : apply the output transition + generation of dep. csts. *)
   let left_set = ref []
   and right_set = ref [] in
   
@@ -261,7 +258,10 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
         (* At this point the constraint system in the symbolic_process are not simplified *)
       let simplified_symb_proc = Process.simplify symb_proc_2 in
       if not (Process.is_bottom simplified_symb_proc)
-      then left_set := simplified_symb_proc::!left_set
+      then
+        let symbP_with_dep_csts = Process.generate_dependency_constraints
+          simplified_symb_proc in
+        left_set := symbP_with_dep_csts::!left_set
     ) var_r_ch symb_proc_1
   ) !left_internal;
   
@@ -270,7 +270,10 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
         (* At this point the constraint system in the symbolic_process are not simplified *)
       let simplified_symb_proc = Process.simplify symb_proc_2 in
       if not (Process.is_bottom simplified_symb_proc)
-      then right_set := simplified_symb_proc::!right_set
+      then
+        let symbP_with_dep_csts = Process.generate_dependency_constraints
+          simplified_symb_proc in
+        right_set := symbP_with_dep_csts::!right_set
     ) var_r_ch symb_proc_1
   ) !right_internal;
   
@@ -285,7 +288,6 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
   
   
   (* Fourth step : apply the input transition *)
-  
   left_set := [];
   right_set := [];
   
@@ -294,11 +296,11 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
   
   List.iter (fun symb_proc_1 ->
     Process.apply_input (fun symb_proc_2 -> 
-          (* At this point the constraint system in the symbolic_process are not simplified *)
+      (* At this point the constraint system in the symbolic_process are not simplified *)
       let simplified_symb_proc = Process.simplify symb_proc_2 in
       if not (Process.is_bottom simplified_symb_proc)
       then left_set := simplified_symb_proc::!left_set
-    ) var_r_ch var_r_t symb_proc_1
+      ) var_r_ch var_r_t symb_proc_1
   ) !left_internal;
   
   List.iter (fun symb_proc_1 ->
@@ -311,7 +313,7 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
   ) !right_internal;
   
 
-      (* Fifth step : apply the strategy on the input matrix *)
+(* Fifth step : apply the strategy on the input matrix *)
   
   if !left_set <> [] || !right_set <> []
   then

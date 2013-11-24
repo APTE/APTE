@@ -917,6 +917,10 @@ let rec search_pattern first_perf acc last_flag last_perf = function
 let count = ref 0                       (* DEBUGGING purpose *)
 let debug_f = ref true                  (* "" *)
 
+(* CF. algorithm.ml|L.236 for a discussion about a trade off. We choose to add
+a dependency constraint only after the last input of any IO block.
+So we require that the trace ends with ....IN.OUT.
+*)
 let generate_dependency_constraints symP =
   (* We extract the recipes of the last inputs and output it with
      the remainder of the list and the index of those inputs.
@@ -959,12 +963,16 @@ let generate_dependency_constraints symP =
     Printf.printf "&&&&& Construct_dep: %s\n" (display_trace_no_unif symP);
   end;
   (* END DEBUG *)
-  match extract_list_variables [] (-1) symP.trace with
-    | ([],_,_) -> symP    (* meaning that the last actions is actually an output *)
-    | (list_recipes, trace, perf) -> construct_constraint list_recipes trace perf symP
-
+  match symP.trace with                 (* We force the trace to be ..IN.OUT. *)
+    | (Output (_,perf,_,_,_,_)) :: (Input (_, perf', _, _, r, _)) :: l ->
+      if perf == perf' then begin
+        match extract_list_variables [r] perf l with
+           (* | ([],_,_) -> symP    (\* meaning that the last actions is actually an output *\) *)
+           | (list_recipes, trace, perf) -> construct_constraint list_recipes trace perf symP;
+      end
+      else symP
+    | _ -> symP
 (** End Lucca Hirschi **)
-
 
 
       (* DUMMY LUCCA HIRSCHI *)
