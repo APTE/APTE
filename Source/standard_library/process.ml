@@ -860,7 +860,7 @@ let is_same_input_output symb_proc1 symb_proc2 =
         same_trace (q1,q2)
     | Output(l1,_,_,ch1,_,t1)::q1, Output(l2,_,_,ch2,_,t2)::q2 when Term.is_equal_and_closed_term ch1 ch2 && Term.is_equal_and_closed_term t1 t2 ->
         switch_label_1 := add_sorted l1 !switch_label_1;
-        switch_label_2 := add_sorted l2 !switch_label_2;
+      switch_label_2 := add_sorted l2 !switch_label_2;
         same_trace (q1,q2)
     | _,_ -> false
   in
@@ -868,10 +868,11 @@ let is_same_input_output symb_proc1 symb_proc2 =
   same_trace (symb_proc1.trace,symb_proc2.trace) && !switch_label_1 = !switch_label_2
  
 
+      (** BEGIN Lucca Hirschi **)
+
 let is_improper symP = symP.last_action.improper_flag
 
-
-      (** BEGIN Lucca Hirschi **)
+let debug_f = ref false                 (* Do we print debugging information ?  *)
 
 (* ********************************************************************** *)
 (*                 Test whether dependency constraints hold               *)
@@ -880,8 +881,8 @@ let test_dependency_constraints symP =
   (* Test whether one dep. cst hold *)
   let rec test_cst = function
     | (_, []) -> true
-    | ([], _::_) -> false
-    | (r::lr , la) -> if Recipe.get_variables_of_recipe r == []
+    | ([], _) -> false
+    | (r::lr , la) -> if Recipe.get_variables_of_recipe r != []
       (* It is better to first check that r :: lr do not contain any
       non-ground recipes ? *)
       then true                         (* cst is not ground *)
@@ -897,6 +898,17 @@ let test_dependency_constraints symP =
       if test_cst cst
       then scan_dep_csts l
       else false in
+
+  (* BEGIN DEBUG *)
+  let csts = (Constraint_system.get_dependency_constraints
+                   (get_constraint_system symP)) in
+  if List.length csts <> 0 && !debug_f then begin
+    Printf.printf "We will check those dependency constraints: %s\n"
+      (Constraint_system.display_dependency_constraints (get_constraint_system symP));
+    Printf.printf "Do those constraints hold?: %B.\n" (scan_dep_csts csts);
+  end;
+  (* END DEBUG *)
+
   scan_dep_csts (Constraint_system.get_dependency_constraints
                    (get_constraint_system symP))
 
@@ -941,7 +953,6 @@ let rec search_pattern first_perf acc last_flag last_perf = function
   | Comm _ :: l -> search_pattern first_perf acc last_flag last_perf l
 
 let count = ref 0                       (* DEBUGGING purpose *)
-let debug_f = ref true                  (* "" *)
 
 (* CF. algorithm.ml|L.236 for a discussion about a trade off. We choose to add
 a dependency constraint only after the last input of any IO block.

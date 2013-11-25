@@ -207,30 +207,32 @@ let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l =
       flush_all ();*)
   
   (*  Lucca Hirschi: Erase processes that have already performed an improper block *)
-  let size_before = List.length left_symb_proc_l in
+  let size_before = List.length left_symb_proc_l' in
   let filter_proper_blocks symp_proc = not(Process.is_improper symp_proc) in
   let left_symb_proc_l_prop = List.filter filter_proper_blocks left_symb_proc_l'
   and right_symb_proc_l_prop = List.filter filter_proper_blocks right_symb_proc_l' in
   let size_after = List.length left_symb_proc_l_prop in
   improper_killed := !improper_killed + (size_after-size_before);
   if size_after - size_before < -50 then
-    Printf.printf "BOUM Improper blocks killed %d processes.\n" (size_before - size_after);
+    Printf.printf "BOUM Improper traces killed %d processes.\n" (size_before - size_after);
 
   (*  Lucca Hirschi: Erase processes that do not satisfy their dep. csts *)
   (* Is it the best place???? *)
   let size_before = List.length left_symb_proc_l_prop in
-  let filter_proper_blocks symp_proc = not(Process.test_dependency_constraints symp_proc) in
-  let left_symb_proc_l_prop = List.filter filter_proper_blocks left_symb_proc_l_prop
-  and right_symb_proc_l_prop = List.filter filter_proper_blocks right_symb_proc_l_prop in
-  let size_after = List.length left_symb_proc_l_prop in
+  (* Normally, dependency_constraints have already been simplified using recipe_eq
+     (see Constraint_system.apply_recipe_subsitution)  *)
+  let filter_proper_blocks symp_proc = Process.test_dependency_constraints symp_proc in
+  let left_symb_proc_l_reduced = List.filter filter_proper_blocks left_symb_proc_l_prop
+  and right_symb_proc_l_reduced = List.filter filter_proper_blocks right_symb_proc_l_prop in
+  let size_after = List.length left_symb_proc_l_reduced in
   non_reduced_killed := !non_reduced_killed + (size_after-size_before);
   if size_after - size_before < -50 then
-    Printf.printf "BOUM Non_Reduced blocks killed %d processes.\n" (size_before - size_after);
+    Printf.printf "BOUM Non_Reduced traces killed %d processes.\n" (size_before - size_after);
 
   (* Erase double *)
   
-  let left_symb_proc_list = erase_double left_symb_proc_l_prop
-  and right_symb_proc_list = erase_double right_symb_proc_l_prop in
+  let left_symb_proc_list = erase_double left_symb_proc_l_reduced
+  and right_symb_proc_list = erase_double right_symb_proc_l_reduced in
 
   let left_internal = ref []
   and right_internal = ref [] in
@@ -364,10 +366,6 @@ and apply_strategy_for_constraint_system want_trace f_csys_strategy left_set rig
        (number_left_symb_proc + number_right_symb_proc)
        complete_csys_list
     )
-  (*
-    Todo (??):
-    Add here the genration of new dependency constraints (using trace)
-  *)
   in
   
   (*Debug.low_debugging (fun () ->
@@ -447,7 +445,8 @@ let decide_trace_equivalence process1 process2 =
         Output;Input;
         Output;Input;Output ] nb_free_names [symb_proc1] [symb_proc2];
       Printf.printf "Number of final tests: %d.\n" (!final_test_count);
-      Printf.printf "Number of pruned roots thanks to compression: %d.\n" (- !improper_killed);
+      Printf.printf "Number of pruned roots corresponding to improper traces (executions killed): %d.\n" (- !improper_killed);
+      Printf.printf "Number of pruned roots thanks to reduction: %d.\n" (- !non_reduced_killed);
       true
     with
       | Not_equivalent_left sym_proc ->
