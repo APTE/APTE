@@ -17,6 +17,9 @@
 ** along with this program.  If not, see http://www.gnu.org/licenses/   **
 **************************************************************************)
 
+(* Lucca: Flag display debug message when we have to deal with non-simple processes *)
+let debug_simple = ref true
+
 (******************
 ***    Label    ***
 *******************)
@@ -299,53 +302,87 @@ let refresh_label proc =
 	   Symbolic process
 **************************************)
 
+(* in trace_label the second compenent contains the index of the basic process that
+   has performed the action *)
+
 type trace_label =
-  | Output of label * Recipe.recipe * Term.term * Recipe.axiom * Term.term
-  | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term
+  | Output of label * int * Recipe.recipe * Term.term * Recipe.axiom * Term.term
+  | Input of label * int * Recipe.recipe * Term.term * Recipe.recipe * Term.term
   | Comm of internal_communication
-  
-type symbolic_process = 
+
+(* Lucca Hirschi: NOTE - COMPRESSION
+   To implement the first compression step of the optimization, we adopt the
+   following method:
+   1) Each process of the multiset has now a unique index: it is an UID of its channel
+   if the whole process is simple;
+   2) last_action contains all information we need concerning the last action that
+   has been performed;
+   3) ifproper_flag is set to true then the process can not perform any other action.
+*)
+type action = | AInp | AOut | AInit        (* init: no last action *)
+type last_action = {                    (* description of the last action *)
+  action : action;                      (* last action *)
+  id : int;                             (* index of the last process that has performed an action *)
+  improper_flag : bool;                 (* is the last block improper *)
+}
+
+type symbolic_process =
   {
     axiom_name_assoc : (Recipe.recipe * Term.term) list;
-    process : process list; (* Represent a multiset of processes *)
+    process : (process*int) list; (* Represent a multiset of processes with their indexs*)
     constraint_system : Constraint_system.constraint_system;
     forbidden_comm : internal_communication list;
     trace : trace_label list;
-    marked : bool
+    marked : bool;
+    last_action : last_action
   }
-  
-let create_symbolic axiom_name_assoc proc csys = 
+
+let null_last_action = {action = AInit; id = -1; improper_flag = false}
+
+let from_par_to_multiset proc =
+  let index = ref 0 in
+  let rec aux = function
+    | Par(p1,p2) :: q -> (aux [p1]) @ (aux [p2]) @ aux q
+    | Nil :: q -> aux q
+    | p :: q -> incr(index); (p, !index - 1) :: (aux q)
+    | [] -> [] in
+  aux [proc]
+
+let create_symbolic axiom_name_assoc proc csys =
   {
     axiom_name_assoc = axiom_name_assoc;
-    process = [proc];
+    process = from_par_to_multiset proc;
     constraint_system = csys;
     forbidden_comm = [];
     trace = [];
-    marked = false
+    marked = false;
+    last_action = null_last_action;
   }
-  
+
 (******* Display *******)
 
 let display_trace_label r_subst m_subst recipe_term_assoc = function 
-  | Output(label,r_ch,m_ch,ax,t) -> 
+  | Output(label,i, r_ch,m_ch,ax,t) -> 
       let r_ch' = Recipe.apply_substitution r_subst r_ch (fun t f -> f t) in
       let m_ch' = Term.apply_substitution m_subst m_ch (fun t f -> f t) in
       let t' = Term.apply_substitution m_subst t (fun t f -> f t) in
         
-      Printf.sprintf "Output {%d} on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
+      Printf.sprintf "Output {%d} (performed by %i)on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
         label 
+        i
         (Term.display_term m_ch')
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch')
         (Term.display_term t')
         (Recipe.display_axiom ax)
-  | Input(label,r_ch,m_ch,r_t,m_t) ->
+  | Input(label,i,r_ch,m_ch,r_t,m_t) ->
       let r_ch' = Recipe.apply_substitution r_subst r_ch (fun t f -> f t) in
       let m_ch' = Term.apply_substitution m_subst m_ch (fun t f -> f t) in
       let r_t' = Recipe.apply_substitution r_subst r_t (fun t f -> f t) in
       let m_t' = Term.apply_substitution m_subst m_t (fun t f -> f t) in
         
-      Printf.sprintf "Input {%d} on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
-        label 
+      Printf.sprintf "Input {%d} (performed by %i) on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
+        label
+        i
         (Term.display_term m_ch')
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch')
         (Term.display_term m_t')
@@ -407,15 +444,15 @@ let size_trace symb_proc = List.length symb_proc.trace
 
 let map_subst_term trace_l f_apply = 
   List.map (function 
-    | Output(label,r_ch,m_ch,ax,t) -> Output(label,r_ch,f_apply m_ch, ax, f_apply t)
-    | Input(label,r_ch,m_ch,r_t,m_t) -> Input(label,r_ch,f_apply m_ch, r_t, f_apply m_t)
+    | Output(label,i,r_ch,m_ch,ax,t) -> Output(label,i,r_ch,f_apply m_ch, ax, f_apply t)
+    | Input(label,i,r_ch,m_ch,r_t,m_t) -> Input(label,i,r_ch,f_apply m_ch, r_t, f_apply m_t)
     | Comm(intern) -> Comm(intern)
   ) trace_l
   
 let map_subst_recipe trace_l f_apply = 
   List.map (function 
-    | Output(label,r_ch,m_ch,ax,t) -> Output(label,f_apply r_ch,m_ch, ax, t)
-    | Input(label,r_ch,m_ch,r_t,m_t) -> Input(label,f_apply r_ch,m_ch, f_apply r_t, m_t)
+    | Output(label,i,r_ch,m_ch,ax,t) -> Output(label,i,f_apply r_ch,m_ch, ax, t)
+    | Input(label,i,r_ch,m_ch,r_t,m_t) -> Input(label,i,f_apply r_ch,m_ch, f_apply r_t, m_t)
     | Comm(intern) -> Comm(intern)
   ) trace_l
 
@@ -431,20 +468,24 @@ let instanciate_trace symb_proc =
 (******* Transition application ********)  
   
 let apply_internal_transition_without_comm function_next symb_proc = 
-
   let rec go_through prev_proc csys = function
     | [] -> function_next { symb_proc with process = prev_proc; constraint_system = csys }
-    | Nil::q -> go_through prev_proc csys q 
-    | Choice(p1,p2)::q -> 
-        go_through prev_proc csys (p1::q);
-        go_through prev_proc csys (p2::q)
-    | Par(p1,p2)::q -> go_through prev_proc csys (p1::p2::q)
-    | New(_,p,_)::q -> go_through prev_proc csys (p::q)
-    | Let(pat,t,proc,_)::q ->
+    | (Nil,_)::q -> go_through prev_proc csys q 
+    | (Choice(p1,p2), i)::q -> 
+      if !debug_simple then
+        Debug.internal_error "[process.ml >> apply_one_internal_transition_without_comm] The process is not simple (Choice).";
+      go_through prev_proc csys ((p1,i)::q);
+      go_through prev_proc csys ((p2,i)::q)
+    | (Par(p1,p2),i)::q ->
+      if !debug_simple then
+        Debug.internal_error "[process.ml >> apply_one_internal_transition_without_comm] The process is not simple (Par not at top level).";
+      go_through prev_proc csys ((p1,i)::(p2,i)::q)
+    | (New(_,p,_),i)::q -> go_through prev_proc csys ((p,i)::q)
+    | (Let(pat,t,proc,_),i)::q ->
         let eq_to_unify = formula_from_pattern t pat in
         let proc' = Term.unify_and_apply eq_to_unify proc iter_term_process in
-        go_through prev_proc csys (proc'::q)      
-    | IfThenElse(formula,proc_then,proc_else,_)::q ->
+        go_through prev_proc csys ((proc',i)::q)      
+    | (IfThenElse(formula,proc_then,proc_else,_),i)::q ->
         let disj_conj_then = conjunction_from_formula formula
         and disj_conj_else = conjunction_from_formula (negation formula) in
         
@@ -457,7 +498,7 @@ let apply_internal_transition_without_comm function_next symb_proc =
                   Constraint_system.add_message_formula csys_acc formula' 
             ) csys conj_then
           in
-          go_through prev_proc new_csys (proc_then::q)            
+          go_through prev_proc new_csys ((proc_then,i)::q)            
         ) disj_conj_then;
         
         List.iter (fun conj_else ->
@@ -469,9 +510,9 @@ let apply_internal_transition_without_comm function_next symb_proc =
                   Constraint_system.add_message_formula csys_acc formula 
             ) csys conj_else
           in
-          go_through prev_proc new_csys (proc_else::q)            
+          go_through prev_proc new_csys ((proc_else,i)::q)            
         ) disj_conj_else
-    | proc::q -> go_through (proc::prev_proc) csys q
+    | (proc,i)::q -> go_through ((proc,i)::prev_proc) csys q
   in
   
   go_through [] symb_proc.constraint_system symb_proc.process
@@ -481,7 +522,7 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
 
   let rec go_through prev_proc_1 forbid_comm_1 = function
     | [] -> function_next { symb_proc with forbidden_comm = forbid_comm_1 }
-    | (In(ch_in,v,sub_proc_in,label_in) as proc_in)::q_1 -> 
+    | ((In(ch_in,v,sub_proc_in,label_in) as proc_in), _)::q_1 -> 
         let rec search_for_a_out prev_proc_2 forbid_comm_2 = function
           | [] -> go_through (proc_in::prev_proc_1) forbid_comm_2 q_1
           | (Out(ch_out,t_out, sub_proc_out, label_out) as proc_out)::q_2 ->
@@ -498,11 +539,15 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                   
                   let symb_proc_1 = 
                     { symb_proc with
-                      process = prev_proc_1@(sub_proc_in::sub_proc_out::prev_proc_2)@q_2;
+                      process =[];
+                      (* prev_proc_1@(sub_proc_in::sub_proc_out::prev_proc_2)@q_2; *)
                       constraint_system = new_csys_comm_2; 
                       forbidden_comm = new_forbid_comm_2;
                       trace = (Comm { in_label = label_in; out_label = label_out })::symb_proc.trace;
                     }
+                  (* HACK *)
+                and _ = prev_proc_1@(sub_proc_in::sub_proc_out::prev_proc_2)@q_2
+
                   in
                   
                   apply_internal_transition_without_comm 
@@ -516,9 +561,10 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                 end
           | proc::q_2 -> search_for_a_out (proc::prev_proc_2) forbid_comm_2 q_2
         in
-        search_for_a_out [] forbid_comm_1 q_1
+        (* search_for_a_out [] forbid_comm_1 q_1 *)
+        search_for_a_out [] forbid_comm_1 []
         
-    | (Out(ch_out,t_out,sub_proc_out,label_out) as proc_out)::q_1 -> 
+    | ((Out(ch_out,t_out,sub_proc_out,label_out) as proc_out),_)::q_1 -> 
         let rec search_for_a_in prev_proc_2 forbid_comm_2 = function
           | [] -> go_through (proc_out::prev_proc_1) forbid_comm_2 q_1
           | (In(ch_in,v, sub_proc_in, label_in) as proc_in)::q_2 ->
@@ -535,11 +581,13 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                   
                   let symb_proc_1 = 
                     { symb_proc with
-                      process = prev_proc_1@(sub_proc_in::sub_proc_out::prev_proc_2)@q_2;
+                      process = [];
+                      (* prev_proc_1@(sub_proc_in::sub_proc_out::prev_proc_2)@q_2; *)
                       constraint_system = new_csys_comm_2; 
                       forbidden_comm = new_forbid_comm_2;
                       trace = (Comm { in_label = label_in; out_label = label_out })::symb_proc.trace
                     }
+                  and _ =  prev_proc_1@(sub_proc_in::sub_proc_out::prev_proc_2)@q_2
                   in
                   
                   apply_internal_transition_without_comm 
@@ -553,10 +601,13 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                 end
           | proc::q_2 -> search_for_a_in (proc::prev_proc_2) forbid_comm_2 q_2
         in
-        search_for_a_in [] forbid_comm_1 q_1
+        search_for_a_in [] forbid_comm_1 []
+    (* search_for_a_in [] forbid_comm_1 q_1 *)
     | _::_ -> Debug.internal_error "[process.ml >> apply_one_internal_transition_with_comm] The processes in the multiset should all start with either an input or output at this point"
 
   in
+  if !debug_simple then
+    Debug.internal_error "[process.ml >> apply_one_internal_transition_with_comm] Internal communication for simple process?";
   go_through [] symb_proc.forbidden_comm symb_proc.process
   
 let apply_internal_transition with_comm function_next symb_proc = 
@@ -574,9 +625,9 @@ let apply_internal_transition with_comm function_next symb_proc =
 (* We assume in this function that all internal transitions have been applied *)  
 let apply_input function_next ch_var_r t_var_r symb_proc = 
   
-  let rec go_through prev_proc = function
+  let rec go_through prev_proc last_action = function
     | [] -> ()
-    | (In(ch,v,sub_proc,label) as proc)::q ->
+    | ((In(ch,v,sub_proc,label) as proc),i)::q ->
         let y = Term.fresh_variable_from_id Term.Free "y" in
         let t_y = Term.term_of_variable y in
         
@@ -586,59 +637,66 @@ let apply_input function_next ch_var_r t_var_r symb_proc =
         
         let ch_r = Recipe.recipe_of_variable ch_var_r
         and t_r = Recipe.recipe_of_variable t_var_r in
-        
-        let symb_proc' = 
-          { symb_proc with
-            process = (sub_proc::q)@prev_proc;
-            constraint_system = new_csys_3;
-            forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
-            trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v))::symb_proc.trace
-          }
-        in
-        
-        function_next symb_proc';
-        
-        go_through (proc::prev_proc) q
-     | proc::q -> go_through (proc::prev_proc) q
+        if last_action.id = i or (last_action.action = AOut) or (last_action.action = AInit)
+        then begin                                          (* proper block *)
+          let last_action' = {action = AInp; id = i; improper_flag = false} in
+          let symb_proc' = 
+            { symb_proc with
+              process = ((sub_proc,i)::q)@prev_proc;
+              constraint_system = new_csys_3;
+              forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
+              trace = (Input (label,i,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v))::symb_proc.trace;
+              last_action = last_action';
+            }
+          in
+          function_next symb_proc';
+        end
+        else (); (* last block = improper block so this other input can not be performed *)
+        go_through ((proc,i)::prev_proc) last_action q
+    | proc::q -> go_through (proc::prev_proc) last_action q
   in
-  
-  go_through [] symb_proc.process
+
+  go_through [] symb_proc.last_action symb_proc.process
   
 let apply_output function_next ch_var_r symb_proc = 
   
-  let rec go_through prev_proc = function
+  let rec go_through prev_proc last_index = function
     | [] -> ()
-    | (Out(ch,t,sub_proc,label) as proc)::q ->
-        let y = Term.fresh_variable_from_id Term.Free "y"
-        and x = Term.fresh_variable_from_id Term.Free "x" in
-        
-        let t_y = Term.term_of_variable y
-        and t_x = Term.term_of_variable x in
-        
-        let new_csys_1 = Constraint_system.add_new_deducibility_constraint symb_proc.constraint_system ch_var_r t_y  in
-        let new_csys_2 = Constraint_system.add_message_equation new_csys_1 ch  (Term.term_of_variable y) in
-        let new_csys_3 = Constraint_system.add_new_axiom new_csys_2 t_x in
-        let new_csys_4 = Constraint_system.add_message_equation new_csys_3 t_x t in
-        
-        let ch_r = Recipe.recipe_of_variable ch_var_r in
-        
-        let symb_proc' = 
-          { symb_proc with
-            process = (sub_proc::q)@prev_proc;
-            constraint_system = new_csys_4;
-            forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
-            trace = (Output (label,ch_r,Term.term_of_variable y,Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),Term.term_of_variable x))::symb_proc.trace
-          }
-        in
-        
-        function_next symb_proc';
-        
-        go_through (proc::prev_proc) q
-    | proc::q -> go_through (proc::prev_proc) q
+    | ((Out(ch,t,sub_proc,label) as proc), l_i)::q ->
+      let y = Term.fresh_variable_from_id Term.Free "y"
+      and x = Term.fresh_variable_from_id Term.Free "x" in
+      
+      let t_y = Term.term_of_variable y
+      and t_x = Term.term_of_variable x in
+      
+      let new_csys_1 = Constraint_system.add_new_deducibility_constraint symb_proc.constraint_system ch_var_r t_y  in
+      let new_csys_2 = Constraint_system.add_message_equation new_csys_1 ch  (Term.term_of_variable y) in
+      let new_csys_3 = Constraint_system.add_new_axiom new_csys_2 t_x in
+      let new_csys_4 = Constraint_system.add_message_equation new_csys_3 t_x t in
+      
+      let ch_r = Recipe.recipe_of_variable ch_var_r in
+      (* index of this subprocess must be last_index (block of outputs on same channel) *)      
+      if l_i != last_index then Debug.internal_error
+        "[process.ml >> apply_output] Not a simple process (out).";
+
+      let symb_proc' = 
+        { symb_proc with
+          process = ((sub_proc,last_index)::q)@prev_proc;
+          constraint_system = new_csys_4;
+          forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
+          trace = (Output (label,last_index,ch_r,Term.term_of_variable y,Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),Term.term_of_variable x))::symb_proc.trace;
+          last_action = {action = AOut; id = last_index; improper_flag = false};
+        }
+      in
+      
+      function_next symb_proc';
+      
+      go_through ((proc, last_index)::prev_proc) last_index q
+    | proc::q -> go_through (proc::prev_proc) last_index q
   in
   
-  go_through [] symb_proc.process
-  
+  go_through [] symb_proc.last_action.id symb_proc.process
+    
 (*************************************
 	   Display function
 **************************************)  
@@ -741,16 +799,16 @@ let rec sub_display_process n_tab prev_choice prev_par prev_in_out = function
 let display_process = sub_display_process 0 false false false
 
 let display_trace_label_no_unif m_subst recipe_term_assoc = function 
-  | Output(label,r_ch,m_ch,ax,t) -> 
-      Printf.sprintf "Output {%d} on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
-        label 
+  | Output(label,i,r_ch,m_ch,ax,t) -> 
+      Printf.sprintf "Output {%d} (performed by %d) on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
+        label i 
         (Term.display_term (Term.apply_substitution m_subst m_ch (fun t f -> f t)))
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch)
         (Term.display_term (Term.apply_substitution m_subst t (fun t f -> f t)))
         (Recipe.display_axiom ax)
-  | Input(label,r_ch,m_ch,r_t,m_t) ->
-      Printf.sprintf "Input {%d} on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
-        label 
+  | Input(label,i,r_ch,m_ch,r_t,m_t) ->
+      Printf.sprintf "Input {%d} (performed by %d) on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
+        label i 
         (Term.display_term (Term.apply_substitution m_subst m_ch (fun t f -> f t)))
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch)
         (Term.display_term (Term.apply_substitution m_subst m_t (fun t f -> f t)))
@@ -770,8 +828,13 @@ let display_trace_no_unif symb_proc =
   
   Printf.sprintf "%s\n%s\n" trace (Constraint_system.display symb_proc.constraint_system)
 
+let add_dependency_constraint sys variables axioms =
+  let old = sys.constraint_system in
+  let new_cst_system = Constraint_system.add_new_dependency_constraint old variables axioms in
+  { sys with  constraint_system = new_cst_system }
+
 (*************************************
-	     Optimisation
+	     Optimization
 **************************************)  
 
 let is_same_input_output symb_proc1 symb_proc2 = 
@@ -788,14 +851,14 @@ let is_same_input_output symb_proc1 symb_proc2 =
     | [], [] -> true
     | [], _ -> false
     | _,[] -> false
-    | Output(l1,_,_,_,_)::q1, Output(l2,_,_,_,_)::q2 when l1 = l2 -> same_trace (q1,q2)
-    | Input(l1,_,_,_,_)::q1, Input(l2,_,_,_,_)::q2 when l1 = l2 -> same_trace (q1,q2)
+    | Output(l1,_,_,_,_,_)::q1, Output(l2,_,_,_,_,_)::q2 when l1 = l2 -> same_trace (q1,q2)
+    | Input(l1,_,_,_,_,_)::q1, Input(l2,_,_,_,_,_)::q2 when l1 = l2 -> same_trace (q1,q2)
     | Comm({in_label = l1in; out_label = l1out})::q1,Comm({in_label = l2in; out_label = l2out})::q2 when l1in = l2in && l1out = l2out -> same_trace (q1,q2)
-    | Input(l1,_,ch1,_,t1)::q1, Input(l2,_,ch2,_,t2)::q2 when Term.is_equal_and_closed_term ch1 ch2 && Term.is_equal_and_closed_term t1 t2 ->
+    | Input(l1,_,_,ch1,_,t1)::q1, Input(l2,_,_,ch2,_,t2)::q2 when Term.is_equal_and_closed_term ch1 ch2 && Term.is_equal_and_closed_term t1 t2 ->
         switch_label_1 := add_sorted l1 !switch_label_1;
         switch_label_2 := add_sorted l2 !switch_label_2;
         same_trace (q1,q2)
-    | Output(l1,_,ch1,_,t1)::q1, Output(l2,_,ch2,_,t2)::q2 when Term.is_equal_and_closed_term ch1 ch2 && Term.is_equal_and_closed_term t1 t2 ->
+    | Output(l1,_,_,ch1,_,t1)::q1, Output(l2,_,_,ch2,_,t2)::q2 when Term.is_equal_and_closed_term ch1 ch2 && Term.is_equal_and_closed_term t1 t2 ->
         switch_label_1 := add_sorted l1 !switch_label_1;
         switch_label_2 := add_sorted l2 !switch_label_2;
         same_trace (q1,q2)
@@ -804,3 +867,181 @@ let is_same_input_output symb_proc1 symb_proc2 =
   
   same_trace (symb_proc1.trace,symb_proc2.trace) && !switch_label_1 = !switch_label_2
  
+
+let is_improper symP = symP.last_action.improper_flag
+
+
+      (** BEGIN Lucca Hirschi **)
+
+(* ********************************************************************** *)
+(*                 Test whether dependency constraints hold               *)
+(* ********************************************************************** *)
+let test_dependency_constraints symP =
+  (* Test whether one dep. cst hold *)
+  let rec test_cst = function
+    | (_, []) -> true
+    | ([], _::_) -> false
+    | (r::lr , la) -> if Recipe.get_variables_of_recipe r == []
+      (* It is better to first check that r :: lr do not contain any
+      non-ground recipes ? *)
+      then true                         (* cst is not ground *)
+      else (
+        if List.exists (fun ax -> Recipe.ax_occurs ax r) la
+        then true                     (* cst hold thanks to r *)
+        else test_cst (lr, la))
+  in
+  (* Scan the list of dep. csts*)
+  let rec scan_dep_csts = function
+    | [] -> true
+    | cst :: l ->
+      if test_cst cst
+      then scan_dep_csts l
+      else false in
+  scan_dep_csts (Constraint_system.get_dependency_constraints
+                   (get_constraint_system symP))
+
+(* ********************************************************************** *)
+(*                 Build dependency constraints given a symbolic process  *)
+(* ********************************************************************** *)
+exception No_pattern                    (* there is no well-formed pattern *)
+exception Channel_not_ground            (* a channel is not fully instantiated
+                                           (not a simple process?) *)
+
+(* shortcuts *)
+let pp a = Printf.printf "error: %s\n" a
+
+type flagLabel = FIn | FOut           (* flag: last actions is eitehr an input or an output *)
+
+(* Scan a simple trace backward looking for a well-formed pattern assuming that last
+   action of the pattern has been performed by first_perf. Initially, last_perf=-1.
+   If there is such a pattern, it outputs the list of Recipe.axioms of the pattern. *)
+let rec search_pattern first_perf acc last_flag last_perf = function
+  | [] -> if first_perf < last_perf      (* end of a block and last_block > first_block *)
+    then acc
+    else raise No_pattern
+  | Output (_,perf,_,_,ax,_) :: l ->
+    if last_flag == FIn
+    then begin                            (* end of block *)
+      if first_perf < last_perf
+      then acc                            (* enf of block and last_block > first_block -> pattern *)
+      else if (last_perf == -1) || (perf < first_perf)
+          || (perf > first_perf)          (* either begining, inside or end of pattern *)
+      then search_pattern first_perf (ax :: acc) FOut perf l
+      else raise No_pattern;
+    end else                                (* inside a block *)
+      if last_perf != perf then begin (* not a possible (compressed) trace*)
+        Debug.internal_error "[process.ml >> search_pattern] Not a simple process (out: it has not been detected yet!!!).";
+      end else search_pattern first_perf (ax :: acc) FOut perf l
+  | Input (_,perf,_,_,_,_) :: l ->
+    if last_perf != perf then begin (* not a possible (compressed) trace -> pattern*)
+      Debug.internal_error "[process.ml >> search_pattern] Not a simple process (in: it has not been detected yet!!!)."
+    end else ();
+    search_pattern first_perf acc FIn perf l
+
+  | Comm _ :: l -> search_pattern first_perf acc last_flag last_perf l
+
+let count = ref 0                       (* DEBUGGING purpose *)
+let debug_f = ref true                  (* "" *)
+
+(* CF. algorithm.ml|L.236 for a discussion about a trade off. We choose to add
+a dependency constraint only after the last input of any IO block.
+So we require that the trace ends with ....IN.OUT.
+*)
+let generate_dependency_constraints symP =
+  (* We extract the recipes of the last inputs and output it with
+     the remainder of the list and the index of those inputs.
+     last_perf : index that has performed last action (init=-1) *)
+  let rec extract_list_variables acc last_perf = function
+    | ((Output (_,perf,_,_,_,_) :: l) as rl) ->
+      if last_perf != -1 && perf != last_perf     (* TODO: two blocks on same channel? *)
+      then (acc, rl, last_perf)                   (* end of the first block *)
+      else extract_list_variables acc perf l      (* inside first block *)
+    | Input (_, perf, _, _, r, _) :: l ->
+      extract_list_variables (r::acc) perf l      (* perf instead of last_perf for improper blocks *)
+    | Comm _ :: l -> extract_list_variables acc last_perf l
+    | [] -> (acc, [], last_perf) in
+
+  (* Given the recipes of the first inputs, the remaining  trace and
+  the index of those inputs, it outputs the updated symbolic process *)
+  let construct_constraint list_recipes remaining_trace first_index symP =
+    (* looking for a well-formed pattern *)
+    try
+      let list_axioms = search_pattern first_index [] FIn (-1) remaining_trace in
+      (* add the correspondant dependency constraint *)
+      let new_sys  = add_dependency_constraint symP list_recipes list_axioms in
+      (* BEGIN DEBUG *)
+      if !debug_f then begin
+        let dep_cst = Constraint_system.display_dependency_constraints
+          (get_constraint_system new_sys) in
+        Printf.printf "---------------------- A Dependency constraint HAS BEEN ADDED----------------------\n### Dependency constraints: %s\n" dep_cst;
+        Printf.printf "### Symbolic Process: %s\n" (display_trace_no_unif new_sys);
+      end;
+      (* END DEBUG *)
+      new_sys
+    with
+      | No_pattern -> symP
+  in
+  (* BEGIN DEBUG *)
+  incr(count);
+  (* Printf.printf "Count: %d\n" (!count); *)
+  if false && List .length (symP.trace) >= 4 then begin
+    debug_f := true;
+    Printf.printf "&&&&& Construct_dep: %s\n" (display_trace_no_unif symP);
+  end;
+  (* END DEBUG *)
+  match symP.trace with                 (* We force the trace to be ..IN.OUT. *)
+    | (Output (_,perf,_,_,_,_)) :: (Input (_, perf', _, _, r, _)) :: l ->
+      if perf == perf' then begin
+        match extract_list_variables [r] perf l with
+           (* | ([],_,_) -> symP    (\* meaning that the last actions is actually an output *\) *)
+           | (list_recipes, trace, perf) -> construct_constraint list_recipes trace perf symP;
+      end
+      else symP
+    | _ -> symP
+(** End Lucca Hirschi **)
+
+
+      (* DUMMY LUCCA HIRSCHI *)
+
+      (*
+
+(* Type of a simpler trace containing the required information for the generation of 
+   dependency constraints *)
+type simple_trace_label =
+  | SOutput of string * Recipe.axiom        (* channel_id, axiom of outputted message *)
+  | SInput of string * Recipe.variable list (* channel_id, variables of inputted message *)
+
+(* Remark: For the moment, we first compute the entire simple trace associated
+   to a symbolic process. In a less naive version, we should proceed the trace
+   backward step by step (a pattern can be found while generate_simple_trace may
+   fail.) *)
+
+(* Construct the simpler trace given a symbolic process (should apply substitution
+   over channel terms) *)
+let generate_simple_trace symP =
+  let extract_id_channel m_subst m_channel =
+    let mChannel = Term.apply_substitution m_subst m_channel (fun t f -> f t) in
+    try Term.get_id_of_name mChannel
+    with | Term.Not_a_name -> raise Channel_not_ground in
+  let apply_to_action m_subst = function
+    | Output (_, _,_, m_ch, ax, _) ->
+      SOutput (extract_id_channel m_subst m_ch, ax)
+    | Input (_, _,_, m_ch, recipe, _) -> let var_l = Recipe.get_variables_of_recipe recipe in
+      SInput (extract_id_channel m_subst m_ch, var_l) in
+  let message_eq = Constraint_system.get_message_equations symP.constraint_system in
+  let subst = Term.unify message_eq in
+  List.map (apply_to_action subst)
+    (List.filter (function Comm _ -> false | _ -> true) symP.trace)
+
+(* For debugging purpose *)
+let display_simple_trace symP =
+  let simple_trace = generate_simple_trace symP in
+    List.iter (function
+      | SOutput (s, ax) -> Printf.printf "Output on %s whose axiom is %s. -- " s
+        (Recipe.display_axiom ax)
+      | SInput (s, vl) -> Printf.printf "Input on %s whose variables are %s -- " s
+        (String.concat ", " (List.map Recipe.display_variable vl)))
+      simple_trace
+
+
+      *)

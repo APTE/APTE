@@ -81,6 +81,9 @@ val recipe_of_axiom : axiom -> recipe
     @raise Internal_error if [r] is not a variable.*)
 val variable_of_recipe : recipe -> variable
 
+(** [get_variables_of_recipe r] returns the list of variables in [r]. *)
+val get_variables_of_recipe : recipe -> variable list
+
 (** [axiom_of_recipe r] returns the recipe [r] as an axiom.
     @raise Internal_error if [r] is not an axiom.*)
 val axiom_of_recipe : recipe -> axiom
@@ -114,6 +117,9 @@ val is_equal_recipe : recipe -> recipe -> bool
 
 (** [occurs v r] return true iff the variable [v] is in the recipe [r] *)
 val occurs : variable -> recipe -> bool
+
+(** [ax_occurs a r] return true iff the axiom [a] is in the recipe [r] *)
+val ax_occurs : axiom -> recipe -> bool
 
 (** [is_free_variable v] returns [true] iff [v] is free.*)
 val is_free_variable : variable -> bool

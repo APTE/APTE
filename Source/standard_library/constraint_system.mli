@@ -58,6 +58,10 @@ val add_new_deducibility_constraint : constraint_system -> Recipe.variable -> Te
 
 val add_deducibility_constraint : constraint_system -> Constraint.Deducibility.elt list -> constraint_system
 
+(** [add_new_dependency_constraint csys dep] add the constraint [dep] to the dependency
+constraints of [csys]. *)
+val add_new_dependency_constraint : constraint_system -> Recipe.recipe list -> Recipe.axiom list -> constraint_system
+
 (** [add_new_axiom csys t] returns the constraint system [csys] with the frame {% $\Phi \cup \\{ \ax_i, i \ded t\\}$ %}
     where {% $\Phi$ %} is the frame of [csys] and $i-1$ is the maximal support of {% $\Phi$ %}.
     @raise Internal_error if [csys] is the bottom constraint system. *)
@@ -123,7 +127,9 @@ val get_message_equations : constraint_system -> (Term.term * Term.term) list
     of equations between recipes in [csys]. 
     @raise Internal_error if [csys] is the bottom constraint system.*)
 val get_recipe_equations : constraint_system -> (Recipe.recipe * Recipe.recipe) list
-(* TODO: contient l'info de la subst. via mgu dans unification.ml *)
+
+(** [get_dependency_constraints csys] returns the dependency constraints. *)
+val get_dependency_constraints : constraint_system -> (Recipe.recipe list * Recipe.axiom list) list
 
 (** [get_maximal_support csys] returns maximal support of the frame of [csys].
     @raise Internal_error if [csys] is the bottom constraint system.*)
@@ -156,6 +162,8 @@ val check_same_structure : constraint_system -> constraint_system -> unit
 val check_same_shape : constraint_system -> constraint_system -> unit
 
 val display : constraint_system -> string
+
+val display_dependency_constraints : constraint_system -> string
 
 val is_unsatisfiable : constraint_system -> bool
 
