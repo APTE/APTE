@@ -1,0 +1,38 @@
+free c1_a.
+free c2_a.
+free c1_b.
+free c2_b.
+free c1_c.
+free c1_d.
+free c1_s.
+free cc.
+free o1k.
+free o2k.
+free o3k.
+free o4k.
+free o5k.
+free o6k.
+free o7k.
+free okk.
+free ok.
+
+let P2 =
+( in(c1_a,x); if x = ok then out(c1_a,senc((o1k,okk),okk))) |
+( in(c1_b,x); if x = ok then out(c1_b,senc((o2k,okk),okk))) |
+( in(c1_c,x); if x = ok then out(c1_c,senc((o3k,okk),okk))) |
+( in(c1_d,x); if x = ok then out(c1_d,senc((o4k,okk),okk))) |
+( in(c1_s,x); if x = ok then out(c1_s,senc((o5k,okk),okk))) |
+( in(c2_a,x); if x = ok then out(c2_a,senc((o6k,okk),okk))) |
+( in(c2_b,x); if x = ok then out(c2_b,senc((o7k,okk),okk))).
+
+
+let Q2 =
+( in(c1_a,x); if x = ok then out(c1_a,senc((o1k,okk),okk))) |
+( in(c1_b,x); if x = ok then out(c1_b,senc((o2k,okk),okk))) |
+( in(c1_c,x); if x = ok then out(c1_c,senc((o3k,okk),okk))) |
+( in(c1_d,x); if x = ok then out(c1_d,senc((o4k,okk),okk))) |
+( in(c1_s,x); if x = ok then out(c1_s,senc((o5k,okk),okk))) |
+( in(c2_a,x); if x = ok then out(c2_a,senc((o6k,okk),okk))) |
+( in(c2_b,x); if x = ok then out(c2_b,senc((o7k,okk),okk))).
+
+equivalence P2 and Q2.

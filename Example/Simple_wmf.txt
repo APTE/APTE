@@ -1,0 +1,81 @@
+## WMF POUR APTE
+free i1.
+free i2.
+free i3.
+free a.
+free c.
+free c_a.
+free c_b.
+free c_s.
+free ok.
+
+let A m kas =
+ new kab;
+ out(c_a, senc((i1,kab),kas));
+ out(c_a, senc((i2,m),kab)).
+
+let S kas ksb =
+ in(c_s, x);
+ let (x1,y) = sdec(x,kas) in
+ if x1 = i1
+ then
+   out(c_s, senc((i3,y),ksb)).
+
+let B ksb =
+ in(c_b,x);
+ let (x1,y) = sdec(x,ksb) in
+ if x1 = i3
+ then
+   in(c_b,z);
+   let (x2,w) = sdec(z,y) in
+   if x2 = i2
+   then
+     out(c_b,ok).
+
+let Inst m =
+ new K_as;
+ new K_sb;
+ ((A m K_as) | (S K_as K_sb) | (B K_as)).
+
+let B_Spec m ksb =
+ in(c_b,x);
+ let (x1,y) = sdec(x,ksb) in
+ if x1 = i3
+ then
+   in(c_b,z);
+   let (x2,w) = sdec(z,y) in
+   if x2 = i2
+   then
+     if w = m
+     then
+       out(c_b,ok).
+
+let Inst_Spec m =
+ new K_as;
+ new K_sb;
+ ((A m K_as) | (S K_as K_sb) | (B_Spec m K_as)).
+
+let Auth1 = 
+in(c,x);
+(Inst x).
+
+let Auth2 = 
+in(c,x);
+(Inst_Spec x).
+
+equivalence Auth1 and Auth2.
+
+# let Auth1_2 = 
+# ((in(c,x);
+# Inst x)
+# | (in(c,x);
+# Inst x)).
+
+# let Auth2_2 = 
+# ((in(c,x);
+# Inst_Spec x)
+# | (in(c,x);
+# Inst_Spec x)).
+
+
+# equivalence Auth1_2 and Auth2_2.
