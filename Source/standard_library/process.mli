@@ -57,6 +57,10 @@ val display_process : process -> string
 
 type symbolic_process 
 
+(** [from_par_to_multiset p] splits the basic processes of [p] under Par into a
+    multiset of basic processes and order them (indexs). *)
+val from_par_to_multiset : symbolic_process -> symbolic_process
+
 val create_symbolic : (Recipe.recipe * Term.term) list -> process -> Constraint_system.constraint_system -> symbolic_process
 
 val display_trace : symbolic_process -> string

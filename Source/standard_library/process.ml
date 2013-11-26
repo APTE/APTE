@@ -302,13 +302,6 @@ let refresh_label proc =
 	   Symbolic process
 **************************************)
 
-(* in trace_label the second compenent contains the index of the basic process that
-   has performed the action *)
-
-type trace_label =
-  | Output of label * int * Recipe.recipe * Term.term * Recipe.axiom * Term.term
-  | Input of label * int * Recipe.recipe * Term.term * Recipe.recipe * Term.term
-  | Comm of internal_communication
 
 (* Lucca Hirschi: NOTE - COMPRESSION
    To implement the first compression step of the optimization, we adopt the
@@ -318,12 +311,31 @@ type trace_label =
    2) last_action contains all information we need concerning the last action that
    has been performed;
    3) ifproper_flag is set to true then the process can not perform any other action.
+   4) we accept a "non-simple prefix" of actions: e.g. New k.in x.out k.(P_s) is acceptable
+   if P_s is a simple process. In order to allow such processes we do the following:
+      - initially, last_action.action is set to APrefix
+      - until we find a par (i.e. |) at top level, we go trough actions at top level
+        without applying compression or reduction (and last_action.action remains
+        APrefix)
+      - as soon as we find a par (i.e. |) at top level, we give a unique UID as index
+        for each sub processes (i.e. basic processes) and start to apply compression
+        and reduction with last-action.action = AInit.
 *)
-type action = | AInp | AOut | AInit        (* init: no last action *)
-type last_action = {                    (* description of the last action *)
-  action : action;                      (* last action *)
-  id : int;                             (* index of the last process that has performed an action *)
-  improper_flag : bool;                 (* is the last block improper *)
+
+(* In trace_label the second compenent contains the index of the basic process that
+   has performed the action and (-1) for the "non-simple prefix"  *)
+
+type trace_label =
+  | Output of label * int * Recipe.recipe * Term.term * Recipe.axiom * Term.term
+  | Input of label * int * Recipe.recipe * Term.term * Recipe.recipe * Term.term
+  | Comm of internal_communication
+
+type action = | AInp | AOut | AInit | AStart    (* init: no last action *)
+type last_action = {                            (* description of the last action *)
+  action : action;                              (* last action *)
+  id : int;                                     (* index of the last process that
+                                                   has performed an action *)
+  improper_flag : bool;                         (* is the last block improper *)
 }
 
 type symbolic_process =
@@ -339,19 +351,26 @@ type symbolic_process =
 
 let null_last_action = {action = AInit; id = -1; improper_flag = false}
 
-let from_par_to_multiset proc =
+let from_par_to_multiset symP =
   let index = ref 0 in
   let rec aux = function
     | Par(p1,p2) :: q -> (aux [p1]) @ (aux [p2]) @ aux q
     | Nil :: q -> aux q
     | p :: q -> incr(index); (p, !index - 1) :: (aux q)
     | [] -> [] in
-  aux [proc]
+  if symP.last_action.action == AInit then
+    match symP.process with
+      | [((Par(_,_) as p),-1)] -> {symP with
+        process = aux [p];
+        last_action = {symP.last_action with action = AStart;}
+      }
+      | _ -> symP
+  else symP
 
 let create_symbolic axiom_name_assoc proc csys =
   {
     axiom_name_assoc = axiom_name_assoc;
-    process = from_par_to_multiset proc;
+    process = [(proc, -1)];             (* -1 (we do not have yet splitted proc) *)
     constraint_system = csys;
     forbidden_comm = [];
     trace = [];
@@ -367,7 +386,7 @@ let display_trace_label r_subst m_subst recipe_term_assoc = function
       let m_ch' = Term.apply_substitution m_subst m_ch (fun t f -> f t) in
       let t' = Term.apply_substitution m_subst t (fun t f -> f t) in
         
-      Printf.sprintf "Output {%d} (performed by %i)on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
+      Printf.sprintf "Output {%d} (performed by %i) on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
         label 
         i
         (Term.display_term m_ch')
@@ -473,13 +492,20 @@ let apply_internal_transition_without_comm function_next symb_proc =
     | (Nil,_)::q -> go_through prev_proc csys q 
     | (Choice(p1,p2), i)::q -> 
       if !debug_simple then
-        Debug.internal_error "[process.ml >> apply_one_internal_transition_without_comm] The process is not simple (Choice).";
+        Debug.internal_error "[process.ml >> apply_one_internal_transition_without_comm] The process is not simple (forbidden construction: Choice).";
       go_through prev_proc csys ((p1,i)::q);
       go_through prev_proc csys ((p2,i)::q)
-    | (Par(p1,p2),i)::q ->
-      if !debug_simple then
-        Debug.internal_error "[process.ml >> apply_one_internal_transition_without_comm] The process is not simple (Par not at top level).";
-      go_through prev_proc csys ((p1,i)::(p2,i)::q)
+    | (Par(p1,p2) as proc,i)::q ->
+      if symb_proc.last_action.action == AInit && prev_proc == [] && q == []
+      then begin  (* In that case, we have reached the end of the "non simple prefix" *)
+        (* We know here that the multiset only contains Par(p1,p2): we skip. And before
+        applying external actions, we will split this Par. *)
+        go_through ((proc,i)::prev_proc) csys q
+      end else begin              (* Error: non (extended) simple *)
+        if !debug_simple then
+          Debug.internal_error "[process.ml >> apply_one_internal_transition_without_comm] The process is not simple (Par not at top level).";
+        go_through prev_proc csys ((p1,i)::(p2,i)::q);
+      end
     | (New(_,p,_),i)::q -> go_through prev_proc csys ((p,i)::q)
     | (Let(pat,t,proc,_),i)::q ->
         let eq_to_unify = formula_from_pattern t pat in
@@ -637,10 +663,15 @@ let apply_input function_next ch_var_r t_var_r symb_proc =
         
         let ch_r = Recipe.recipe_of_variable ch_var_r
         and t_r = Recipe.recipe_of_variable t_var_r in
-        if last_action.id = i or (last_action.action = AOut) or (last_action.action = AInit)
+        if last_action.id = i or (last_action.action != AInp)
         then begin                                          (* proper block *)
-          let last_action' = {action = AInp; id = i; improper_flag = false} in
-          let symb_proc' = 
+          let last_action' = {
+            action = if last_action.action == AInit
+              then AInit
+              else AInp;
+            id = i;
+            improper_flag = false} in
+          let symb_proc' =
             { symb_proc with
               process = ((sub_proc,i)::q)@prev_proc;
               constraint_system = new_csys_3;
@@ -676,8 +707,8 @@ let apply_output function_next ch_var_r symb_proc =
       
       let ch_r = Recipe.recipe_of_variable ch_var_r in
       (* index of this subprocess must be last_index (block of outputs on same channel) *)      
-      if l_i != last_index then Debug.internal_error
-        "[process.ml >> apply_output] Not a simple process (out).";
+      if (last_index != -1) && (l_i != last_index)
+      then Debug.internal_error "[process.ml >> apply_output] Not a simple process (out).";
 
       let symb_proc' = 
         { symb_proc with
@@ -685,7 +716,13 @@ let apply_output function_next ch_var_r symb_proc =
           constraint_system = new_csys_4;
           forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
           trace = (Output (label,last_index,ch_r,Term.term_of_variable y,Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),Term.term_of_variable x))::symb_proc.trace;
-          last_action = {action = AOut; id = last_index; improper_flag = false};
+          last_action = {
+            action = if last_index == -1
+              then AInit
+              else AOut;
+            id = last_index;
+            improper_flag = false;
+          };
         }
       in
       
@@ -695,7 +732,11 @@ let apply_output function_next ch_var_r symb_proc =
     | proc::q -> go_through (proc::prev_proc) last_index q
   in
   
-  go_through [] symb_proc.last_action.id symb_proc.process
+  let last_action = symb_proc.last_action in
+  let last_index = if last_action.action == AInit
+    then -1
+    else last_action.id in
+  go_through [] last_index symb_proc.process
     
 (*************************************
 	   Display function
@@ -936,16 +977,20 @@ let rec search_pattern first_perf acc last_flag last_perf = function
     then begin                            (* end of block *)
       if first_perf < last_perf
       then acc                            (* enf of block and last_block > first_block -> pattern *)
-      else if (last_perf == -1) || (perf < first_perf)
-          || (perf > first_perf)          (* either begining, inside or end of pattern *)
+      else if (perf != -1) && ((last_perf == -1) || (perf < first_perf)
+          || (perf > first_perf))         (* either begining, inside or end of pattern *)
       then search_pattern first_perf (ax :: acc) FOut perf l
       else raise No_pattern;
     end else                                (* inside a block *)
-      if last_perf != perf then begin (* not a possible (compressed) trace*)
+      if (perf == -1)
+      then raise No_pattern
+      else if last_perf != perf then begin (* not a possible (compressed) trace*)
         Debug.internal_error "[process.ml >> search_pattern] Not a simple process (out: it has not been detected yet!!!).";
       end else search_pattern first_perf (ax :: acc) FOut perf l
   | Input (_,perf,_,_,_,_) :: l ->
-    if last_perf != perf then begin (* not a possible (compressed) trace -> pattern*)
+    if perf == -1
+    then raise No_pattern
+    else if last_perf != perf then begin (* not a possible (compressed) trace -> pattern*)
       Debug.internal_error "[process.ml >> search_pattern] Not a simple process (in: it has not been detected yet!!!)."
     end else ();
     search_pattern first_perf acc FIn perf l
