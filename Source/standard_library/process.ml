@@ -708,26 +708,25 @@ let apply_output function_next ch_var_r symb_proc =
       let ch_r = Recipe.recipe_of_variable ch_var_r in
       (* index of this subprocess must be last_index (block of outputs on same channel) *)      
       if (last_index != -1) && (l_i != last_index)
-      then Debug.internal_error "[process.ml >> apply_output] Not a simple process (out).";
+      then go_through ((proc,l_i)::prev_proc) last_index q
+      else let symb_proc' =
+             { symb_proc with
+               process = ((sub_proc,last_index)::q)@prev_proc;
+               constraint_system = new_csys_4;
+               forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
+               trace = (Output (label,last_index,ch_r,Term.term_of_variable y,
+                                Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),
+                                Term.term_of_variable x))::symb_proc.trace;
+               last_action = {
+                 action = if last_index == -1
+                   then AInit
+                   else AOut;
+                 id = last_index;
+                 improper_flag = false;
+               };
+             } in
+           function_next symb_proc';
 
-      let symb_proc' = 
-        { symb_proc with
-          process = ((sub_proc,last_index)::q)@prev_proc;
-          constraint_system = new_csys_4;
-          forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
-          trace = (Output (label,last_index,ch_r,Term.term_of_variable y,Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),Term.term_of_variable x))::symb_proc.trace;
-          last_action = {
-            action = if last_index == -1
-              then AInit
-              else AOut;
-            id = last_index;
-            improper_flag = false;
-          };
-        }
-      in
-      
-      function_next symb_proc';
-      
       go_through ((proc, last_index)::prev_proc) last_index q
     | proc::q -> go_through (proc::prev_proc) last_index q
   in
@@ -910,6 +909,11 @@ let is_same_input_output symb_proc1 symb_proc2 =
  
 
       (** BEGIN Lucca Hirschi **)
+
+let display_symb_process symP =
+  Printf.printf "##################### Symbolic Process ###########################\n";
+  List.iter (fun (p,i) -> Printf.printf "## Process (index %d): %s\n" i (display_process p))
+    symP.process
 
 let is_improper symP = symP.last_action.improper_flag
 
