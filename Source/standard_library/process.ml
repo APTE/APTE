@@ -945,12 +945,14 @@ let test_dependency_constraints symP =
       else false in
 
   (* BEGIN DEBUG *)
-  let csts = (Constraint_system.get_dependency_constraints
-                   (get_constraint_system symP)) in
-  if List.length csts <> 0 && !debug_f then begin
-    Printf.printf "We will check those dependency constraints: %s\n"
-      (Constraint_system.display_dependency_constraints (get_constraint_system symP));
-    Printf.printf "Do those constraints hold?: %B.\n" (scan_dep_csts csts);
+  if !Debug.red then begin
+    let csts = (Constraint_system.get_dependency_constraints
+                  (get_constraint_system symP)) in
+    if List.length csts <> 0 then begin
+      Printf.printf "We will check those dependency constraints: %s\n"
+        (Constraint_system.display_dependency_constraints (get_constraint_system symP));
+      Printf.printf "Do those constraints hold?: %B.\n" (scan_dep_csts csts);
+    end;
   end;
   (* END DEBUG *)
 
@@ -963,9 +965,6 @@ let test_dependency_constraints symP =
 exception No_pattern                    (* there is no well-formed pattern *)
 exception Channel_not_ground            (* a channel is not fully instantiated
                                            (not a simple process?) *)
-
-(* shortcuts *)
-let pp a = Printf.printf "error: %s\n" a
 
 type flagLabel = FIn | FOut           (* flag: last actions is eitehr an input or an output *)
 
@@ -1030,7 +1029,7 @@ let generate_dependency_constraints symP =
       (* add the correspondant dependency constraint *)
       let new_sys  = add_dependency_constraint symP list_recipes list_axioms in
       (* BEGIN DEBUG *)
-      if !debug_f then begin
+      if !Debug.red then begin
         let dep_cst = Constraint_system.display_dependency_constraints
           (get_constraint_system new_sys) in
         Printf.printf "---------------------- A Dependency constraint HAS BEEN ADDED----------------------\n### Dependency constraints: %s\n" dep_cst;
@@ -1041,14 +1040,6 @@ let generate_dependency_constraints symP =
     with
       | No_pattern -> symP
   in
-  (* BEGIN DEBUG *)
-  incr(count);
-  (* Printf.printf "Count: %d\n" (!count); *)
-  if false && List .length (symP.trace) >= 4 then begin
-    debug_f := true;
-    Printf.printf "&&&&& Construct_dep: %s\n" (display_trace_no_unif symP);
-  end;
-  (* END DEBUG *)
   match symP.trace with                 (* We force the trace to be ..IN.OUT. *)
     | (Output (_,perf,_,_,_,_)) :: (Input (_, perf', _, _, r, _)) :: l ->
       if perf == perf' then begin

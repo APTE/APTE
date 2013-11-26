@@ -26,7 +26,7 @@ let print_help () =
   Printf.printf "   Algorithm for Proving Trace Equivalence\n\n";
   Printf.printf "Version 0.3alpha\n\n";
   Printf.printf "Synopsis :\n";
-  Printf.printf "      apte [-debug [high|low|none]] file\n";
+  Printf.printf "      apte [-debug [high|low|none]] [-verbose [L]] file\n";
   Printf.printf "Options :\n";
   Printf.printf "      -debug [high|low|none] : APTE is programmed with three level of debugging.\n";
   Printf.printf "          The High debugging option checks several invariants of the algorithms.\n";
@@ -34,7 +34,12 @@ let print_help () =
   Printf.printf "          algorithm slower.\n";
   Printf.printf "          The Low debugging option only checks basic invariants. (default) \n";
   Printf.printf "          The None debugging option does not check any invariant. Chose this option\n";
-  Printf.printf "          for optimal running time.\n"
+  Printf.printf "          for optimal running time.\n";
+  Printf.printf "      -verbose [L] :  It is possible to specify which kind of information you\n\
+                \          want APTE to display with the the list [L]. The list can contain:\n\
+                \          csts: display the systems of constraints; proc: display the process,\n\
+                \          compression: display information about the compression step; reduction:\n\
+                \          same for reduction; size: display sizes of matrixs.\n"
   
 (************************
 ***       Parsing     ***
@@ -128,8 +133,10 @@ let _ =
   let path = ref "" in
   let arret = ref false in
   let i = ref 1 in
-  
-  while !i < Array.length Sys.argv && not !arret do
+  let find = ref false in
+  let verbose_list = ref [] in
+
+  while !i < Array.length Sys.argv && not !arret && not !find do
     match (Sys.argv).(!i) with
       | "-debug" when not (!i+1 = (Array.length Sys.argv)) -> 
           if (Sys.argv).(!i+1) = "none"
@@ -137,16 +144,33 @@ let _ =
           else if (Sys.argv).(!i+1) = "high"
           then Debug.initialise_debugging Debug.High
           else Debug.initialise_debugging Debug.Low;
-          
-	  i := !i + 2
+      | "-verbose" when not (!i+1 = (Array.length Sys.argv)) ->
+        incr(i);
+        while !i < Array.length Sys.argv - 1 && not !arret do
+          match (Sys.argv).(!i) with
+            | "csts" -> verbose_list := Debug.Csts :: !verbose_list;
+              incr(i)
+            | "proc" -> verbose_list := Debug.Proc :: !verbose_list;
+              incr(i)
+            | "compression" -> verbose_list := Debug.Compression :: !verbose_list;
+              incr(i)
+            | "reduction" -> verbose_list := Debug.Reduction :: !verbose_list;
+              incr(i)
+            | "size" -> verbose_list := Debug.Size :: !verbose_list;
+              incr(i)
+            | _ -> arret := true
+        done
       | str_path -> 
-          path := str_path;
-	  i := !i + 1
+        path := str_path;
+        i := !i + 1;
+        find := true;
   done;
+  
+  Debug.initialise_verbose !verbose_list;
   
   if Array.length Sys.argv <= 1
   then arret := true;
-	
+
   if !arret || !path = ""
   then print_help ()
   else 

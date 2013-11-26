@@ -44,3 +44,19 @@ val high_debugging : (unit -> unit) -> unit
 val low_debugging : (unit -> unit) -> unit
 
 val display_debug : string -> unit
+
+(*** Verbose ***)
+type verbose_arg =
+  | Proc
+  | Csts
+  | Compression
+  | Reduction
+  | Size
+
+val proc : bool ref
+val csts : bool ref
+val compr : bool ref
+val red : bool ref
+val size : bool ref
+
+val initialise_verbose : verbose_arg list -> unit

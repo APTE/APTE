@@ -57,3 +57,24 @@ let display_debug str =
   flush_all ()*)
   
 let display_debug _ = ()
+
+type verbose_arg =
+  | Proc
+  | Csts
+  | Compression
+  | Reduction
+  | Size
+
+let proc = ref false
+let csts = ref false
+let compr = ref false
+let red = ref false
+let size = ref false
+
+let rec initialise_verbose = function
+  | [] -> ()
+  | Proc :: tl -> proc := true; initialise_verbose tl
+  | Csts :: tl -> csts := true; initialise_verbose tl
+  | Compression :: tl -> compr := true; initialise_verbose tl
+  | Reduction :: tl -> red := true; initialise_verbose tl
+  | Size :: tl -> size := true; initialise_verbose tl
