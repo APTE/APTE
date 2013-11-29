@@ -459,9 +459,9 @@ let decide_trace_equivalence process1 process2 =
         Output;Input;
         Output;Input;
         Output;Input;Output ] nb_free_names [symb_proc1] [symb_proc2];
-      Printf.printf "Number of final tests: %d.\n" (!final_test_count);
-      Printf.printf "Number of pruned roots corresponding to improper traces (executions killed): %d.\n" (- !improper_killed);
       Printf.printf "Number of pruned roots thanks to reduction: %d.\n" (- !non_reduced_killed);
+      Printf.printf "Number of pruned roots corresponding to improper traces (executions killed): %d.\n" (- !improper_killed);
+      Printf.printf "Number of final tests: %d.\n" (!final_test_count);
       true
     with
       | Not_equivalent_left sym_proc ->
