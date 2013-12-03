@@ -1,5 +1,5 @@
 APTE : Algorithm for Proving Trace Equivalence
-Version : 0.3.1beta
+Version : 0.3.2beta
 
 For more information, visit the [dedicated website.](http://projects.lsv.ens-cachan.fr/APTE/).
 
