@@ -1,22 +1,3 @@
-(*************************************************************************
-** APTE v0.3.2beta - Algorithm for Proving Trace Equivalence            **
-**                                                                      **
-** Copyright (C) 2013  Vincent Cheval                                   **
-**                                                                      **
-** This program is free software: you can redistribute it and/or modify **
-** it under the terms of the GNU General Public License as published by **
-** the Free Software Foundation, either version 3 of the License, or    **
-** any later version.                                                   **
-**                                                                      **
-** This program is distributed in the hope that it will be useful,      **
-** but WITHOUT ANY WARRANTY; without even the implied warranty of       **
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 **
-** See the GNU General Public License for more details.                 **
-**                                                                      **
-** You should have received a copy of the GNU General Public License    **
-** along with this program.  If not, see http://www.gnu.org/licenses/   **
-**************************************************************************)
-
 open Standard_library
 
 (***********************************
@@ -62,7 +43,7 @@ type declaration =
   | ProcDecl of ident * ident list * process
   | FuncDecl of ident * int
   | LengthDecl of ident * (float * float list)
-  | LengthTupleDecl of int * (float * float list)
+  | LengthTupleDecl of int * (float * float list) * int
   | FreeNameDecl of ident
   | Equivalence of process * process
   | EquivalenceLength of process * process
@@ -310,8 +291,11 @@ let parse_one_declaration = function
       environment := parse_process_declaration !environment id var_list proc
   | LengthDecl (id,(cst,args)) ->
       parse_length_declaration !environment id (cst,args)
-  | LengthTupleDecl (ar,(cst,args)) ->  
-      Length_equivalence.Length.length_functions := (Term.get_tuple ar,(cst,args)):: !Length_equivalence.Length.length_functions
+  | LengthTupleDecl (ar,(cst,args),line) ->  
+      let f = Term.get_tuple ar in
+      if ar = List.length args
+      then Length_equivalence.Length.length_functions := (f,(cst,args)):: !Length_equivalence.Length.length_functions
+      else error_message line (Printf.sprintf "The function tuple(%d) is given %d length coefficients for its arguments but is expecting %d coefficients" ar (List.length args) ar);
   | FuncDecl (id,arity) -> 
       environment := parse_function_declaration !environment id arity
   | FreeNameDecl id ->

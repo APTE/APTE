@@ -1,22 +1,3 @@
-(*************************************************************************
-** APTE v0.3.2beta - Algorithm for Proving Trace Equivalence            **
-**                                                                      **
-** Copyright (C) 2013  Vincent Cheval                                   **
-**                                                                      **
-** This program is free software: you can redistribute it and/or modify **
-** it under the terms of the GNU General Public License as published by **
-** the Free Software Foundation, either version 3 of the License, or    **
-** any later version.                                                   **
-**                                                                      **
-** This program is distributed in the hope that it will be useful,      **
-** but WITHOUT ANY WARRANTY; without even the implied warranty of       **
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 **
-** See the GNU General Public License for more details.                 **
-**                                                                      **
-** You should have received a copy of the GNU General Public License    **
-** along with this program.  If not, see http://www.gnu.org/licenses/   **
-**************************************************************************)
-
 (************************
 ***       Types       ***
 *************************)
@@ -308,13 +289,7 @@ let is_name t = match t with
 let is_name_status s t = match t with
   | Name(n) when n.status = s -> true
   | _ -> false
-
-exception Not_a_name  
-
-let get_id_of_name t = match t with
-  | Name name -> name.id_n
-  | _ -> raise Not_a_name
-
+  
 let is_function t = match t with
   | Func(_,_) -> true
   | _ -> false
@@ -339,7 +314,8 @@ let map_args f_map = function
   | _ -> Debug.internal_error "[terms.ml >> map_args] The term is not a function application"
   
 let fold_left_args2 f_acc acc term l = match term with
-  | Func(_,l_args) -> List.fold_left2 f_acc acc l_args l
+  | Func(_,l_args) -> 
+      List.fold_left2 f_acc acc l_args l
   | _ -> Debug.internal_error "[terms.ml >> fold_left_args2] The term is not a function application"
   
 (*********************************
