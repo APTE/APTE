@@ -53,9 +53,6 @@ debug: display .depend $(COMPILE_DEBUG) $(MODULES_DEBUG)
 .ml.cmx: 
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
 
-.PHONY: %.mod %.debug %.clean
-#	 standard_library.mod trace_equivalence.mod length_equivalence.mod parser.mod
-
 %.mod :
 	@echo
 	@cd $* && $(MAKE)
