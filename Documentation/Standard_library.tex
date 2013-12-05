@@ -1,0 +1,5626 @@
+\section{Module {\tt{Term}} : Operations on terms}
+\label{module:Term}\index{Term@\verb`Term`}
+
+
+
+
+\ocamldocvspace{0.5cm}
+
+
+
+This module regroups all the functions that manipulate terms. In~\thesis, the terms
+    are splitted into first (resp. second) order terms called messages (resp. recipe). 
+    In this module, we focus on the messages. The recipe are handled in a different module. 
+
+
+
+\subsection{Symbol}
+
+
+
+
+A symbol can be a destructor or a constructor.
+
+
+
+\label{type:Term.symbol}\begin{ocamldoccode}
+type symbol 
+\end{ocamldoccode}
+\index{symbol@\verb`symbol`}
+\begin{ocamldocdescription}
+The type {\tt{symbol}} represents the type of function symbol.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Built-in signature}
+
+
+
+
+The algorithm described in~\thesis~considers a fix set of cryptographic primitives
+    whose behaviour is defined by rewrite rules plus any number of constructors. Thus, we directly defined
+    here this set of cryptographics primitives. 
+
+
+
+\subparagraph{Built-in constructors}
+
+
+
+
+\label{val:Term.senc}\begin{ocamldoccode}
+val senc : symbol
+\end{ocamldoccode}
+\index{senc@\verb`senc`}
+\begin{ocamldocdescription}
+{\tt{senc}} is the symbol for symmetric encryption (arity 2).
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.aenc}\begin{ocamldoccode}
+val aenc : symbol
+\end{ocamldoccode}
+\index{aenc@\verb`aenc`}
+\begin{ocamldocdescription}
+{\tt{aenc}} is the symbol for asymmetric encryption (arity 2).
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.pk}\begin{ocamldoccode}
+val pk : symbol
+\end{ocamldoccode}
+\index{pk@\verb`pk`}
+\begin{ocamldocdescription}
+{\tt{pk}} is the symbol for asymmetric public key (arity 1).
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.vk}\begin{ocamldoccode}
+val vk : symbol
+\end{ocamldoccode}
+\index{vk@\verb`vk`}
+\begin{ocamldocdescription}
+{\tt{vk}} is the symbol for public verification key used in signature (arity 1).
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.sign}\begin{ocamldoccode}
+val sign : symbol
+\end{ocamldoccode}
+\index{sign@\verb`sign`}
+\begin{ocamldocdescription}
+{\tt{sign}} is the symbol for asymmetric public key (arity 1).
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.hash}\begin{ocamldoccode}
+val hash : symbol
+\end{ocamldoccode}
+\index{hash@\verb`hash`}
+\begin{ocamldocdescription}
+{\tt{hash}} is the symbol for hash function (arity 1).
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subparagraph{Built-in destructors}
+
+
+
+
+\label{val:Term.sdec}\begin{ocamldoccode}
+val sdec : symbol
+\end{ocamldoccode}
+\index{sdec@\verb`sdec`}
+\begin{ocamldocdescription}
+{\tt{sdec}} is the symbol for symmetric decryption (arity 2).
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.adec}\begin{ocamldoccode}
+val adec : symbol
+\end{ocamldoccode}
+\index{adec@\verb`adec`}
+\begin{ocamldocdescription}
+{\tt{adec}} is the symbol for asymmetric decryption (arity 2).
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.checksign}\begin{ocamldoccode}
+val checksign : symbol
+\end{ocamldoccode}
+\index{checksign@\verb`checksign`}
+\begin{ocamldocdescription}
+{\tt{checksign}} is the symbol for signature verification (arity 2).
+
+
+\end{ocamldocdescription}
+
+
+
+
+Although the algorithm described in~\thesis~ only have a pair function of arity 2 with its
+    associated projection, it can be extended to tuple of any arity. Thus, a user we be allowed to 
+    use such tuple.
+
+
+
+\label{val:Term.nth-underscoreprojection}\begin{ocamldoccode}
+val nth_projection : symbol -> int -> symbol
+\end{ocamldoccode}
+\index{nth-underscoreprojection@\verb`nth_projection`}
+\begin{ocamldocdescription}
+{\tt{nth\_projection f i}} returns the projection function symbol of the {\tt{i}}$^{th}$ element of tuple function symbol {\tt{f}}.
+    Note that for a tuple of arity {\tt{n}}, the range of {\tt{i}} is {\tt{1...n}}.
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if {\tt{f}} is not a tuple.
+\item {\tt{Not\_found}} if {\tt{f}} was not previously introduced by {\tt{get\_tuple}}.
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.get-underscoreprojections}\begin{ocamldoccode}
+val get_projections : symbol -> symbol list
+\end{ocamldoccode}
+\index{get-underscoreprojections@\verb`get_projections`}
+\begin{ocamldocdescription}
+{\tt{get\_projections f}} returns the list {\tt{[f\_1;...;f\_n]}} with {\tt{f\_i}} is the projection 
+    function symbol of the {\tt{i}}$^{th}$ element of the tuple function symbol {\tt{f}}.
+    It returns the same result as {\tt{[nth\_projection f 1; ...; nth\_projection f n]}}.
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if {\tt{f}} is not a tuple.
+\item {\tt{Not\_found}} if {\tt{f}} was not previously introduced by {\tt{get\_tuple}}.
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.all-underscoretuple}\begin{ocamldoccode}
+val all_tuple : symbol list Pervasives.ref
+\end{ocamldoccode}
+\index{all-underscoretuple@\verb`all_tuple`}
+\begin{ocamldocdescription}
+The list contains all tuples introduced by the algorithm.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.all-underscoreconstructors}\begin{ocamldoccode}
+val all_constructors : symbol list Pervasives.ref
+\end{ocamldoccode}
+\index{all-underscoreconstructors@\verb`all_constructors`}
+\begin{ocamldocdescription}
+The list of all constructors (included the tupple function symbol) used in the algorithm.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.number-underscoreof-underscoreconstructors}\begin{ocamldoccode}
+val number_of_constructors : int Pervasives.ref
+\end{ocamldoccode}
+\index{number-underscoreof-underscoreconstructors@\verb`number_of_constructors`}
+\begin{ocamldocdescription}
+The number of constructors used in the algorithm.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Addition}
+
+
+
+
+\label{val:Term.new-underscoreconstructor}\begin{ocamldoccode}
+val new_constructor : int -> string -> symbol
+\end{ocamldoccode}
+\index{new-underscoreconstructor@\verb`new_constructor`}
+\begin{ocamldocdescription}
+{\tt{new\_symbol ar s}} creates a constructor function symbol with the name {\tt{s}} and the arity {\tt{ar}}.
+    The resulting symbol is automatically added into {\tt{all\_constructors}}. 
+    Moreover, {\tt{number\_of\_constructors}} is increased by 1.
+    Note that if the constructor is in fact a tuple, it is better to use {\tt{get\_tuple}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.get-underscoretuple}\begin{ocamldoccode}
+val get_tuple : int -> symbol
+\end{ocamldoccode}
+\index{get-underscoretuple@\verb`get_tuple`}
+\begin{ocamldocdescription}
+{\tt{get\_tuple ar}} get the function symbol for tuple of arity {\tt{ar}}.
+    If such function symbol was not created yet, it creates it and 
+    the resulting symbol is automatically added into {\tt{all\_constructors}}.
+    Moreover, {\tt{number\_of\_constructors}} is increased by 1.
+    At last, the associated projection function symbol are automatically added into {\tt{all\_projection}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Symbol testing}
+
+
+
+
+\label{val:Term.is-underscoreequal-underscoresymbol}\begin{ocamldoccode}
+val is_equal_symbol : symbol -> symbol -> bool
+\end{ocamldoccode}
+\index{is-underscoreequal-underscoresymbol@\verb`is_equal_symbol`}
+\begin{ocamldocdescription}
+{\tt{is\_equal\_symbol f1 f2}} returns {\tt{true}} iff {\tt{f1}} and {\tt{f2}} are the same function symbol.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscoretuple}\begin{ocamldoccode}
+val is_tuple : symbol -> bool
+\end{ocamldoccode}
+\index{is-underscoretuple@\verb`is_tuple`}
+\begin{ocamldocdescription}
+{\tt{is\_tuple f}} returns {\tt{true}} iff {\tt{f}} is a tuple.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscoreconstructor}\begin{ocamldoccode}
+val is_constructor : symbol -> bool
+\end{ocamldoccode}
+\index{is-underscoreconstructor@\verb`is_constructor`}
+\begin{ocamldocdescription}
+{\tt{is\_constructor f}} returns true iff {\tt{f}} is a constructor or a tuple. Note that all tuples are constructors.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscoredestructor}\begin{ocamldoccode}
+val is_destructor : symbol -> bool
+\end{ocamldoccode}
+\index{is-underscoredestructor@\verb`is_destructor`}
+\begin{ocamldocdescription}
+{\tt{is\_destructor f}} returns true iff {\tt{f}} is a destructor.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Symbol Access}
+
+
+
+
+\label{val:Term.get-underscorearity}\begin{ocamldoccode}
+val get_arity : symbol -> int
+\end{ocamldoccode}
+\index{get-underscorearity@\verb`get_arity`}
+\begin{ocamldocdescription}
+{\tt{get\_arity f}} returns the arity of the function symbol {\tt{f}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Symbol Display}
+
+
+
+
+\label{val:Term.display-underscoresymbol-underscorewithout-underscorearity}\begin{ocamldoccode}
+val display_symbol_without_arity : symbol -> string
+\end{ocamldoccode}
+\index{display-underscoresymbol-underscorewithout-underscorearity@\verb`display_symbol_without_arity`}
+
+
+
+
+\label{val:Term.display-underscoresymbol-underscorewith-underscorearity}\begin{ocamldoccode}
+val display_symbol_with_arity : symbol -> string
+\end{ocamldoccode}
+\index{display-underscoresymbol-underscorewith-underscorearity@\verb`display_symbol_with_arity`}
+
+
+
+
+\subsection{Messages}
+
+
+
+
+\label{type:Term.quantifier}\begin{ocamldoccode}
+type quantifier =
+  | Free
+  | Existential
+  | Universal
+\end{ocamldoccode}
+\index{quantifier@\verb`quantifier`}
+\begin{ocamldocdescription}
+The type {\tt{quantifier}} is associated to a variable to quantify it.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{type:Term.variable}\begin{ocamldoccode}
+type variable 
+\end{ocamldoccode}
+\index{variable@\verb`variable`}
+\begin{ocamldocdescription}
+A {\tt{variable}} is always quantified. It corresponds to the set $\Xun$ in~\thesis. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{type:Term.name-underscorestatus}\begin{ocamldoccode}
+type name_status =
+  | Public
+  | Private
+\end{ocamldoccode}
+\index{name-underscorestatus@\verb`name_status`}
+\begin{ocamldocdescription}
+A {\tt{name}} is can be either public or private.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{type:Term.name}\begin{ocamldoccode}
+type name 
+\end{ocamldoccode}
+\index{name@\verb`name`}
+\begin{ocamldocdescription}
+The type {\tt{name}} corresponds to the set $\N$ in~\thesis. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{type:Term.term}\begin{ocamldoccode}
+type term 
+\end{ocamldoccode}
+\index{term@\verb`term`}
+\begin{ocamldocdescription}
+The type {\tt{term}} corresponds to the set $\T(\F,\N \cup \Xun)$ in~\thesis. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Variable generation}
+
+
+
+
+The variables created by the functions below are structuraly and physically different
+
+
+
+\label{val:Term.fresh-underscorevariable}\begin{ocamldoccode}
+val fresh_variable : quantifier -> variable
+\end{ocamldoccode}
+\index{fresh-underscorevariable@\verb`fresh_variable`}
+\begin{ocamldocdescription}
+{\tt{fresh\_variable q}} creates a fresh variable quantified by {\tt{q}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.fresh-underscorevariable-underscorefrom-underscoreid}\begin{ocamldoccode}
+val fresh_variable_from_id : quantifier -> string -> variable
+\end{ocamldoccode}
+\index{fresh-underscorevariable-underscorefrom-underscoreid@\verb`fresh_variable_from_id`}
+\begin{ocamldocdescription}
+{\tt{fresh\_variable\_from\_id q s}} creates a fresh variable quantified as {\tt{q}} with display identifier {\tt{s}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.fresh-underscorevariable-underscorefrom-underscorevar}\begin{ocamldoccode}
+val fresh_variable_from_var : variable -> variable
+\end{ocamldoccode}
+\index{fresh-underscorevariable-underscorefrom-underscorevar@\verb`fresh_variable_from_var`}
+\begin{ocamldocdescription}
+{\tt{fresh\_variable\_from\_var v}} creates a fresh variable 
+    with the same display identifier and quantifier as the variable {\tt{v}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.fresh-underscorevariable-underscorelist}\begin{ocamldoccode}
+val fresh_variable_list : quantifier -> int -> variable list
+\end{ocamldoccode}
+\index{fresh-underscorevariable-underscorelist@\verb`fresh_variable_list`}
+\begin{ocamldocdescription}
+{\tt{fresh\_variable\_list q n}} creates a list of {\tt{n}} fresh variables all quantified as {\tt{q}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.fresh-underscorevariable-underscorelist2}\begin{ocamldoccode}
+val fresh_variable_list2 : quantifier -> int -> term list
+\end{ocamldoccode}
+\index{fresh-underscorevariable-underscorelist2@\verb`fresh_variable_list2`}
+\begin{ocamldocdescription}
+{\tt{fresh\_variable\_list2 q n}} creates a list of {\tt{n}} fresh variables all quantified as {\tt{q}} and considered as terms.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Name generation}
+
+
+
+
+\label{val:Term.fresh-underscorename}\begin{ocamldoccode}
+val fresh_name : name_status -> name
+\end{ocamldoccode}
+\index{fresh-underscorename@\verb`fresh_name`}
+\begin{ocamldocdescription}
+{\tt{fresh\_name ns}} creates a fresh name with the status {\tt{ns}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.fresh-underscorename-underscorefrom-underscoreid}\begin{ocamldoccode}
+val fresh_name_from_id : name_status -> string -> name
+\end{ocamldoccode}
+\index{fresh-underscorename-underscorefrom-underscoreid@\verb`fresh_name_from_id`}
+\begin{ocamldocdescription}
+{\tt{fresh\_name\_from\_id ns s}} creates a fresh name with status {\tt{ns}} and  with display identifier {\tt{s}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.fresh-underscorename-underscorefrom-underscorename}\begin{ocamldoccode}
+val fresh_name_from_name : name -> name
+\end{ocamldoccode}
+\index{fresh-underscorename-underscorefrom-underscorename@\verb`fresh_name_from_name`}
+\begin{ocamldocdescription}
+{\tt{fresh\_name\_from\_name n}} creates a fresh name with the same display identifier
+    and same status as {\tt{n}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Generation of terms}
+
+
+
+
+\label{val:Term.term-underscoreof-underscorevariable}\begin{ocamldoccode}
+val term_of_variable : variable -> term
+\end{ocamldoccode}
+\index{term-underscoreof-underscorevariable@\verb`term_of_variable`}
+\begin{ocamldocdescription}
+{\tt{term\_of\_variable v}} returns the variable {\tt{v}} considered as a term.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.term-underscoreof-underscorename}\begin{ocamldoccode}
+val term_of_name : name -> term
+\end{ocamldoccode}
+\index{term-underscoreof-underscorename@\verb`term_of_name`}
+\begin{ocamldocdescription}
+{\tt{term\_of\_name n}} returns the name {\tt{n}} considered as a term.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.variable-underscoreof-underscoreterm}\begin{ocamldoccode}
+val variable_of_term : term -> variable
+\end{ocamldoccode}
+\index{variable-underscoreof-underscoreterm@\verb`variable_of_term`}
+\begin{ocamldocdescription}
+{\tt{variable\_from\_term t}} returns the term {\tt{t}} as a variable.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{t}} is not a variable.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.name-underscoreof-underscoreterm}\begin{ocamldoccode}
+val name_of_term : term -> name
+\end{ocamldoccode}
+\index{name-underscoreof-underscoreterm@\verb`name_of_term`}
+\begin{ocamldocdescription}
+{\tt{name\_from\_term t}} returns the term {\tt{t}} as a name.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{t}} is not a name.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.apply-underscorefunction}\begin{ocamldoccode}
+val apply_function : symbol -> term list -> term
+\end{ocamldoccode}
+\index{apply-underscorefunction@\verb`apply_function`}
+\begin{ocamldocdescription}
+{\tt{apply\_function f args}} applies the the function symbol {\tt{f}} to the arguments {\tt{args}}.
+    If {\tt{args}} is the list {\tt{[t1;...;tn]}} then the term obtained is {\tt{f(t1,...,tn)}}.
+
+
+    \lowdebug  Raise an internal error if the number of arguments in {\tt{args}} does not coincide
+    with the arity of {\tt{f}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.rename}\begin{ocamldoccode}
+val rename :
+  (variable * variable) list ->
+  (name * name) list -> term -> term
+\end{ocamldoccode}
+\index{rename@\verb`rename`}
+\begin{ocamldocdescription}
+{\tt{rename v\_list n\_list t}} creates a new term from {\tt{t}} where each {\tt{v\_i}} is replaced by {\tt{v{\textquotesingle}\_i}}
+    and each {\tt{n\_i}} is replaced by {\tt{n{\textquotesingle}\_i}} where {\tt{v\_list}} is the list {\tt{(v\_1,v{\textquotesingle}\_1),...,(v\_p,v{\textquotesingle}\_p)}}
+    and {\tt{n\_list}} is the list {\tt{(n\_1,n{\textquotesingle}\_1),...,(n\_q,n{\textquotesingle}\_q)}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Access functions}
+
+
+
+
+\label{val:Term.top}\begin{ocamldoccode}
+val top : term -> symbol
+\end{ocamldoccode}
+\index{top@\verb`top`}
+\begin{ocamldocdescription}
+{\tt{top t}} returns the symbol at the root position of {\tt{t}}.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{t}} is not a function symbol application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.nth-underscoreargs}\begin{ocamldoccode}
+val nth_args : term -> int -> term
+\end{ocamldoccode}
+\index{nth-underscoreargs@\verb`nth_args`}
+\begin{ocamldocdescription}
+{\tt{nth\_args t i}} returns the {\tt{i}}$^{th}$ argument of the constructed term {\tt{t}}.  
+    Note that the index {\tt{i}} start with 1 and not 0. For example, if {\tt{t}} is the term $f(t_1,\ldots t_n)$ 
+    then {\tt{nth\_args t i}} returns the term $t_i$ .
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{t}} is not a function symbol application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.get-underscoreargs}\begin{ocamldoccode}
+val get_args : term -> term list
+\end{ocamldoccode}
+\index{get-underscoreargs@\verb`get_args`}
+\begin{ocamldocdescription}
+{\tt{get\_args t}} returns the list of argument of the constructed term {\tt{t}}. For example, if {\tt{t}} is the term $f(t_1,\ldots t_n)$ 
+    then {\tt{get\_args t}} returns the list [$t_1$;\ldots;$t_n$] .
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{t}} is not a function symbol application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.get-underscorequantifier}\begin{ocamldoccode}
+val get_quantifier : variable -> quantifier
+\end{ocamldoccode}
+\index{get-underscorequantifier@\verb`get_quantifier`}
+\begin{ocamldocdescription}
+{\tt{get\_quantifier v}} returns the quantifier of {\tt{v}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Scanning}
+
+
+
+
+\label{val:Term.var-underscoreoccurs}\begin{ocamldoccode}
+val var_occurs : variable -> term -> bool
+\end{ocamldoccode}
+\index{var-underscoreoccurs@\verb`var_occurs`}
+\begin{ocamldocdescription}
+{\tt{occurs v t}} returns {\tt{true}} iff the variable {\tt{v}} occurs in the term {\tt{t}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.var-underscoreoccurs-underscorelist}\begin{ocamldoccode}
+val var_occurs_list : variable list -> term -> bool
+\end{ocamldoccode}
+\index{var-underscoreoccurs-underscorelist@\verb`var_occurs_list`}
+\begin{ocamldocdescription}
+{\tt{occurs\_list v\_list t}} returns {\tt{true}} iff one of the variable in {\tt{v\_list}} occurs in the term {\tt{t}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.exists-underscorevar}\begin{ocamldoccode}
+val exists_var : quantifier -> term -> bool
+\end{ocamldoccode}
+\index{exists-underscorevar@\verb`exists_var`}
+\begin{ocamldocdescription}
+{\tt{exists\_var q t}} returns {\tt{true}} iff there exists a variable quantified as {\tt{q}} in the term {\tt{t}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.for-underscoreall-underscorevar}\begin{ocamldoccode}
+val for_all_var : quantifier -> term -> bool
+\end{ocamldoccode}
+\index{for-underscoreall-underscorevar@\verb`for_all_var`}
+\begin{ocamldocdescription}
+{\tt{for\_all\_var q t}} returns {\tt{true}} iff all variables in the term {\tt{t}} are quantified as {\tt{q}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.exists-underscorename-underscorewith-underscorestatus}\begin{ocamldoccode}
+val exists_name_with_status : name_status -> term -> bool
+\end{ocamldoccode}
+\index{exists-underscorename-underscorewith-underscorestatus@\verb`exists_name_with_status`}
+\begin{ocamldocdescription}
+{\tt{exists\_name s t}} returns {\tt{true}} iff there exists a name in {\tt{t}} with status {\tt{s}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.exists-underscorename}\begin{ocamldoccode}
+val exists_name : term -> bool
+\end{ocamldoccode}
+\index{exists-underscorename@\verb`exists_name`}
+\begin{ocamldocdescription}
+{\tt{exists\_name t}} returns {\tt{true}} iff there exists a name in {\tt{t}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscoreequal-underscoreterm}\begin{ocamldoccode}
+val is_equal_term : term -> term -> bool
+\end{ocamldoccode}
+\index{is-underscoreequal-underscoreterm@\verb`is_equal_term`}
+\begin{ocamldocdescription}
+{\tt{is\_equal\_term t1 t2}} returns {\tt{true}} iff the terms {\tt{t1}} and {\tt{t2}} are equal.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscoreequal-underscoreand-underscoreclosed-underscoreterm}\begin{ocamldoccode}
+val is_equal_and_closed_term : term -> term -> bool
+\end{ocamldoccode}
+\index{is-underscoreequal-underscoreand-underscoreclosed-underscoreterm@\verb`is_equal_and_closed_term`}
+\begin{ocamldocdescription}
+{\tt{is\_equal\_term t1 t2}} returns {\tt{true}} iff the terms {\tt{t1}} and {\tt{t2}} are equal.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscoreequal-underscorename}\begin{ocamldoccode}
+val is_equal_name : name -> name -> bool
+\end{ocamldoccode}
+\index{is-underscoreequal-underscorename@\verb`is_equal_name`}
+\begin{ocamldocdescription}
+{\tt{is\_equal\_name n1 n2}} returns {\tt{true}} iff the name {\tt{n1}} and {\tt{n2}} are equal.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscorevariable}\begin{ocamldoccode}
+val is_variable : term -> bool
+\end{ocamldoccode}
+\index{is-underscorevariable@\verb`is_variable`}
+\begin{ocamldocdescription}
+{\tt{is\_variable t}} returns {\tt{true}} iff the term {\tt{t}} is a variable.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscorename}\begin{ocamldoccode}
+val is_name : term -> bool
+\end{ocamldoccode}
+\index{is-underscorename@\verb`is_name`}
+\begin{ocamldocdescription}
+{\tt{is\_name t}} returns {\tt{true}} iff the term {\tt{t}} is a name.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscorename-underscorestatus}\begin{ocamldoccode}
+val is_name_status : name_status -> term -> bool
+\end{ocamldoccode}
+\index{is-underscorename-underscorestatus@\verb`is_name_status`}
+\begin{ocamldocdescription}
+{\tt{is\_name\_status s t}} returns {\tt{true}} iff the term {\tt{t}} is a name with status {\tt{s}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscorefunction}\begin{ocamldoccode}
+val is_function : term -> bool
+\end{ocamldoccode}
+\index{is-underscorefunction@\verb`is_function`}
+\begin{ocamldocdescription}
+{\tt{is\_function t}} returns {\tt{true}} iff the term {\tt{t}} is a function symbol application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscoreconstructor-underscoreterm}\begin{ocamldoccode}
+val is_constructor_term : term -> bool
+\end{ocamldoccode}
+\index{is-underscoreconstructor-underscoreterm@\verb`is_constructor_term`}
+\begin{ocamldocdescription}
+{\tt{is\_constructor\_term t}} returns {\tt{true}} iff $t \in \T(\Fc, \Xun \cup \N)$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Iterators}
+
+
+
+
+\label{val:Term.fold-underscoreleft-underscoreargs}\begin{ocamldoccode}
+val fold_left_args : ({\textquotesingle}a -> term -> {\textquotesingle}a) -> {\textquotesingle}a -> term -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreleft-underscoreargs@\verb`fold_left_args`}
+\begin{ocamldocdescription}
+{\tt{fold\_left\_args f acc t}} is {\tt{f (...(f (f acc t1) t2) ...) tn}} if {\tt{t}} is
+    the term $g(t_1,...,t_n)$  for some function symbol $g$ .
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{t}} is not a function application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.fold-underscoreright-underscoreargs}\begin{ocamldoccode}
+val fold_right_args : (term -> {\textquotesingle}a -> {\textquotesingle}a) -> term -> {\textquotesingle}a -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreright-underscoreargs@\verb`fold_right_args`}
+\begin{ocamldocdescription}
+{\tt{fold\_right\_args f t acc}} is {\tt{f t1 (f t2 (...(f tn acc)...))}} if {\tt{t}} is
+    the term $g(t_1,...,t_n)$  for some function symbol $g$ .
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{t}} is not a function application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.map-underscoreargs}\begin{ocamldoccode}
+val map_args : (term -> {\textquotesingle}a) -> term -> {\textquotesingle}a list
+\end{ocamldoccode}
+\index{map-underscoreargs@\verb`map_args`}
+\begin{ocamldocdescription}
+{\tt{map\_args f t}} is the list {\tt{[f t1; ...; f tn]}} if {\tt{t}} is
+    the term $g(t_1,...,t_n)$  for some function symbol $g$ .
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{t}} is not a function application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.fold-underscoreleft-underscoreargs2}\begin{ocamldoccode}
+val fold_left_args2 : ({\textquotesingle}a -> term -> {\textquotesingle}b -> {\textquotesingle}a) -> {\textquotesingle}a -> term -> {\textquotesingle}b list -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreleft-underscoreargs2@\verb`fold_left_args2`}
+\begin{ocamldocdescription}
+{\tt{fold\_left\_args2 f acc t l}} is {\tt{f (...(f (f acc t1 e1) t2 e2) ...) tn en}} if {\tt{t}} is
+    the term $g(t_1,...,t_n)$  for some function symbol $g$ 
+    and {\tt{l}} is the list {\tt{[e1;...;en]}}.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{t}} is not a function application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Display}
+
+
+
+
+\label{val:Term.display-underscoreterm}\begin{ocamldoccode}
+val display_term : term -> string
+\end{ocamldoccode}
+\index{display-underscoreterm@\verb`display_term`}
+
+
+
+
+\label{val:Term.display-underscorename}\begin{ocamldoccode}
+val display_name : name -> string
+\end{ocamldoccode}
+\index{display-underscorename@\verb`display_name`}
+
+
+
+
+\label{val:Term.display-underscorevariable}\begin{ocamldoccode}
+val display_variable : variable -> string
+\end{ocamldoccode}
+\index{display-underscorevariable@\verb`display_variable`}
+
+
+
+
+\subsection{Mapping table}
+
+
+
+
+\begin{ocamldoccode}
+{\tt{module }}{\tt{VariableMap}}{\tt{ : }}\end{ocamldoccode}
+\label{module:Term.VariableMap}\index{VariableMap@\verb`VariableMap`}
+
+\begin{ocamldocsigend}
+
+
+\label{type:Term.VariableMap.map}\begin{ocamldoccode}
+type {\textquotesingle}a map 
+\end{ocamldoccode}
+\index{map@\verb`map`}
+\begin{ocamldocdescription}
+{\tt{{\textquotesingle}a map}} is the type that represents the mapping of variable to element of type {\tt{{\textquotesingle}a}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Term.VariableMap.empty}\begin{ocamldoccode}
+val empty : {\textquotesingle}a map
+\end{ocamldoccode}
+\index{empty@\verb`empty`}
+\begin{ocamldocdescription}
+{\tt{empty}} is the empty mapping function.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Term.VariableMap.is-underscoreempty}\begin{ocamldoccode}
+val is_empty : {\textquotesingle}a map -> bool
+\end{ocamldoccode}
+\index{is-underscoreempty@\verb`is_empty`}
+\begin{ocamldocdescription}
+{\tt{is\_empty map}} returns {\tt{true}} iff {\tt{map}} is empty.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Term.VariableMap.add}\begin{ocamldoccode}
+val add : Term.variable -> {\textquotesingle}a -> {\textquotesingle}a map -> {\textquotesingle}a map
+\end{ocamldoccode}
+\index{add@\verb`add`}
+\begin{ocamldocdescription}
+{\tt{add v elt map}} returns a map containing the same bindings as {\tt{map}}, 
+      plus a binding of {\tt{v}} to {\tt{elt}}. If {\tt{v}} was already bound in {\tt{map}}, 
+      its previous binding disappears.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Term.VariableMap.find}\begin{ocamldoccode}
+val find : Term.variable -> {\textquotesingle}a map -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{find@\verb`find`}
+\begin{ocamldocdescription}
+{\tt{find v map}} returns the current binding of {\tt{v}} in {\tt{map}}.
+
+{\bf Raises} {\tt{Not\_found}} if no binding exists.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Term.VariableMap.mem}\begin{ocamldoccode}
+val mem : Term.variable -> {\textquotesingle}a map -> bool
+\end{ocamldoccode}
+\index{mem@\verb`mem`}
+\begin{ocamldocdescription}
+{\tt{mem v map}} returns {\tt{true}} iff {\tt{map}} contains a binding for {\tt{v}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Term.VariableMap.display}\begin{ocamldoccode}
+val display : ({\textquotesingle}a -> string) -> {\textquotesingle}a map -> unit
+\end{ocamldoccode}
+\index{display@\verb`display`}
+\end{ocamldocsigend}
+
+
+
+
+
+
+\subsection{Substitution}
+
+
+
+
+\label{type:Term.substitution}\begin{ocamldoccode}
+type substitution 
+\end{ocamldoccode}
+\index{substitution@\verb`substitution`}
+
+
+
+
+\label{val:Term.identity}\begin{ocamldoccode}
+val identity : substitution
+\end{ocamldoccode}
+\index{identity@\verb`identity`}
+\begin{ocamldocdescription}
+{\tt{identity}} corresponds to the identity substitution.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscoreidentity}\begin{ocamldoccode}
+val is_identity : substitution -> bool
+\end{ocamldoccode}
+\index{is-underscoreidentity@\verb`is_identity`}
+\begin{ocamldocdescription}
+{\tt{is\_identity s}} returns {\tt{true}} iff {\tt{s}} is the identity substitution.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.create-underscoresubstitution}\begin{ocamldoccode}
+val create_substitution : variable -> term -> substitution
+\end{ocamldoccode}
+\index{create-underscoresubstitution@\verb`create_substitution`}
+\begin{ocamldocdescription}
+{\tt{create\_substitution v t}} creates the substitution ${v \rightarrow t}$ .
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.compose}\begin{ocamldoccode}
+val compose : substitution -> substitution -> substitution
+\end{ocamldoccode}
+\index{compose@\verb`compose`}
+\begin{ocamldocdescription}
+{\tt{compose}} $\sigma_1$~$\sigma_2$  returns the substitution $\sigma_1\sigma_2$ .
+
+
+    \lowdebug  Raise an internal error if the domain of two substitutions are not disjoint.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.filter-underscoredomain}\begin{ocamldoccode}
+val filter_domain : (variable -> bool) -> substitution -> substitution
+\end{ocamldoccode}
+\index{filter-underscoredomain@\verb`filter_domain`}
+\begin{ocamldocdescription}
+{\tt{filter\_domain f s}} returns the substitution {\tt{s}} restricted to variables that satisfy {\tt{f}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.apply-underscoresubstitution}\begin{ocamldoccode}
+val apply_substitution :
+  substitution -> {\textquotesingle}a -> ({\textquotesingle}a -> (term -> term) -> {\textquotesingle}a) -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{apply-underscoresubstitution@\verb`apply_substitution`}
+\begin{ocamldocdescription}
+{\tt{apply\_substitution subst elt map\_elt}} applies the substitution {\tt{subst}} on the element {\tt{elt}}. The function
+    {\tt{map\_elt}} should map the terms contained in the element {\tt{elt}} on which {\tt{subst}} should be applied.
+
+
+    For example, applying a substitution {\tt{subst}} on a list of terms {\tt{term\_list}} 
+    could be done by applying {\tt{apply\_substitution subst term\_list (fun l f -> List.map f l)}}.
+
+
+    Another example: applying a substitution {\tt{subst}} on the second element of a couple of terms could be 
+    done by applying {\tt{apply\_substitution subst term\_c (fun (t1,t2) f -> (t1, f t2))}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.apply-underscoresubstitution-underscorechange-underscoredetected}\begin{ocamldoccode}
+val apply_substitution_change_detected :
+  substitution ->
+  {\textquotesingle}a -> ({\textquotesingle}a -> (term -> bool * term) -> {\textquotesingle}a) -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{apply-underscoresubstitution-underscorechange-underscoredetected@\verb`apply_substitution_change_detected`}
+\begin{ocamldocdescription}
+{\tt{apply\_substitution\_change\_detected subst elt map\_elt}} is similar to {\tt{apply\_substitution}} 
+    except that the function {\tt{map\_elt}}, which should map the term to be substituted, will consider
+    a function that returns if a term was modify or not. 
+
+
+    {\tt{apply\_substitution\_change\_detected subst elt map\_elt}} is faster but has the same result as 
+
+
+\begin{ocamldoccode}
+apply_substitution subst elt (fun a f -> 
+  map_elt a (fun t ->
+    let t{\textquotesingle} = f t in not (is_equal_term t t{\textquotesingle}),t{\textquotesingle}))
+\end{ocamldoccode}
+
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.equations-underscoreof-underscoresubstitution}\begin{ocamldoccode}
+val equations_of_substitution : substitution -> (term * term) list
+\end{ocamldoccode}
+\index{equations-underscoreof-underscoresubstitution@\verb`equations_of_substitution`}
+\begin{ocamldocdescription}
+{\tt{equations\_of\_substitution s}} returns the list {\tt{[(x1,t1);...;(xn,tn)]}} where 
+    {\tt{s}} is the substitution ${x_1 \rightarrow t_1, \ldots, x_n \rightarrow t_n}$ .
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsection{Rewrite rules}
+
+
+
+
+\label{val:Term.fresh-underscorerewrite-underscorerule}\begin{ocamldoccode}
+val fresh_rewrite_rule : symbol -> term list * term
+\end{ocamldoccode}
+\index{fresh-underscorerewrite-underscorerule@\verb`fresh_rewrite_rule`}
+\begin{ocamldocdescription}
+{\tt{fresh\_rewrite\_rule f}} returns the couple {\tt{([t1,...,tn],t)}} where $f(t_1,\dots,t_n) \rightarrow t$ 
+    is a fresh rewrite rule of {\tt{f}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.link-underscoredestruc-underscoreconstruc}\begin{ocamldoccode}
+val link_destruc_construc : symbol -> symbol -> bool
+\end{ocamldoccode}
+\index{link-underscoredestruc-underscoreconstruc@\verb`link_destruc_construc`}
+\begin{ocamldocdescription}
+{\tt{link\_destruc\_construc s\_d s\_c}} returns {\tt{true}} iff {\tt{s\_d}} is the destructor symbol of the constructor symbol {\tt{s\_c}}.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{s\_c}} is not a constructor or if it is a tuple symbol.
+
+
+    Example : {\tt{link\_destruc\_construc sdec senc}} returns {\tt{true}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.constructor-underscoreto-underscoredestructor}\begin{ocamldoccode}
+val constructor_to_destructor : symbol -> symbol
+\end{ocamldoccode}
+\index{constructor-underscoreto-underscoredestructor@\verb`constructor_to_destructor`}
+\begin{ocamldocdescription}
+{\tt{constructor\_to\_destructor s\_c}} returns the destructor symbol of the constructor symbol {\tt{s\_c}}.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{s\_c}} is not a constructor or if it is a tuple symbol.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsection{Unification}
+
+
+
+
+\label{exception:Term.Not-underscoreunifiable}\begin{ocamldoccode}
+exception Not_unifiable
+\end{ocamldoccode}
+\index{Not-underscoreunifiable@\verb`Not_unifiable`}
+
+
+
+
+\label{val:Term.unify}\begin{ocamldoccode}
+val unify : (term * term) list -> substitution
+\end{ocamldoccode}
+\index{unify@\verb`unify`}
+\begin{ocamldocdescription}
+{\tt{unify l}} unifies the pairs of term in {\tt{l}} and returns the substitution that unifies them
+
+{\bf Raises} {\tt{Not\_unifiable}} if no unification is possible.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscoreunifiable}\begin{ocamldoccode}
+val is_unifiable : (term * term) list -> bool
+\end{ocamldoccode}
+\index{is-underscoreunifiable@\verb`is_unifiable`}
+\begin{ocamldocdescription}
+{\tt{is\_unifiable l}} returns {\tt{true}} iff the pairs of term in {\tt{l}} are unifiable.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.unify-underscoreand-underscoreapply}\begin{ocamldoccode}
+val unify_and_apply :
+  (term * term) list ->
+  {\textquotesingle}a -> ({\textquotesingle}a -> (term -> term) -> {\textquotesingle}a) -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{unify-underscoreand-underscoreapply@\verb`unify_and_apply`}
+\begin{ocamldocdescription}
+{\tt{unify\_and\_apply l elt map\_elt}} unifies the pairs of term in {\tt{l}} and apply the substitution that unifies them
+    on the terms in {\tt{elt}} according to the function {\tt{map\_elt}}.
+
+{\bf Raises} {\tt{Not\_unifiable}} if no unification is possible.
+
+
+    It is faster but returns the same as {\tt{apply\_substitution (unify l) elt map\_elt}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.unify-underscoreand-underscoreapply-underscorechange-underscoredetected}\begin{ocamldoccode}
+val unify_and_apply_change_detected :
+  (term * term) list ->
+  {\textquotesingle}a -> ({\textquotesingle}a -> (term -> bool * term) -> {\textquotesingle}a) -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{unify-underscoreand-underscoreapply-underscorechange-underscoredetected@\verb`unify_and_apply_change_detected`}
+\begin{ocamldocdescription}
+{\tt{unify\_and\_apply\_change\_detected l elt map\_elt}} unifies the pairs of term in {\tt{l}} and apply the substitution that unifies them
+    on the terms in {\tt{elt}} according to the function {\tt{map\_elt}}.
+
+{\bf Raises} {\tt{Not\_unifiable}} if no unification is possible.
+
+
+    It is faster but returns the same as {\tt{apply\_substitution\_change\_detected (unify l) elt map\_elt}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.unify-underscoremodulo-underscorerewrite-underscorerules}\begin{ocamldoccode}
+val unify_modulo_rewrite_rules : (term * term) list -> substitution
+\end{ocamldoccode}
+\index{unify-underscoremodulo-underscorerewrite-underscorerules@\verb`unify_modulo_rewrite_rules`}
+\begin{ocamldocdescription}
+{\tt{unify\_modulo\_rewrite\_rules l}} unifies the pairs of term in {\tt{l}} modulo the rewriting systems.
+    All variables introduced by the unification are quantified existentially.
+
+{\bf Raises} {\tt{Not\_unifiable}} if no unification is possible or if a destructor cannot be reduced
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.unify-underscoremodulo-underscorerewrite-underscorerules-underscoreand-underscoreapply}\begin{ocamldoccode}
+val unify_modulo_rewrite_rules_and_apply :
+  (term * term) list ->
+  {\textquotesingle}a -> ({\textquotesingle}a -> (term -> term) -> {\textquotesingle}a) -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{unify-underscoremodulo-underscorerewrite-underscorerules-underscoreand-underscoreapply@\verb`unify_modulo_rewrite_rules_and_apply`}
+\begin{ocamldocdescription}
+{\tt{unify\_modulo\_rewrite\_rules\_and\_apply l elt map\_elt}} unifies the pairs of term in {\tt{l}} modulo the rewriting systems
+    and apply the substitution that unifies them on the terms in {\tt{elt}} according to the function {\tt{map\_elt}}.
+    All variables introduced by the unification are quantified existentially.
+
+{\bf Raises} {\tt{Not\_unifiable}} if no unification is possible.
+
+
+    It is faster but returns the same as {\tt{apply\_substitution (unify l) elt map\_elt}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsection{Formula}
+
+
+
+
+\label{type:Term.formula}\begin{ocamldoccode}
+type formula 
+\end{ocamldoccode}
+\index{formula@\verb`formula`}
+\begin{ocamldocdescription}
+The type {\tt{formula}} represents a disjunction of inequation of the form $\forall \tilde{x}. \bigvee_{i = 1}^n  u_i \neqi v_i$
+    for some terms $u_i$,$v_i$ that may contain destructor symbol. Note that the semantics of $u \neqi v$ is given in~\thesis.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.top-underscoreformula}\begin{ocamldoccode}
+val top_formula : formula
+\end{ocamldoccode}
+\index{top-underscoreformula@\verb`top_formula`}
+\begin{ocamldocdescription}
+{\tt{top\_formula}} is the always true formula.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.bottom-underscoreformula}\begin{ocamldoccode}
+val bottom_formula : formula
+\end{ocamldoccode}
+\index{bottom-underscoreformula@\verb`bottom_formula`}
+\begin{ocamldocdescription}
+{\tt{bottom\_formula}} is the always false formula.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.create-underscoreinequation}\begin{ocamldoccode}
+val create_inequation : term -> term -> formula
+\end{ocamldoccode}
+\index{create-underscoreinequation@\verb`create_inequation`}
+\begin{ocamldocdescription}
+{\tt{create\_inequation t\_1 t\_2}} creates the formula $t_1 \neqi t_n$. 
+    Note that the quantifier of the variables are not modified. For instance, the existential vairiables
+    in {\tt{t\_1}} and {\tt{t\_2}} do not become universal variables.
+    Note that {\tt{create\_inequation}} is not commutative, i.e. {\tt{create\_inequationt t\_1 t\_2}} is different from
+    {\tt{create\_inequation t\_2 t\_1}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.create-underscoredisjunction-underscoreinequation}\begin{ocamldoccode}
+val create_disjunction_inequation : (term * term) list -> formula
+\end{ocamldoccode}
+\index{create-underscoredisjunction-underscoreinequation@\verb`create_disjunction_inequation`}
+\begin{ocamldocdescription}
+{\tt{create\_disjunction\_inequation [(u\_1,v\_1);...;(u\_n,v\_n)]}} creates the formula $\bigvee_{i=1}^n u_i \neqi v_i$. 
+    Note that the quantifier of the variables are not modified.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Iterators}
+
+
+
+
+\label{val:Term.iter-underscoreinequation-underscoreformula}\begin{ocamldoccode}
+val iter_inequation_formula : (term -> term -> unit) -> formula -> unit
+\end{ocamldoccode}
+\index{iter-underscoreinequation-underscoreformula@\verb`iter_inequation_formula`}
+\begin{ocamldocdescription}
+{\tt{iter\_inequation\_formula f phi}} is {\tt{f u1 v1; f u2 v2; ...; f un vn}} where {\tt{phi}} is the formula
+    $\forall \tilde{x}. \bigvee_{i = 1}^n  u_i \neqi v_i$ .
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.map-underscoreterm-underscoreformula}\begin{ocamldoccode}
+val map_term_formula : formula -> (term -> term) -> formula
+\end{ocamldoccode}
+\index{map-underscoreterm-underscoreformula@\verb`map_term_formula`}
+\begin{ocamldocdescription}
+{\tt{map\_term\_formula phi f }} is the formula {\tt{create\_disjunction\_inequation [(f u1,f v1);...;(f un,f vn)]}}
+    where {\tt{phi}} is the formula $\forall \tilde{x}. \bigvee_{i = 1}^n  u_i \neqi v_i$ .
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.map-underscoreterm-underscoreformula-underscorechange-underscoredetected}\begin{ocamldoccode}
+val map_term_formula_change_detected :
+  formula -> (term -> bool * term) -> bool * formula
+\end{ocamldoccode}
+\index{map-underscoreterm-underscoreformula-underscorechange-underscoredetected@\verb`map_term_formula_change_detected`}
+\begin{ocamldocdescription}
+Similar to {\tt{map\_term\_formula}} except that it returns the couple {\tt{(b,phi{\textquotesingle})}} where {\tt{phi{\textquotesingle}}} is the 
+   formula {\tt{phi}} on which we applied {\tt{f}} and {\tt{b}} is {\tt{true}} iff one of the application of {\tt{f}} returned
+   true.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Formula scanning}
+
+
+
+
+\label{val:Term.find-underscoreand-underscoreapply-underscoreformula}\begin{ocamldoccode}
+val find_and_apply_formula :
+  (term -> term -> bool) ->
+  (term -> term -> {\textquotesingle}a) -> (unit -> {\textquotesingle}a) -> formula -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{find-underscoreand-underscoreapply-underscoreformula@\verb`find_and_apply_formula`}
+\begin{ocamldocdescription}
+{\tt{find\_and\_apply\_formula f\_test f\_apply f\_no formula}} searches in {\tt{formula}} an inequation satisfying {\tt{f\_test}}. 
+   If such inequation exists then it applies {\tt{f\_apply}} on it else it apply the function {\tt{f\_no}}.
+
+
+   Note that since an inequation $u \neqi v$  is semantically the same as $v \neqi u$ , it is recommanded that
+   {\tt{f\_test u v}} and {\tt{f\_test v u}} are equal. Same for {\tt{f\_apply}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscorebottom}\begin{ocamldoccode}
+val is_bottom : formula -> bool
+\end{ocamldoccode}
+\index{is-underscorebottom@\verb`is_bottom`}
+\begin{ocamldocdescription}
+{\tt{is\_bottom formula}} returns {\tt{true}} iff {\tt{formula}} is the always false formula.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscoretop}\begin{ocamldoccode}
+val is_top : formula -> bool
+\end{ocamldoccode}
+\index{is-underscoretop@\verb`is_top`}
+\begin{ocamldocdescription}
+{\tt{is\_true formula}} returns {\tt{true}} iff {\tt{formula}} is the always true formula.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.is-underscorein-underscoreformula}\begin{ocamldoccode}
+val is_in_formula : term -> term -> formula -> bool
+\end{ocamldoccode}
+\index{is-underscorein-underscoreformula@\verb`is_in_formula`}
+\begin{ocamldocdescription}
+{\tt{is\_in\_formula t\_1 t\_2 formula}} returns {\tt{true}} iff {\tt{formula}} is of the form $\forall \tilde{x}. t_1 \neqi t_2 \vee F$
+    where $F$ is a disjunction of inequation. 
+    Note that this function is commutative, i.e. {\tt{is\_in\_formula t\_1 t\_2 phi}} is the same as {\tt{is\_in\_formula t\_2 t\_1 phi}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Simplification}
+
+
+
+
+Following~\thesis, a substitution $\sigma$ of constructor terms models a formula $u \neqi v$, denoted $\sigma \vDash_c u \neqi v$, if
+    $u\sigma\mydownarrow \neq v\sigma\mydownarrow$ or $\valid{u}$ or $\valid{v}$.
+    $\vDash_c$ is naturally extended to formula $\forall \tilde{x}. \bigvee_i u_i \neqi v_i$.
+    The simplification functions in this section preserve the models of the formulas.
+
+
+
+\label{val:Term.simplify-underscoreformula}\begin{ocamldoccode}
+val simplify_formula : formula -> formula
+\end{ocamldoccode}
+\index{simplify-underscoreformula@\verb`simplify_formula`}
+\begin{ocamldocdescription}
+This function transforms a formula of the form $\forall \tilde{x} \bigvee_i u_i \neq v_i$ into 
+    a formula of the form $\forall \tilde{y} \bigvee_j x_j \neqi t_j$ where $u_i,v_i,t_i$ are all constructors terms
+    and all $x_j$ are distinct.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.simplify-underscoreformula-underscorephase-underscore2}\begin{ocamldoccode}
+val simplify_formula_phase_2 : formula -> formula
+\end{ocamldoccode}
+\index{simplify-underscoreformula-underscorephase-underscore2@\verb`simplify_formula_phase_2`}
+\begin{ocamldocdescription}
+This function simplifies a formula containing only constructor term by the simplification rules 
+     defined in \thesisL{Figure 7.3}. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Term.simplify-underscoreformula-underscoremodulo-underscorerewrite-underscorerules}\begin{ocamldoccode}
+val simplify_formula_modulo_rewrite_rules : formula -> formula
+\end{ocamldoccode}
+\index{simplify-underscoreformula-underscoremodulo-underscorerewrite-underscorerules@\verb`simplify_formula_modulo_rewrite_rules`}
+\begin{ocamldocdescription}
+This function simplifies a formula that may contain destructor symbols into a formula that contains only constructor terms.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Display}
+
+
+
+
+\label{val:Term.display-underscoreformula}\begin{ocamldoccode}
+val display_formula : formula -> string
+\end{ocamldoccode}
+\index{display-underscoreformula@\verb`display_formula`}
+
+
+\section{Module {\tt{Recipe}} : Operations on recipes}
+\label{module:Recipe}\index{Recipe@\verb`Recipe`}
+
+
+
+
+\ocamldocvspace{0.5cm}
+
+
+
+This module regroups all the functions that manipulate recipes. In ~\thesis , the terms
+    are splitted into first (resp. second) order terms called messages (resp. recipe). 
+    In this module, we focus on the recipes. The message are handled in a different module.
+    In theory a recipe and a message are both terms hence one could consider this module almost 
+    as a copy of the module {\tt{Term}}. However, in the algorithm presented in ~\thesis , the usage of
+    message and recipe are really different.
+
+
+
+\subsection{Recipe}
+
+
+
+
+\label{type:Recipe.variable}\begin{ocamldoccode}
+type variable 
+\end{ocamldoccode}
+\index{variable@\verb`variable`}
+\begin{ocamldocdescription}
+The type {\tt{variable}} corresponds to the set $\Xdeux$ in~\thesis. 
+    Since the recipe variable are always introduced in the algorithm with a deducibility constraint, 
+    a recipe variable is always associated to an integer called the support in ~\thesis . 
+    For example, if $X, i \deduce u$ is a deducibility constraint, the support of $X$ is $i$.
+    Hence a variable is always associated to a support in our module
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{type:Recipe.axiom}\begin{ocamldoccode}
+type axiom 
+\end{ocamldoccode}
+\index{axiom@\verb`axiom`}
+\begin{ocamldocdescription}
+The type {\tt{axiom}} corresponds to the set $\AX$ in~\thesis. Similarly to the variable, a axiom 
+    is always associated to a support. In~\thesis, for an axiom $\ax_i$, $i$ is the support.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{type:Recipe.recipe}\begin{ocamldoccode}
+type recipe 
+\end{ocamldoccode}
+\index{recipe@\verb`recipe`}
+\begin{ocamldocdescription}
+The type {\tt{recipe}} corresponds to the set $\T(\F, \AX \cup \Xdeux)$ in~\thesis. Note that the recipes
+    does not have names. It corresponds to the recipes used in Chapter 7 and 8 of~\thesis. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Fresh function}
+
+
+
+
+\label{val:Recipe.fresh-underscorevariable}\begin{ocamldoccode}
+val fresh_variable : int -> variable
+\end{ocamldoccode}
+\index{fresh-underscorevariable@\verb`fresh_variable`}
+\begin{ocamldocdescription}
+{\tt{fresh\_variable n}} creates a fresh variable with support {\tt{n}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.fresh-underscorevariable-underscorefrom-underscoreid}\begin{ocamldoccode}
+val fresh_variable_from_id : string -> int -> variable
+\end{ocamldoccode}
+\index{fresh-underscorevariable-underscorefrom-underscoreid@\verb`fresh_variable_from_id`}
+\begin{ocamldocdescription}
+{\tt{fresh\_variable\_from\_id s n}} creates a fresh variable with support {\tt{n}} and display identifier {\tt{s}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.fresh-underscorevariable-underscorelist}\begin{ocamldoccode}
+val fresh_variable_list : int -> int -> variable list
+\end{ocamldoccode}
+\index{fresh-underscorevariable-underscorelist@\verb`fresh_variable_list`}
+\begin{ocamldocdescription}
+{\tt{fresh\_variable\_list nb n}} creates a list of {\tt{nb}} fresh variables all with support {\tt{n}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.fresh-underscorevariable-underscorelist2}\begin{ocamldoccode}
+val fresh_variable_list2 : int -> int -> recipe list
+\end{ocamldoccode}
+\index{fresh-underscorevariable-underscorelist2@\verb`fresh_variable_list2`}
+\begin{ocamldocdescription}
+{\tt{fresh\_variable\_list2 nb n}} creates a list of {\tt{nb}} fresh variables considered as recipes and all with support {\tt{n}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.fresh-underscorefree-underscorevariable}\begin{ocamldoccode}
+val fresh_free_variable : int -> variable
+\end{ocamldoccode}
+\index{fresh-underscorefree-underscorevariable@\verb`fresh_free_variable`}
+\begin{ocamldocdescription}
+{\tt{fresh\_free\_variable n}} creates a fresh free variable with support {\tt{n}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.fresh-underscorefree-underscorevariable-underscorefrom-underscoreid}\begin{ocamldoccode}
+val fresh_free_variable_from_id : string -> int -> variable
+\end{ocamldoccode}
+\index{fresh-underscorefree-underscorevariable-underscorefrom-underscoreid@\verb`fresh_free_variable_from_id`}
+\begin{ocamldocdescription}
+{\tt{fresh\_free\_variable\_from\_id s n}} creates a fresh free variable with support {\tt{n}} and display identifier {\tt{s}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.fresh-underscorefree-underscorevariable-underscorelist}\begin{ocamldoccode}
+val fresh_free_variable_list : int -> int -> variable list
+\end{ocamldoccode}
+\index{fresh-underscorefree-underscorevariable-underscorelist@\verb`fresh_free_variable_list`}
+\begin{ocamldocdescription}
+{\tt{fresh\_free\_variable\_list nb n}} creates a list of {\tt{nb}} fresh free variables all with support {\tt{n}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.axiom}\begin{ocamldoccode}
+val axiom : int -> axiom
+\end{ocamldoccode}
+\index{axiom@\verb`axiom`}
+\begin{ocamldocdescription}
+{\tt{axiom n}} creates an axiom with support {\tt{n}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Generation of recipe}
+
+
+
+
+\label{val:Recipe.recipe-underscoreof-underscorevariable}\begin{ocamldoccode}
+val recipe_of_variable : variable -> recipe
+\end{ocamldoccode}
+\index{recipe-underscoreof-underscorevariable@\verb`recipe_of_variable`}
+\begin{ocamldocdescription}
+{\tt{recipe\_of\_variable v}} returns the variable {\tt{v}} considered as a recipe.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.recipe-underscoreof-underscoreaxiom}\begin{ocamldoccode}
+val recipe_of_axiom : axiom -> recipe
+\end{ocamldoccode}
+\index{recipe-underscoreof-underscoreaxiom@\verb`recipe_of_axiom`}
+\begin{ocamldocdescription}
+{\tt{recipe\_of\_axiom ax}} returns the axiom {\tt{ax}} considered as a recipe.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.variable-underscoreof-underscorerecipe}\begin{ocamldoccode}
+val variable_of_recipe : recipe -> variable
+\end{ocamldoccode}
+\index{variable-underscoreof-underscorerecipe@\verb`variable_of_recipe`}
+\begin{ocamldocdescription}
+{\tt{variable\_of\_recipe r}} returns the recipe {\tt{r}} as a variable.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{r}} is not a variable.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.axiom-underscoreof-underscorerecipe}\begin{ocamldoccode}
+val axiom_of_recipe : recipe -> axiom
+\end{ocamldoccode}
+\index{axiom-underscoreof-underscorerecipe@\verb`axiom_of_recipe`}
+\begin{ocamldocdescription}
+{\tt{axiom\_of\_recipe r}} returns the recipe {\tt{r}} as an axiom.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{r}} is not an axiom.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.apply-underscorefunction}\begin{ocamldoccode}
+val apply_function : Term.symbol -> recipe list -> recipe
+\end{ocamldoccode}
+\index{apply-underscorefunction@\verb`apply_function`}
+\begin{ocamldocdescription}
+{\tt{apply\_function f args}} applies the the function symbol {\tt{f}} to the arguments {\tt{args}}.
+    If {\tt{args}} is the list {\tt{[r1;...;rn]}} then the recipe obtained is {\tt{f(r1,...,rn)}}.
+
+
+    \lowdebug  Raise an internal error if the number of arguments in {\tt{args}} does not coincide
+    with the arity of {\tt{f}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Access}
+
+
+
+
+\label{val:Recipe.top}\begin{ocamldoccode}
+val top : recipe -> Term.symbol
+\end{ocamldoccode}
+\index{top@\verb`top`}
+\begin{ocamldocdescription}
+{\tt{top r}} returns the symbol at the root position of {\tt{r}}.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{r}} is not a function symbol application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.get-underscoresupport}\begin{ocamldoccode}
+val get_support : variable -> int
+\end{ocamldoccode}
+\index{get-underscoresupport@\verb`get_support`}
+\begin{ocamldocdescription}
+{\tt{get\_support v}} returns the support of the variable {\tt{v}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Testing}
+
+
+
+
+\label{val:Recipe.is-underscoreequal-underscorevariable}\begin{ocamldoccode}
+val is_equal_variable : variable -> variable -> bool
+\end{ocamldoccode}
+\index{is-underscoreequal-underscorevariable@\verb`is_equal_variable`}
+\begin{ocamldocdescription}
+{\tt{is\_equal\_variable v1 v2}} returns {\tt{true}} iff {\tt{v1}} and {\tt{v2}} are the same variable.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscoreequal-underscoreaxiom}\begin{ocamldoccode}
+val is_equal_axiom : axiom -> axiom -> bool
+\end{ocamldoccode}
+\index{is-underscoreequal-underscoreaxiom@\verb`is_equal_axiom`}
+\begin{ocamldocdescription}
+{\tt{is\_equal\_axiom ax1 ax2}} returns {\tt{true}} iff {\tt{ax1}} and {\tt{ax2}} are the same axioms.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscoreequal-underscorerecipe}\begin{ocamldoccode}
+val is_equal_recipe : recipe -> recipe -> bool
+\end{ocamldoccode}
+\index{is-underscoreequal-underscorerecipe@\verb`is_equal_recipe`}
+\begin{ocamldocdescription}
+{\tt{is\_equal\_recipe r1 r2}} returns {\tt{true}} iff {\tt{r1}} and {\tt{r2}} are the same recipes.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.occurs}\begin{ocamldoccode}
+val occurs : variable -> recipe -> bool
+\end{ocamldoccode}
+\index{occurs@\verb`occurs`}
+\begin{ocamldocdescription}
+{\tt{occurs v r}} return true iff the variable {\tt{v}} is in the recipe {\tt{r}}
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscorefree-underscorevariable}\begin{ocamldoccode}
+val is_free_variable : variable -> bool
+\end{ocamldoccode}
+\index{is-underscorefree-underscorevariable@\verb`is_free_variable`}
+\begin{ocamldocdescription}
+{\tt{is\_free\_variable v}} returns {\tt{true}} iff {\tt{v}} is free.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscorefree-underscorevariable2}\begin{ocamldoccode}
+val is_free_variable2 : recipe -> bool
+\end{ocamldoccode}
+\index{is-underscorefree-underscorevariable2@\verb`is_free_variable2`}
+\begin{ocamldocdescription}
+{\tt{is\_free\_variable2 r}} returns {\tt{true}} iff {\tt{r}} is a free variable.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscorevariable}\begin{ocamldoccode}
+val is_variable : recipe -> bool
+\end{ocamldoccode}
+\index{is-underscorevariable@\verb`is_variable`}
+\begin{ocamldocdescription}
+{\tt{is\_variable r}} returns {\tt{true}} iff {\tt{r}} is a variable.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscoreaxiom}\begin{ocamldoccode}
+val is_axiom : recipe -> bool
+\end{ocamldoccode}
+\index{is-underscoreaxiom@\verb`is_axiom`}
+\begin{ocamldocdescription}
+{\tt{is\_axiom r}} returns {\tt{true}} iff {\tt{r}} is an axiom.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscorefunction}\begin{ocamldoccode}
+val is_function : recipe -> bool
+\end{ocamldoccode}
+\index{is-underscorefunction@\verb`is_function`}
+\begin{ocamldocdescription}
+{\tt{is\_function r}} returns {\tt{true}} iff {\tt{r}} is a function symbol application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Iterators}
+
+
+
+
+\label{val:Recipe.iter-underscoreargs}\begin{ocamldoccode}
+val iter_args : (recipe -> unit) -> recipe -> unit
+\end{ocamldoccode}
+\index{iter-underscoreargs@\verb`iter_args`}
+\begin{ocamldocdescription}
+{\tt{iter\_args f r}} is {\tt{f r1; ...; f rn}} if {\tt{r}} is
+    the recipe $g(r_1,...,r_n)$  for some function symbol $g$. 
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{r}} is not a function application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.map-underscoreargs}\begin{ocamldoccode}
+val map_args : (recipe -> {\textquotesingle}a) -> recipe -> {\textquotesingle}a list
+\end{ocamldoccode}
+\index{map-underscoreargs@\verb`map_args`}
+\begin{ocamldocdescription}
+{\tt{map\_args f r}} is the list {\tt{[f r1; ...; f rn]}} if {\tt{r}} is
+    the recipe $g(r_1,...,r_n)$  for some function symbol $g$. 
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{r}} is not a function application.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Display}
+
+
+
+
+\label{val:Recipe.display-underscorevariable}\begin{ocamldoccode}
+val display_variable : variable -> string
+\end{ocamldoccode}
+\index{display-underscorevariable@\verb`display_variable`}
+
+
+
+
+\label{val:Recipe.display-underscoreaxiom}\begin{ocamldoccode}
+val display_axiom : axiom -> string
+\end{ocamldoccode}
+\index{display-underscoreaxiom@\verb`display_axiom`}
+
+
+
+
+\label{val:Recipe.display-underscorerecipe}\begin{ocamldoccode}
+val display_recipe : recipe -> string
+\end{ocamldoccode}
+\index{display-underscorerecipe@\verb`display_recipe`}
+
+
+
+
+\label{val:Recipe.display-underscorerecipe2}\begin{ocamldoccode}
+val display_recipe2 :
+  (recipe * {\textquotesingle}a) list -> ({\textquotesingle}a -> string) -> recipe -> string
+\end{ocamldoccode}
+\index{display-underscorerecipe2@\verb`display_recipe2`}
+\begin{ocamldocdescription}
+{\tt{display\_recipe assoc f\_display r}} display the recipe {\tt{r}} but each variable
+    and axiom {\tt{r{\textquotesingle}}} in {\tt{r}} is displayed as {\tt{f\_display b}} if {\tt{(r{\textquotesingle},b)}} is in {\tt{assoc}}
+    else is normally displayed.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsection{Variable Mapping}
+
+
+
+
+\begin{ocamldoccode}
+{\tt{module }}{\tt{VariableMap}}{\tt{ : }}\end{ocamldoccode}
+\label{module:Recipe.VariableMap}\index{VariableMap@\verb`VariableMap`}
+
+\begin{ocamldocsigend}
+
+
+\label{type:Recipe.VariableMap.map}\begin{ocamldoccode}
+type {\textquotesingle}a map 
+\end{ocamldoccode}
+\index{map@\verb`map`}
+\begin{ocamldocdescription}
+{\tt{{\textquotesingle}a map}} is the type that represents the mapping of variable to element of type {\tt{{\textquotesingle}a}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Recipe.VariableMap.empty}\begin{ocamldoccode}
+val empty : {\textquotesingle}a map
+\end{ocamldoccode}
+\index{empty@\verb`empty`}
+\begin{ocamldocdescription}
+{\tt{empty}} is the empty mapping function.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Recipe.VariableMap.is-underscoreempty}\begin{ocamldoccode}
+val is_empty : {\textquotesingle}a map -> bool
+\end{ocamldoccode}
+\index{is-underscoreempty@\verb`is_empty`}
+\begin{ocamldocdescription}
+{\tt{is\_empty map}} returns {\tt{true}} iff {\tt{map}} is empty.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Recipe.VariableMap.add}\begin{ocamldoccode}
+val add : Recipe.variable ->
+  {\textquotesingle}a -> {\textquotesingle}a map -> {\textquotesingle}a map
+\end{ocamldoccode}
+\index{add@\verb`add`}
+\begin{ocamldocdescription}
+{\tt{add v elt map}} returns a map containing the same bindings as {\tt{map}}, 
+      plus a binding of {\tt{v}} to {\tt{elt}}.
+If {\tt{v}} was already bound in {\tt{map}}, 
+      its previous binding disappears.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Recipe.VariableMap.find}\begin{ocamldoccode}
+val find : Recipe.variable -> {\textquotesingle}a map -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{find@\verb`find`}
+\begin{ocamldocdescription}
+{\tt{find v map}} returns the current binding of {\tt{v}} in {\tt{map}}.
+
+{\bf Raises} {\tt{Not\_found}} if no binding exists.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Recipe.VariableMap.mem}\begin{ocamldoccode}
+val mem : Recipe.variable -> {\textquotesingle}a map -> bool
+\end{ocamldoccode}
+\index{mem@\verb`mem`}
+\begin{ocamldocdescription}
+{\tt{mem v map}} returns {\tt{true}} iff {\tt{map}} contains a binding for {\tt{v}}.
+
+
+\end{ocamldocdescription}
+\end{ocamldocsigend}
+
+
+
+
+
+
+\subsection{Substitution and unify}
+
+
+
+
+\label{type:Recipe.substitution}\begin{ocamldoccode}
+type substitution 
+\end{ocamldoccode}
+\index{substitution@\verb`substitution`}
+\begin{ocamldocdescription}
+{\tt{substitution}} corresponds to a mapping from $\Xdeux$ to $\T(\F, \AX \cup \Xdeux)$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscoreidentity}\begin{ocamldoccode}
+val is_identity : substitution -> bool
+\end{ocamldoccode}
+\index{is-underscoreidentity@\verb`is_identity`}
+\begin{ocamldocdescription}
+{\tt{is\_identity s}} returns {\tt{true}} iff {\tt{s}} is the identity substitution.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.unify}\begin{ocamldoccode}
+val unify : (recipe * recipe) list -> substitution
+\end{ocamldoccode}
+\index{unify@\verb`unify`}
+\begin{ocamldocdescription}
+{\tt{unify l}} returns the most general unifier of the pairs of recipes in {\tt{l}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.create-underscoresubstitution}\begin{ocamldoccode}
+val create_substitution : variable -> recipe -> substitution
+\end{ocamldoccode}
+\index{create-underscoresubstitution@\verb`create_substitution`}
+\begin{ocamldocdescription}
+{\tt{create\_substitution v r}} returns the substitution $\{v \mapsto r\}$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.create-underscoresubstitution2}\begin{ocamldoccode}
+val create_substitution2 : recipe -> recipe -> substitution
+\end{ocamldoccode}
+\index{create-underscoresubstitution2@\verb`create_substitution2`}
+\begin{ocamldocdescription}
+{\tt{create\_substitution2 v r}} returns the substitution $\{v \mapsto r\}$. 
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{v}} is not a variable.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.apply-underscoresubstitution}\begin{ocamldoccode}
+val apply_substitution :
+  substitution ->
+  {\textquotesingle}a -> ({\textquotesingle}a -> (recipe -> recipe) -> {\textquotesingle}a) -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{apply-underscoresubstitution@\verb`apply_substitution`}
+\begin{ocamldocdescription}
+{\tt{apply\_substitution subst elt map\_elt}} applies the substitution {\tt{subst}} on the element {\tt{elt}}. The function
+    {\tt{map\_elt}} should map the recipes contained in the element {\tt{elt}} on which {\tt{subst}} should be applied.
+    See {\tt{Term.apply\_substitution}} for more explanation.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.equations-underscorefrom-underscoresubstitution}\begin{ocamldoccode}
+val equations_from_substitution : substitution -> (recipe * recipe) list
+\end{ocamldoccode}
+\index{equations-underscorefrom-underscoresubstitution@\verb`equations_from_substitution`}
+\begin{ocamldocdescription}
+{\tt{equations\_from\_substitution subst}} returns {\tt{[(v1,r1);...;(vn,rn)]}}
+    if {\tt{subst}} is the substitution $\{ v_1 \mapsto r_1, \ldots, v_n \mapsto r_n \}$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.filter-underscoredomain}\begin{ocamldoccode}
+val filter_domain : (variable -> bool) -> substitution -> substitution
+\end{ocamldoccode}
+\index{filter-underscoredomain@\verb`filter_domain`}
+\begin{ocamldocdescription}
+{\tt{filter\_domain f s}} returns the substitution {\tt{s}} restricted to variables that satisfy {\tt{f}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsection{Path}
+
+
+
+
+\label{type:Recipe.path}\begin{ocamldoccode}
+type path 
+\end{ocamldoccode}
+\index{path@\verb`path`}
+\begin{ocamldocdescription}
+The {\tt{path}} corresponds to the path of a recipe defined in ~\thesisL{Definition 7.4}.
+    It corresponds to the set $\Fd^* \cdot \AX$ in~\thesis.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.path-underscoreof-underscorerecipe}\begin{ocamldoccode}
+val path_of_recipe : recipe -> path
+\end{ocamldoccode}
+\index{path-underscoreof-underscorerecipe@\verb`path_of_recipe`}
+\begin{ocamldocdescription}
+{\tt{path\_of\_recipe xi}} returns the path of a recipe. It corresponds to $\mpath(\xi)$ in~\thesis~
+    where $\xi$ is a recipe.
+
+{\bf Raises} {\tt{Internal\_error}} if the path of {\tt{xi}} is not closed or if the path if not defined.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.apply-underscorefunction-underscoreto-underscorepath}\begin{ocamldoccode}
+val apply_function_to_path : Term.symbol -> path -> path
+\end{ocamldoccode}
+\index{apply-underscorefunction-underscoreto-underscorepath@\verb`apply_function_to_path`}
+\begin{ocamldocdescription}
+{\tt{apply\_function\_to\_path f p}} returns the path $f \cdot p$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.axiom-underscorepath}\begin{ocamldoccode}
+val axiom_path : axiom -> path
+\end{ocamldoccode}
+\index{axiom-underscorepath@\verb`axiom_path`}
+\begin{ocamldocdescription}
+{\tt{axiom\_path ax}} returns the path {\tt{ax}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Testing path}
+
+
+
+
+\label{val:Recipe.is-underscoreequal-underscorepath}\begin{ocamldoccode}
+val is_equal_path : path -> path -> bool
+\end{ocamldoccode}
+\index{is-underscoreequal-underscorepath@\verb`is_equal_path`}
+\begin{ocamldocdescription}
+{\tt{is\_equal\_path p1 p2}} returns {\tt{true}} iff {\tt{p1}} and {\tt{p2}} are the same path.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscorerecipe-underscoresame-underscorepath}\begin{ocamldoccode}
+val is_recipe_same_path : recipe -> recipe -> bool
+\end{ocamldoccode}
+\index{is-underscorerecipe-underscoresame-underscorepath@\verb`is_recipe_same_path`}
+\begin{ocamldocdescription}
+{\tt{is\_recipe\_same\_path r1 r2}} returns {\tt{true}} iff the paths of {\tt{r1}} and of {\tt{r2}} are the same. 
+    Note that two recipes having the same path does not imply that the recipes are equal.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscorepath-underscoreof-underscorerecipe}\begin{ocamldoccode}
+val is_path_of_recipe : recipe -> path -> bool
+\end{ocamldoccode}
+\index{is-underscorepath-underscoreof-underscorerecipe@\verb`is_path_of_recipe`}
+\begin{ocamldocdescription}
+{\tt{is\_path\_of\_recipe r p}} returns {\tt{true}} iff the path of {\tt{r}} is {\tt{p}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Display}
+
+
+
+
+\label{val:Recipe.display-underscorepath}\begin{ocamldoccode}
+val display_path : path -> string
+\end{ocamldoccode}
+\index{display-underscorepath@\verb`display_path`}
+
+
+
+
+\subsection{Recipe context}
+
+
+
+
+\label{type:Recipe.context}\begin{ocamldoccode}
+type context 
+\end{ocamldoccode}
+\index{context@\verb`context`}
+\begin{ocamldocdescription}
+The type {\tt{context}} corresponds to the set $\T(\Fc, \Fd^* \cdot \AX \cup \Xdeux)$ in~\thesis.
+    The context of a recipe, defined in~\thesisL{Definition 7.6},  is used in the algorithm 
+    for dealing with the inequations.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.context-underscoreof-underscorerecipe}\begin{ocamldoccode}
+val context_of_recipe : recipe -> context
+\end{ocamldoccode}
+\index{context-underscoreof-underscorerecipe@\verb`context_of_recipe`}
+\begin{ocamldocdescription}
+{\tt{context\_of\_recipe r}} returns the context of the recipe {\tt{r}} following ~\thesisL{Definition 7.6}. 
+    Note that in this definition, a frame is needed as parameter. But since we consider context with only
+    constructor function symbol as application function, such frame is not necessary. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.recipe-underscoreof-underscorecontext}\begin{ocamldoccode}
+val recipe_of_context : context -> recipe
+\end{ocamldoccode}
+\index{recipe-underscoreof-underscorecontext@\verb`recipe_of_context`}
+\begin{ocamldocdescription}
+{\tt{recipe\_of\_context c}} transforms the context {\tt{c}} as a recipe if {\tt{c}} is included in $\T(\F, \Xdeux)$. 
+    {\tt{c}} cannot contain a path since one cannot reconstruct a recipe from a path.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{c}} is not included in $\T(\F, \Xdeux)$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.path-underscoreof-underscorecontext}\begin{ocamldoccode}
+val path_of_context : context -> path
+\end{ocamldoccode}
+\index{path-underscoreof-underscorecontext@\verb`path_of_context`}
+
+
+
+
+\label{val:Recipe.top-underscorecontext}\begin{ocamldoccode}
+val top_context : context -> Term.symbol
+\end{ocamldoccode}
+\index{top-underscorecontext@\verb`top_context`}
+
+
+
+
+\label{val:Recipe.apply-underscoresubstitution-underscoreon-underscorecontext}\begin{ocamldoccode}
+val apply_substitution_on_context :
+  substitution ->
+  {\textquotesingle}a -> ({\textquotesingle}a -> (context -> context) -> {\textquotesingle}a) -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{apply-underscoresubstitution-underscoreon-underscorecontext@\verb`apply_substitution_on_context`}
+\begin{ocamldocdescription}
+{\tt{apply\_substitution\_on\_context theta elt map\_elt}} first transforms the substitution $\theta = \{X_i \mapsto \xi_i\}_i$
+    into a substitution $\theta' = \{X_i \mapsto \gamma_i\}_i$  where {\tt{gamma\_i}} is the result of {\tt{context\_of\_recipe xi\_i}}.
+    Then it applies the substitution {\tt{theta{\textquotesingle}}} on the {\tt{elt}}. The function
+    {\tt{map\_elt}} should map the contexts contained in the element {\tt{elt}} on which {\tt{theta{\textquotesingle}}} should be applied.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Testing}
+
+
+
+
+\label{val:Recipe.is-underscorevariable-underscorecontext}\begin{ocamldoccode}
+val is_variable_context : context -> bool
+\end{ocamldoccode}
+\index{is-underscorevariable-underscorecontext@\verb`is_variable_context`}
+\begin{ocamldocdescription}
+{\tt{is\_variable\_context c}} returns {\tt{true}} iff {\tt{c}} is a variable, i.e. is in $\Xdeux$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscorepath-underscorecontext}\begin{ocamldoccode}
+val is_path_context : context -> bool
+\end{ocamldoccode}
+\index{is-underscorepath-underscorecontext@\verb`is_path_context`}
+\begin{ocamldocdescription}
+{\tt{is\_path\_context c}} returns {\tt{true}} iff {\tt{c}} is a path, i.e. is in $\F^* \cdot \AX$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.is-underscoreclosed-underscorecontext}\begin{ocamldoccode}
+val is_closed_context : context -> bool
+\end{ocamldoccode}
+\index{is-underscoreclosed-underscorecontext@\verb`is_closed_context`}
+\begin{ocamldocdescription}
+{\tt{is\_closed\_context c}} returns {\tt{true}} iff {\tt{c}} is closed, i.e. is in $\T(\F,\F^* \cdot \AX)$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.exists-underscorepath-underscorein-underscorecontext}\begin{ocamldoccode}
+val exists_path_in_context : context -> bool
+\end{ocamldoccode}
+\index{exists-underscorepath-underscorein-underscorecontext@\verb`exists_path_in_context`}
+\begin{ocamldocdescription}
+{\tt{is\_closed\_context c}} returns {\tt{true}} iff there exists a path subterm of {\tt{c}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Access}
+
+
+
+
+\label{val:Recipe.get-underscoremax-underscoreparam-underscorecontext}\begin{ocamldoccode}
+val get_max_param_context : context -> int
+\end{ocamldoccode}
+\index{get-underscoremax-underscoreparam-underscorecontext@\verb`get_max_param_context`}
+\begin{ocamldocdescription}
+{\tt{get\_max\_param\_context c}} returns the maximal parameter of the recipe context {\tt{c}}, defined in~\thesisL{Section 7.4.2.2}
+    and denoted $\maxparamC{\C}{c}$ where $\C$ is a constraint system.  Note that our function does not have 
+    a constraint system as argument. Indeed, the purpose of the constraint system is to allow the association support/variable
+    in~\thesis~ which is coded directly in the variables in this module.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Display}
+
+
+
+
+\label{val:Recipe.display-underscorecontext}\begin{ocamldoccode}
+val display_context : context -> string
+\end{ocamldoccode}
+\index{display-underscorecontext@\verb`display_context`}
+
+
+
+
+\subsection{Formula on contexts of recipes}
+
+
+
+
+\label{type:Recipe.formula}\begin{ocamldoccode}
+type formula 
+\end{ocamldoccode}
+\index{formula@\verb`formula`}
+\begin{ocamldocdescription}
+The type {\tt{formula}} correspond to a disjunction of inequation between context of recipe.
+    It corresponds to the formulas contains in the association table in~\thesisL{Section 7.4.2.2}. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{exception:Recipe.Removal-underscoretransformation}\begin{ocamldoccode}
+exception Removal_transformation
+\end{ocamldoccode}
+\index{Removal-underscoretransformation@\verb`Removal_transformation`}
+\begin{ocamldocdescription}
+This exception will be trigerred when a formula will satisfy the removal transformation
+    described in~\thesisL{Section 7.4.2.5}. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.create-underscoreformula}\begin{ocamldoccode}
+val create_formula : variable -> recipe -> formula
+\end{ocamldoccode}
+\index{create-underscoreformula@\verb`create_formula`}
+\begin{ocamldocdescription}
+{\tt{create\_formula x xi}} creates the formula $X \neqi \context{\xi}{}$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Scanning}
+
+
+
+
+\label{val:Recipe.for-underscoreall-underscoreformula}\begin{ocamldoccode}
+val for_all_formula : (context * context -> bool) -> formula -> bool
+\end{ocamldoccode}
+\index{for-underscoreall-underscoreformula@\verb`for_all_formula`}
+\begin{ocamldocdescription}
+{\tt{for\_all\_formula f phi}} returns {\tt{true}} iff {\tt{f xi\_i beta\_i}} returns {\tt{true}} for all {\tt{i}}
+    where {\tt{phi}} is the formula $\bigvee_i \xi_i \neqi \beta_i$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.exists-underscoreformula}\begin{ocamldoccode}
+val exists_formula : (context * context -> bool) -> formula -> bool
+\end{ocamldoccode}
+\index{exists-underscoreformula@\verb`exists_formula`}
+\begin{ocamldocdescription}
+{\tt{exists\_formula f phi}} returns {\tt{true}} iff there exists {\tt{i}} s.t. {\tt{f xi\_i beta\_i}} returns {\tt{true}} 
+    where {\tt{phi}} is the formula $\bigvee_i \xi_i \neqi \beta_i$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.find-underscoreand-underscoreapply-underscoreformula}\begin{ocamldoccode}
+val find_and_apply_formula :
+  (context -> context -> bool) ->
+  (context -> context -> {\textquotesingle}a) ->
+  (unit -> {\textquotesingle}a) -> formula -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{find-underscoreand-underscoreapply-underscoreformula@\verb`find_and_apply_formula`}
+\begin{ocamldocdescription}
+{\tt{find\_and\_apply\_formula f\_test f\_apply f\_no formula}} searches in {\tt{formula}} an inequation satisfying {\tt{f\_test}}. 
+   If such inequation exists then it applies {\tt{f\_apply}} on it else it apply the function {\tt{f\_no}}.
+
+
+   Note that since an inequation $\xi \neqi \beta$  is semantically the same as $\beta \neqi \xi$ , it is recommanded that
+   {\tt{f\_test xi beta}} and {\tt{f\_test beta xi}} are equal. Same for {\tt{f\_apply}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Modification}
+
+
+
+
+\label{val:Recipe.apply-underscoresubstitution-underscoreon-underscoreformulas}\begin{ocamldoccode}
+val apply_substitution_on_formulas :
+  substitution ->
+  {\textquotesingle}a -> ({\textquotesingle}a -> (formula -> formula) -> {\textquotesingle}a) -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{apply-underscoresubstitution-underscoreon-underscoreformulas@\verb`apply_substitution_on_formulas`}
+\begin{ocamldocdescription}
+{\tt{apply\_substitution\_on\_formulas theta elt map\_elt}} first transforms a substitution $\theta = \{X \mapsto \xi\}$
+    into a substitution $\theta' = \{X \mapsto \gamma\}$  where {\tt{gamma}} is the result of {\tt{context\_of\_recipe xi}}.
+    Then it applies the substitution {\tt{theta{\textquotesingle}}} on the formulas of {\tt{elt}}. The function
+    {\tt{map\_elt}} should map the formulas contained in the element {\tt{elt}} on which {\tt{theta{\textquotesingle}}} should be applied.
+
+{\bf Raises} {\tt{Internal\_error}} if the domain of {\tt{theta}} is different from a singleton.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.simplify-underscoreformula}\begin{ocamldoccode}
+val simplify_formula : formula -> formula
+\end{ocamldoccode}
+\index{simplify-underscoreformula@\verb`simplify_formula`}
+\begin{ocamldocdescription}
+{\tt{simplify\_formula phi}} returns the formula {\tt{phi}} simplified as detailed in~\thesisL{Section 7.4.2.2}. 
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if {\tt{phi}} can be simplified into a formula $f(\beta_1, \ldots, \beta_n) \neqi g(\beta'_1, \ldots, \beta'_m) \vee \Phi'$ for some $f \neq g$. 
+\item {\tt{Removal\_transformation}} if {\tt{phi}} can be simplified into a formula of the form $\bigvee_i \xi_i \neqi \beta_i$ where for all $i$, $\xi_i \in \Fd^*\cdot \AX$ or $\beta_i \in \Fd^*\cdot \AX$. 
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.apply-underscoresimplify-underscoresubstitution-underscoreon-underscoreformulas}\begin{ocamldoccode}
+val apply_simplify_substitution_on_formulas :
+  substitution ->
+  {\textquotesingle}a -> ({\textquotesingle}a -> (formula -> formula) -> {\textquotesingle}a) -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{apply-underscoresimplify-underscoresubstitution-underscoreon-underscoreformulas@\verb`apply_simplify_substitution_on_formulas`}
+\begin{ocamldocdescription}
+{\tt{apply\_simplify\_substitution\_on\_formulas theta elt map\_elt}} returns the same as {\tt{simplify\_formula (apply\_substitution\_on\_formulas theta elt map\_elt)}}
+    but computes it more quickly.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Recipe.display-underscoreformula}\begin{ocamldoccode}
+val display_formula : formula -> string
+\end{ocamldoccode}
+\index{display-underscoreformula@\verb`display_formula`}
+
+
+\section{Module {\tt{Constraint}} : Frame and deducibility constraints}
+\label{module:Constraint}\index{Constraint@\verb`Constraint`}
+
+
+
+
+\ocamldocvspace{0.5cm}
+
+
+
+This module regrous all the functions that manipulate the deduciblity constraints and the frame.
+    Hence it corresponds to the elements of the form $X, i \deduce u$ and $\xi, j \ded v$ in~\thesisL{Chapter 7,8}. 
+
+
+
+\subsection{Support set}
+
+
+
+
+\label{type:Constraint.support-underscoreset}\begin{ocamldoccode}
+type {\textquotesingle}a support_set 
+\end{ocamldoccode}
+\index{support-underscoreset@\verb`support_set`}
+\begin{ocamldocdescription}
+Both frame and deducibility constraints are theorically a sets of elements of the form $X, i \deduce u$ and $\xi, j \ded v$
+    in~\thesis.  However, both of these element depend of a support, i.e. an integer. Hence to improve the 
+    efficiency of our algorithm, the type {\tt{support\_set}} is an optimised set of element parametrised by an integer.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{type:Constraint.position}\begin{ocamldoccode}
+type position 
+\end{ocamldoccode}
+\index{position@\verb`position`}
+\begin{ocamldocdescription}
+The type {\tt{position}} corresponds to the specific position of an element in a {\tt{support\_set}}.
+    It is used to speed-up the access to element of a {\tt{support\_set}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.empty-underscoreset}\begin{ocamldoccode}
+val empty_set : {\textquotesingle}a support_set
+\end{ocamldoccode}
+\index{empty-underscoreset@\verb`empty_set`}
+\begin{ocamldocdescription}
+{\tt{empty\_set}} is an empty support set.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Modification}
+
+
+
+
+\label{val:Constraint.add}\begin{ocamldoccode}
+val add : ({\textquotesingle}a -> int) -> {\textquotesingle}a -> {\textquotesingle}a support_set -> {\textquotesingle}a support_set
+\end{ocamldoccode}
+\index{add@\verb`add`}
+\begin{ocamldocdescription}
+{\tt{add f elt set}} add the element {\tt{elt}} with support {\tt{f elt}} in the set {\tt{set}}. {\tt{f}} should correspond
+    to the function that return the support of {\tt{elt}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.add-underscorenew-underscoresupport}\begin{ocamldoccode}
+val add_new_support : (int -> {\textquotesingle}a) -> {\textquotesingle}a support_set -> {\textquotesingle}a support_set
+\end{ocamldoccode}
+\index{add-underscorenew-underscoresupport@\verb`add_new_support`}
+\begin{ocamldocdescription}
+{\tt{add\_new\_support f set}} add the element {\tt{f s}} in {\tt{set}} where {\tt{s-1}} is the support maximal of the
+    element in {\tt{set}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.add-underscorelist}\begin{ocamldoccode}
+val add_list : ({\textquotesingle}a -> int) ->
+  {\textquotesingle}a list -> {\textquotesingle}a support_set -> {\textquotesingle}a support_set
+\end{ocamldoccode}
+\index{add-underscorelist@\verb`add_list`}
+\begin{ocamldocdescription}
+{\tt{add\_list f elt\_list set}} add the elements in {\tt{elt\_list}} in the set {\tt{set}}. {\tt{f}} should correspond
+    to the function that return the support of the elements of {\tt{elt\_list}}.
+
+{\bf Raises} {\tt{Internal\_error}} if the application of {\tt{f}} on the elements of {\tt{elt\_list}} does not return the same value. \lowdebug 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.replace}\begin{ocamldoccode}
+val replace :
+  position ->
+  ({\textquotesingle}a -> {\textquotesingle}a list) ->
+  {\textquotesingle}a support_set -> {\textquotesingle}a * {\textquotesingle}a support_set
+\end{ocamldoccode}
+\index{replace@\verb`replace`}
+\begin{ocamldocdescription}
+{\tt{replace p f set}} replace the element in {\tt{set}} at the position {\tt{p}} by the elements {\tt{f elt}}
+    if {\tt{elt}} is the element in {\tt{set}} at the position {\tt{p}}.
+
+{\bf Raises} {\tt{Internal\_error}} if the position {\tt{p}} does not correspond to any element in {\tt{set}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.replace2}\begin{ocamldoccode}
+val replace2 :
+  position ->
+  ({\textquotesingle}a -> {\textquotesingle}a list * {\textquotesingle}a list) ->
+  {\textquotesingle}a support_set ->
+  {\textquotesingle}a * {\textquotesingle}a support_set * {\textquotesingle}a support_set
+\end{ocamldoccode}
+\index{replace2@\verb`replace2`}
+\begin{ocamldocdescription}
+{\tt{replace2 p f set}} returns two sets {\tt{set1,set2}} where {\tt{set1}} (resp. {\tt{set2}}) is the set {\tt{set}} where 
+    the element {\tt{elt}} at the position {\tt{p}} in {\tt{set}} is replaced by {\tt{elt\_l1}} (resp. {\tt{elt\_l2}}) with {\tt{elt\_l1,elt\_l2}}
+    being the result of {\tt{f elt}}.
+
+{\bf Raises} {\tt{Internal\_error}} if the position {\tt{p}} does not correspond to any element in {\tt{set}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Scanning}
+
+
+
+
+\label{type:Constraint.support-underscorerange}\begin{ocamldoccode}
+type support_range =
+  | SUnique of int
+\end{ocamldoccode}
+\begin{ocamldoccomment}
+{\tt{SUnique s}} Consider only the elements of support {\tt{s}}.
+\end{ocamldoccomment}
+\begin{ocamldoccode}
+  | SAll
+\end{ocamldoccode}
+\begin{ocamldoccomment}
+Consider all the elements in the set.
+\end{ocamldoccomment}
+\begin{ocamldoccode}
+  | SUntil of int
+\end{ocamldoccode}
+\begin{ocamldoccomment}
+{\tt{SUntil s}} considers only the elements of support inferior or equal to {\tt{s}}.
+\end{ocamldoccomment}
+\begin{ocamldoccode}
+  | SFrom of int
+\end{ocamldoccode}
+\begin{ocamldoccomment}
+{\tt{SFrom s}} considers only the elements of support superior or equal to {\tt{s}}.
+\end{ocamldoccomment}
+\begin{ocamldoccode}
+  | SBetween of int * int
+\end{ocamldoccode}
+\begin{ocamldoccomment}
+{\tt{SBetween s1 s2}} considers only the elements of support superior or equal to {\tt{s1}}, and inferior or equal to {\tt{s2}}.
+\end{ocamldoccomment}
+\index{support-underscorerange@\verb`support_range`}
+\begin{ocamldocdescription}
+{\tt{support\_range}} is a parameter for scanning function.
+    It allows more efficient and precise search on the sets.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.search}\begin{ocamldoccode}
+val search :
+  support_range ->
+  ({\textquotesingle}a -> bool) -> {\textquotesingle}a support_set -> {\textquotesingle}a * position
+\end{ocamldoccode}
+\index{search@\verb`search`}
+\begin{ocamldocdescription}
+{\tt{search s\_range test set}} returns {\tt{elt,pos}} where {\tt{elt}} is an element in {\tt{set}} whose support
+  satisfies {\tt{s\_range}} and such that {\tt{test elt}} returns true. {\tt{pos}} is the position of {\tt{elt}} in {\tt{set}}.
+
+{\bf Raises} {\tt{Not\_found}} if no element of {\tt{set}} satisfies the function {\tt{test}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.search-underscoreand-underscorereplace}\begin{ocamldoccode}
+val search_and_replace :
+  support_range ->
+  ({\textquotesingle}a -> bool) ->
+  ({\textquotesingle}a -> {\textquotesingle}a list) ->
+  {\textquotesingle}a support_set ->
+  {\textquotesingle}a * position * {\textquotesingle}a support_set
+\end{ocamldoccode}
+\index{search-underscoreand-underscorereplace@\verb`search_and_replace`}
+\begin{ocamldocdescription}
+{\tt{search\_and\_replace s\_range test f set}} is an optimisation of
+{\tt{{\char123} let (elt,pos) = search s\_range test set in\
+elt,pos, replace pos f set{\char125}}}
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.search-underscoreand-underscorereplace2}\begin{ocamldoccode}
+val search_and_replace2 :
+  support_range ->
+  ({\textquotesingle}a -> bool) ->
+  ({\textquotesingle}a -> {\textquotesingle}a list * {\textquotesingle}a list) ->
+  {\textquotesingle}a support_set ->
+  {\textquotesingle}a * position * {\textquotesingle}a support_set *
+  {\textquotesingle}a support_set
+\end{ocamldoccode}
+\index{search-underscoreand-underscorereplace2@\verb`search_and_replace2`}
+\begin{ocamldocdescription}
+{\tt{search\_and\_replace2 s\_range test f set}} is an optimisation of
+{\tt{{\char123} let (elt,pos) = search s\_range test set in\
+let set1,set2 = replace2 pos f set in\
+elt,pos,set1,set2{\char125}}}
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.for-underscoreall}\begin{ocamldoccode}
+val for_all : support_range -> ({\textquotesingle}a -> bool) -> {\textquotesingle}a support_set -> bool
+\end{ocamldoccode}
+\index{for-underscoreall@\verb`for_all`}
+\begin{ocamldocdescription}
+{\tt{for\_all s\_range test set}} returns {\tt{true}} iff for all elements {\tt{elt}} in {\tt{set}}
+    whose support satisfies {\tt{s\_range}}, {\tt{test elt}} returns {\tt{true}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.exists}\begin{ocamldoccode}
+val exists : support_range -> ({\textquotesingle}a -> bool) -> {\textquotesingle}a support_set -> bool
+\end{ocamldoccode}
+\index{exists@\verb`exists`}
+\begin{ocamldocdescription}
+{\tt{exists s\_range test set}} returns {\tt{true}} iff there exists an element {\tt{elt}} in {\tt{set}}
+    whose support satisfies {\tt{s\_range}} and such that {\tt{test elt}} returns {\tt{true}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Access}
+
+
+
+
+\label{val:Constraint.get}\begin{ocamldoccode}
+val get : position -> {\textquotesingle}a support_set -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{get@\verb`get`}
+\begin{ocamldocdescription}
+{\tt{get pos set}} returns the element of {\tt{set}} at the position {\tt{pos}}.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{pos}} is not a position in {\tt{set}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Iterators}
+
+
+
+
+\label{val:Constraint.iter}\begin{ocamldoccode}
+val iter : support_range -> ({\textquotesingle}a -> unit) -> {\textquotesingle}a support_set -> unit
+\end{ocamldoccode}
+\index{iter@\verb`iter`}
+\begin{ocamldocdescription}
+{\tt{iter s\_range f set}} is {\tt{f e1; ...; f en}} where apply the function {\tt{f}} to all elements of {\tt{set}} whose support satisfies {\tt{s\_range}}.
+    The order on the element on which {\tt{f}} is applied is by increasing support first and then
+    in the order in which they were added in the set.
+
+
+    Note that the function {\tt{replace}} modifies the order in which elements are added:
+    For example, consider a set {\tt{set}} of elements with same support such that {\tt{elt1}}, {\tt{elt2}}, {\tt{elt3}}
+    was added in this particular order by call the function {\tt{add}}. Consider {\tt{pos2}} the position of {\tt{elt2}}
+    in {\tt{set}} and the function {\tt{g = fun e -> [e;e]}}.
+    We have that {\tt{iter SAll f (replace pos2 g set)}} is {\tt{f elt1; f elt2; f elt2; f elt3}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.map}\begin{ocamldoccode}
+val map : support_range ->
+  ({\textquotesingle}a -> {\textquotesingle}a) -> {\textquotesingle}a support_set -> {\textquotesingle}a support_set
+\end{ocamldoccode}
+\index{map@\verb`map`}
+\begin{ocamldocdescription}
+{\tt{map s\_range f set}} returns the set {\tt{set}} where the function {\tt{f}} was applied on all
+    the elements of {\tt{set}} satisfying {\tt{s\_range}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint.fold-underscoreleft}\begin{ocamldoccode}
+val fold_left :
+  support_range ->
+  ({\textquotesingle}a -> {\textquotesingle}b -> {\textquotesingle}a) -> {\textquotesingle}a -> {\textquotesingle}b support_set -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreleft@\verb`fold_left`}
+
+
+
+
+\label{val:Constraint.iter2}\begin{ocamldoccode}
+val iter2 :
+  support_range ->
+  ({\textquotesingle}a -> {\textquotesingle}a -> unit) ->
+  {\textquotesingle}a support_set -> {\textquotesingle}a support_set -> unit
+\end{ocamldoccode}
+\index{iter2@\verb`iter2`}
+\begin{ocamldocdescription}
+{\tt{iter2 s\_range f set1 set2}} is {\tt{f e1 d1; f e2 d2; ...; fen dn}} where {\tt{set1}} (resp. {\tt{set2}})
+    is a set whose elements satisfying {\tt{s\_range}} have the application order {\tt{e1;...; en}} 
+    (resp. {\tt{d1;...;dn}}). See {\tt{Constraint.iter}} for more details on the application order.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{set1}} and {\tt{set2}} do not have the same number of elements  of equal support.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Display}
+
+
+
+
+\label{val:Constraint.display-underscorehorizontally}\begin{ocamldoccode}
+val display_horizontally : ({\textquotesingle}a -> string) -> {\textquotesingle}a support_set -> string
+\end{ocamldoccode}
+\index{display-underscorehorizontally@\verb`display_horizontally`}
+
+
+
+
+\label{val:Constraint.display-underscorevertically}\begin{ocamldoccode}
+val display_vertically : ({\textquotesingle}a -> string) -> string -> {\textquotesingle}a support_set -> string
+\end{ocamldoccode}
+\index{display-underscorevertically@\verb`display_vertically`}
+
+
+
+
+\subsection{Frame}
+
+
+
+
+In~\thesis, a frame is a set $\{ \xi_1, i_1 \ded u_1; \ldots; \xi_n, i_n \ded u_n\}$ where 
+    $\xi_j \in \T(\F, \AX \cup \Xdeux)$, $\mpath(\xi_j)$ exists and $u_j \in T(\Fc, \N \cup \Xun)$
+    for all $j \in \{1, \ldots, n\}$. Note that compare to~\thesis, a frame in this implementation is
+    extented by the addition of some flags which will represents different notions used 
+    later on in the constraint systems. 
+
+
+
+\begin{ocamldoccode}
+{\tt{module }}{\tt{Frame}}{\tt{ : }}\end{ocamldoccode}
+\label{module:Constraint.Frame}\index{Frame@\verb`Frame`}
+
+\begin{ocamldocsigend}
+
+
+\label{type:Constraint.Frame.elt}\begin{ocamldoccode}
+type elt 
+\end{ocamldoccode}
+\index{elt@\verb`elt`}
+\begin{ocamldocdescription}
+A frame constraint represents in~\thesis~an element of the form $\xi, i \ded_F u$ with  
+      $\xi$ a recipe, $i$ a integer, $u$ a constructor term and $F$ a set of flags. 
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.create}\begin{ocamldoccode}
+val create : Recipe.recipe -> int -> Term.term -> elt
+\end{ocamldoccode}
+\index{create@\verb`create`}
+\begin{ocamldocdescription}
+{\tt{create frame\_constraint xi s m}} returns the frame constraint $\xi, s \ded_\emptyset m$. 
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{m}} is not a constructor term. \highdebug 
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Access}
+
+
+\label{val:Constraint.Frame.get-underscorerecipe}\begin{ocamldoccode}
+val get_recipe : elt -> Recipe.recipe
+\end{ocamldoccode}
+\index{get-underscorerecipe@\verb`get_recipe`}
+\begin{ocamldocdescription}
+{\tt{get\_recipe fc}} returns the recipe of {\tt{fc}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.get-underscoresupport}\begin{ocamldoccode}
+val get_support : elt -> int
+\end{ocamldoccode}
+\index{get-underscoresupport@\verb`get_support`}
+\begin{ocamldocdescription}
+{\tt{get\_suport fc}} returns the support of {\tt{fc}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.get-underscoremessage}\begin{ocamldoccode}
+val get_message : elt -> Term.term
+\end{ocamldoccode}
+\index{get-underscoremessage@\verb`get_message`}
+\begin{ocamldocdescription}
+{\tt{get\_message fc}} returns the message of {\tt{fc}}.
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Modification}
+
+
+\label{val:Constraint.Frame.replace-underscorerecipe}\begin{ocamldoccode}
+val replace_recipe : elt ->
+  (Recipe.recipe -> Recipe.recipe) -> elt
+\end{ocamldoccode}
+\index{replace-underscorerecipe@\verb`replace_recipe`}
+\begin{ocamldocdescription}
+{\tt{replace\_recipe fc rep}} returns the frame constraint {\tt{fc}} with the recipe {\tt{rep r}}
+      where {\tt{r}} was the recipe of {\tt{fc}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.replace-underscoremessage}\begin{ocamldoccode}
+val replace_message : elt -> (Term.term -> Term.term) -> elt
+\end{ocamldoccode}
+\index{replace-underscoremessage@\verb`replace_message`}
+\begin{ocamldocdescription}
+{\tt{replace\_message fc rep}} returns the frame constraint {\tt{fc}} with the message {\tt{rep m}}
+      where {\tt{m}} was the message of {\tt{fc}}.
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Flags}
+
+
+In~\thesis, the notion of flag does not exist. However they correspond to 
+    other elements or properties of constraint systems. Hence, we will give the semantics
+    of each flag when introducting their adding function. For this, we will
+    consider a constraint system $\C$, its associated frame $\Phi$  and let {\tt{fc}} be 
+    a frame element $(\xi, i \ded_F u) \in \Phi$. 
+
+\label{val:Constraint.Frame.add-underscorenoDedSubterm}\begin{ocamldoccode}
+val add_noDedSubterm : elt -> Term.symbol -> int -> elt
+\end{ocamldoccode}
+\index{add-underscorenoDedSubterm@\verb`add_noDedSubterm`}
+\begin{ocamldocdescription}
+{\tt{add\_noDedSubterm fc f s}} adds a flag $\textsc{noDedSubterm}(\ffun,s) \in \F$ with $\ffun \in \Fc$.
+      It corresponds to the non-deducibility constraint $\ffun(x_1,\ldots, x_n) \neqi u \vee s \not\deduce
+      x_1 \vee \ldots \vee s \not\deduce x_n$ where $x_1, \ldots, x_n$ are fresh variables. 
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if a flag $\textsc{noUse}$ is alreafy in $\F$. \lowdebug 
+\item {\tt{Internal\_error}} if a flag $\textsc{yesDedSubterm}(\gfun,s')$ was already in $F$ for any $\gfun$, $s'$ except when $\gfun = \ffun$ and $s < s'$.
+\item {\tt{Internal\_error}} if {\tt{f}} is not a constructor function symbol or if it is a tuple. \lowdebug 
+\item {\tt{Internal\_error}} if $u \in \Xun$ \lowdebug .
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.add-underscoreyesDedSubterm}\begin{ocamldoccode}
+val add_yesDedSubterm : elt -> Term.symbol -> int -> elt
+\end{ocamldoccode}
+\index{add-underscoreyesDedSubterm@\verb`add_yesDedSubterm`}
+\begin{ocamldocdescription}
+{\tt{add\_YesDedSubterm fc f s}} adds a flag $\textsc{YesDedSubterm}(\ffun,s) \in \F$. It corresponds to there exists $X_1, \ldots, X_n \in \varsdeux(\C)$
+      such that for all $i \in \{1, \ldots, n\}$, $\maxparam{X_i\theta}{\C} \leq s$ and 
+      \[
+      \context{\ffun(X_1,\ldots,X_n)\theta}{\Phi}\directun{\C} = v
+      \]
+      Intuitively, it indicates that $u$ can be constructed in $\C$ by applying $\ffun$ with support inferior or equal to $s$. 
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if a flag $\textsc{noDedSubterm}(\ffun,s')$ or $\textsc{noUse}$ was already in $F$ with $s \leq s'$. \lowdebug 
+\item {\tt{Internal\_error}} if {\tt{f}} is not a constructor function symbol or if it is a tuple. \lowdebug 
+\item {\tt{Internal\_error}} if $u \in \Xun$ \lowdebug .
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.add-underscorenoDest}\begin{ocamldoccode}
+val add_noDest : elt -> Term.symbol -> int -> elt
+\end{ocamldoccode}
+\index{add-underscorenoDest@\verb`add_noDest`}
+\begin{ocamldocdescription}
+{\tt{add\_noDest fc f s}} adds a flag $\textsc{NoDest}(\ffun,s) \in \F$ with $f \in \Fd$.
+      It corresponds to the non-deducibility constraint $\forall \tilde{x}. u \neqi v_1 \vee s \not\deduce v_2 \vee \ldots vee s \not\deduce v_n$
+      where $\ffun(v_1, \ldots, v_n) \rightarrow w$ is a fresh rewrite rule with $\tilde{x} = \vars(v_1)$. 
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if a flag $\textsc{yesDest}$ or $\textsc{noUse}$ was already in $F$ 
+\item {\tt{Internal\_error}} if {\tt{f}} is not a destructor function symbol. \lowdebug 
+\item {\tt{Internal\_error}} if {\tt{f}} is a projection function symbol. \highdebug 
+\item {\tt{Internal\_error}} if $u \in \Xun$ \lowdebug .
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.add-underscoreyesDest}\begin{ocamldoccode}
+val add_yesDest : elt -> elt
+\end{ocamldoccode}
+\index{add-underscoreyesDest@\verb`add_yesDest`}
+\begin{ocamldocdescription}
+{\tt{add\_yesDest fc}} adds a flag $\textsc{YesDest} \in F$.
+      It corresponds to the fact that there exists $(\zeta, k \ded v) \in \Phi$ such that
+      $\mpath(\zeta) = \gfun \cdot \mpath(\xi)$  and {\tt{Term.link\_destruc\_construc g f}} returns {\tt{true}}
+      where $\gfun = \Top{u}$. 
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if a flag $\textsc{noUse}$ is already in $\F$. 
+\item {\tt{Internal\_error}} if $u \in \Xun$ \lowdebug .
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.add-underscorenoUse}\begin{ocamldoccode}
+val add_noUse : elt -> elt
+\end{ocamldoccode}
+\index{add-underscorenoUse@\verb`add_noUse`}
+\begin{ocamldocdescription}
+{\tt{add\_noUse fc}} adds a flag $\textsc{NoUse} \in F$. 
+      It corresponds to the fact that $(\xi, i \ded u) \in \flag(\C)$. 
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.is-underscorenoDedSubterm}\begin{ocamldoccode}
+val is_noDedSubterm : elt -> int -> bool
+\end{ocamldoccode}
+\index{is-underscorenoDedSubterm@\verb`is_noDedSubterm`}
+\begin{ocamldocdescription}
+{\tt{is\_noDedSubterm fc s}} returns {\tt{true}} iff there is a flag $\textsc{NoDedSubterm}(\ffun,s') \in F$ with $s \leq s'$
+      where $\ffun = \Top{u}$. 
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.is-underscoreyesDedSubterm}\begin{ocamldoccode}
+val is_yesDedSubterm : elt -> int -> bool
+\end{ocamldoccode}
+\index{is-underscoreyesDedSubterm@\verb`is_yesDedSubterm`}
+\begin{ocamldocdescription}
+{\tt{is\_yesDedSubterm fc s}} returns {\tt{true}} iff there is a flag $\textsc{YesDedSubterm}(\ffun,s') \in F$ with $s \geq s'$
+      where $\ffun = \Top{u}$. 
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.is-underscorenoDest}\begin{ocamldoccode}
+val is_noDest : elt -> int -> bool
+\end{ocamldoccode}
+\index{is-underscorenoDest@\verb`is_noDest`}
+\begin{ocamldocdescription}
+{\tt{is\_noDest fc s}} returns {\tt{true}} iff there is a flag $\textsc{NoDest}(\ffun,s') \in F$ with $s \leq s'$
+      where $\ffun$ is the corresponding destructor of $\Top{u}$. 
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.is-underscoreyesDest}\begin{ocamldoccode}
+val is_yesDest : elt -> bool
+\end{ocamldoccode}
+\index{is-underscoreyesDest@\verb`is_yesDest`}
+\begin{ocamldocdescription}
+{\tt{is\_yesDest fc}} returns {\tt{true}} iff there is a flag $\textsc{YesDest} \in F$
+      where $\ffun = \Top{u}$. 
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Frame.is-underscorenoUse}\begin{ocamldoccode}
+val is_noUse : elt -> bool
+\end{ocamldoccode}
+\index{is-underscorenoUse@\verb`is_noUse`}
+\begin{ocamldocdescription}
+{\tt{is\_noUse fc}} returns {\tt{true}} iff there is a flag $\textsc{NoUse}$ .
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Testing on frame}
+
+
+\label{val:Constraint.Frame.is-underscoresame-underscorestructure}\begin{ocamldoccode}
+val is_same_structure :
+  elt Constraint.support_set ->
+  elt Constraint.support_set -> bool
+\end{ocamldoccode}
+\index{is-underscoresame-underscorestructure@\verb`is_same_structure`}
+\begin{ocamldocdescription}
+{\tt{is\_same\_structure frame1 frame2}} checks that every couple of frame constraints in {\tt{frame1}} and {\tt{frame2}}
+      of same application order have:
+      \begin{itemize}
+\item the same recipe 
+\item the same support 
+\item the same set of flags
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Display}
+
+
+\label{val:Constraint.Frame.display}\begin{ocamldoccode}
+val display : elt -> string
+\end{ocamldoccode}
+\index{display@\verb`display`}
+\begin{ocamldocdescription}
+{\tt{display fc}} display the frame constraint without considering the flags.
+
+
+\end{ocamldocdescription}
+\end{ocamldocsigend}
+
+
+
+
+
+
+\subsection{Deducibility constraint}
+
+
+
+
+In~\thesis, the deducibility constraints are element of the form $X, i \deduce u$ where 
+    $X \in \Xdeux$, $i \in \mathbb{N}$ and $u \in \T(\Fc, \N \cup \Xun)$.
+    Note that compare to~\thesis, a deducibility constraints in this implementation is
+    extented by the addition of some flags which will represents different notions used 
+    later on in the constraint systems. 
+
+
+
+\begin{ocamldoccode}
+{\tt{module }}{\tt{Deducibility}}{\tt{ : }}\end{ocamldoccode}
+\label{module:Constraint.Deducibility}\index{Deducibility@\verb`Deducibility`}
+
+\begin{ocamldocsigend}
+
+
+\label{type:Constraint.Deducibility.elt}\begin{ocamldoccode}
+type elt 
+\end{ocamldoccode}
+\index{elt@\verb`elt`}
+
+
+\label{val:Constraint.Deducibility.create}\begin{ocamldoccode}
+val create : Recipe.variable -> int -> Term.term -> elt
+\end{ocamldoccode}
+\index{create@\verb`create`}
+\begin{ocamldocdescription}
+{\tt{create v s t}} creates a deducibility constraint with the variable {\tt{v}}, the support {\tt{s}} and
+      the term {\tt{t}}.
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if {\tt{t}} is not a constructor term. \highdebug 
+\item {\tt{Internal\_error}} if {\tt{s}} is different from the support of {\tt{v}}.
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Access}
+
+
+\label{val:Constraint.Deducibility.get-underscorerecipe-underscorevariable}\begin{ocamldoccode}
+val get_recipe_variable : elt -> Recipe.variable
+\end{ocamldoccode}
+\index{get-underscorerecipe-underscorevariable@\verb`get_recipe_variable`}
+\begin{ocamldocdescription}
+{\tt{get\_recipe\_variable dc}} returns the recipe variable of {\tt{dc}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Deducibility.get-underscoresupport}\begin{ocamldoccode}
+val get_support : elt -> int
+\end{ocamldoccode}
+\index{get-underscoresupport@\verb`get_support`}
+\begin{ocamldocdescription}
+{\tt{get\_support dc}} returns the support of {\tt{dc}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Deducibility.get-underscoremessage}\begin{ocamldoccode}
+val get_message : elt -> Term.term
+\end{ocamldoccode}
+\index{get-underscoremessage@\verb`get_message`}
+\begin{ocamldocdescription}
+{\tt{get\_message dc}} returns the message of {\tt{dc}}.
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Modification}
+
+
+\label{val:Constraint.Deducibility.replace-underscoremessage}\begin{ocamldoccode}
+val replace_message : elt ->
+  (Term.term -> Term.term) -> elt
+\end{ocamldoccode}
+\index{replace-underscoremessage@\verb`replace_message`}
+\begin{ocamldocdescription}
+{\tt{replace\_message cc rep}} returns the deducibility constraint {\tt{dc}} with the message {\tt{rep m}}
+      where {\tt{m}} was the message of {\tt{dc}}.
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Flags}
+
+
+Similarly to the module [Frame], the flags in deducibility constraint correspond to 
+      other elements or properties of constraint systems. Hence, we will give the semantics
+      of each flag when introducting their adding function. For this, we will
+      consider a constraint system $\C$, its associated deducibility constraint set $\De$  and let {\tt{dc}} be 
+      a deducibility constraint $(X, i \deduce_F u) \in \De$. 
+
+\label{val:Constraint.Deducibility.add-underscorenoCons}\begin{ocamldoccode}
+val add_noCons : elt -> Term.symbol -> elt
+\end{ocamldoccode}
+\index{add-underscorenoCons@\verb`add_noCons`}
+\begin{ocamldocdescription}
+{\tt{add\_noCons dc f}} adds the flag $\textsc{NoCons}(\ffun) \in F$. It corresponds to the
+      inequation $\Top(X) \neqi \ffun$. 
+
+{\bf Raises} {\tt{Internal\_error}} if the flag was already added. \lowdebug 
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Deducibility.add-underscorenoAxiom}\begin{ocamldoccode}
+val add_noAxiom : elt ->
+  Constraint.position -> elt
+\end{ocamldoccode}
+\index{add-underscorenoAxiom@\verb`add_noAxiom`}
+\begin{ocamldocdescription}
+{\tt{add\_noAxiom dc p}} add the flag $\textsc{NoAxiom}(p) \in \F$. 
+      It corresponds to the inequation $X \neqi \xi$ where $(\xi, j \ded v)$ is the 
+      frame constraint in $\Phi(\C)$ at the position  {\tt{p}}.
+      Note: the flags $\textsc{NoAxiom}  must be added by the rule $\textsc{Axiom}$  for all 
+      cases except when a $\textsc{NoUse}  is detected.
+
+{\bf Raises} {\tt{Internal\_error}} if the flag was already added. \lowdebug 
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Deducibility.compare-underscorenoCons}\begin{ocamldoccode}
+val compare_noCons : elt ->
+  elt -> Term.symbol list * Term.symbol list
+\end{ocamldoccode}
+\index{compare-underscorenoCons@\verb`compare_noCons`}
+\begin{ocamldocdescription}
+{\tt{compare\_noCons dc1 dc2}} compare the flags \textsc{NoCons}  in {\tt{dc1}} and {\tt{dc2}}. 
+      It returns a pair of set of function symbols $(S_1,S_2)$  where:
+      \begin{itemize}
+\item for all $\ffun \in S_1$, $\textsc{NoCons}(\ffun) \in \F_2$ but $\textsc{NoCons}(\ffun) \not\in \F_1$.  
+\item for all $\ffun \in S_2$, $\textsc{NoCons}(\ffun) \in \F_1$ but $\textsc{NoCons}(\ffun) \not\in \F_2$. 
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Deducibility.compare-underscorenoAxiom}\begin{ocamldoccode}
+val compare_noAxiom :
+  elt ->
+  elt ->
+  int -> Constraint.position list * Constraint.position list
+\end{ocamldoccode}
+\index{compare-underscorenoAxiom@\verb`compare_noAxiom`}
+\begin{ocamldocdescription}
+{\tt{compare\_noAxiom c1 c2 s}} compare the flags \textsc{NoAxiom}  in {\tt{dc1}} and {\tt{dc2}}. 
+      It returns a pair of set of position $(P_1,P_2)$  where:
+      \begin{itemize}
+\item for all $p \in P_1$ of support $s$, $\textsc{NoAxiom}(p) \in F_2$ but $\textsc{NoAxiom}(p) \not\in F_1$.  
+\item for all $p \in P_2$ of support $s$, $\textsc{NoAxiom}(p) \in F_1$ but $\textsc{NoAxiom}(p) \not\in F_2$.  
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Deducibility.fold-underscoreleft-underscoreframe-underscorefree-underscoreof-underscorenoAxiom}\begin{ocamldoccode}
+val fold_left_frame_free_of_noAxiom :
+  elt ->
+  ({\textquotesingle}a -> Constraint.Frame.elt -> {\textquotesingle}a) ->
+  {\textquotesingle}a -> Constraint.Frame.elt Constraint.support_set -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreleft-underscoreframe-underscorefree-underscoreof-underscorenoAxiom@\verb`fold_left_frame_free_of_noAxiom`}
+\begin{ocamldocdescription}
+{\tt{fold\_left\_frame\_free\_of\_noAxiom dc f acc frame}} is similar to {\tt{fold\_left (SUntil s) f acc frame}}
+      but {\tt{f}} is only applied to the element of position {\tt{pos}} of {\tt{frame}} such that 
+      the flag {\tt{NoAxiom pos}} is not in {\tt{dc}}. Moreover, {\tt{s}} is the support of {\tt{dc}}
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Scanning}
+
+
+\label{val:Constraint.Deducibility.is-underscoreall-underscorenoCons}\begin{ocamldoccode}
+val is_all_noCons : elt -> bool
+\end{ocamldoccode}
+\index{is-underscoreall-underscorenoCons@\verb`is_all_noCons`}
+\begin{ocamldocdescription}
+{\tt{is\_all\_noCons dc}} returns {\tt{true}} iff the flags {\tt{NoCons f}} is in {\tt{dc}} for all constructors {\tt{f}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Deducibility.is-underscoresame-underscorestructure}\begin{ocamldoccode}
+val is_same_structure :
+  elt Constraint.support_set ->
+  elt Constraint.support_set -> bool
+\end{ocamldoccode}
+\index{is-underscoresame-underscorestructure@\verb`is_same_structure`}
+\begin{ocamldocdescription}
+{\tt{is\_same\_structure dc\_set1 dc\_set2}} checks that every couple of deducibility constraints in {\tt{dc\_set1}} and {\tt{dc\_set2}}
+      of same application order have:
+      \begin{itemize}
+\item the same variable 
+\item the same support 
+\item the same set of flags
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint.Deducibility.is-underscorenoCons}\begin{ocamldoccode}
+val is_noCons : elt -> Term.symbol -> bool
+\end{ocamldoccode}
+\index{is-underscorenoCons@\verb`is_noCons`}
+
+
+\label{val:Constraint.Deducibility.is-underscoreunsatisfiable}\begin{ocamldoccode}
+val is_unsatisfiable :
+  Constraint.Frame.elt Constraint.support_set ->
+  elt -> bool
+\end{ocamldoccode}
+\index{is-underscoreunsatisfiable@\verb`is_unsatisfiable`}
+
+
+\subsubsection{Display}
+
+
+\label{val:Constraint.Deducibility.display}\begin{ocamldoccode}
+val display : elt -> string
+\end{ocamldoccode}
+\index{display@\verb`display`}
+\end{ocamldocsigend}
+
+
+
+
+\section{Module {\tt{Constraint\_system}} : Operations on (matrices of) constraint systems}
+\label{module:Constraint-underscoresystem}\index{Constraint-underscoresystem@\verb`Constraint_system`}
+
+
+
+
+\ocamldocvspace{0.5cm}
+
+
+
+This module regrous all the functions that manipulate the constraint systems and the
+    matrices of constraint system. In~\thesis, there are several definitions of constraint systems
+    but we are only interested in the constraint system of~\thesisL{Chapter 7}. 
+
+
+
+\subsection{Constraint system}
+
+
+
+
+\label{type:Constraint-underscoresystem.constraint-underscoresystem}\begin{ocamldoccode}
+type constraint_system 
+\end{ocamldoccode}
+\index{constraint-underscoresystem@\verb`constraint_system`}
+\begin{ocamldocdescription}
+{\tt{constraint\_system}} corresponds to~\thesisL{Definition 7.6} . Moreover, it will contain
+    additional information used in the algorithm such as association table (see~\thesisL{Section 7.4.2.2}). 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.empty}\begin{ocamldoccode}
+val empty : constraint_system
+\end{ocamldoccode}
+\index{empty@\verb`empty`}
+\begin{ocamldocdescription}
+{\tt{empty}} is the constraint system that accept any solution. It does not contain any
+    deducibility constraint, nor frame constraint, nor equation, nor inequation.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.bottom}\begin{ocamldoccode}
+val bottom : constraint_system
+\end{ocamldoccode}
+\index{bottom@\verb`bottom`}
+\begin{ocamldocdescription}
+{\tt{bottom}} is the constraint system with no solution. It corresponds to $\bot$~in \thesis. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Iterators}
+
+
+
+
+\label{val:Constraint-underscoresystem.map-underscoremessage-underscoreinequation}\begin{ocamldoccode}
+val map_message_inequation :
+  (Term.formula -> Term.formula) ->
+  constraint_system -> constraint_system
+\end{ocamldoccode}
+\index{map-underscoremessage-underscoreinequation@\verb`map_message_inequation`}
+
+
+
+
+\subsubsection{Modification functions}
+
+
+
+
+\label{val:Constraint-underscoresystem.add-underscoremessage-underscoreequation}\begin{ocamldoccode}
+val add_message_equation :
+  constraint_system ->
+  Term.term -> Term.term -> constraint_system
+\end{ocamldoccode}
+\index{add-underscoremessage-underscoreequation@\verb`add_message_equation`}
+\begin{ocamldocdescription}
+{\tt{add\_message\_equation csys t1 t2}} returns the constraint system {\tt{csys}} with the added equation $t_1 \eqi t_2$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.add-underscoremessage-underscoreformula}\begin{ocamldoccode}
+val add_message_formula :
+  constraint_system ->
+  Term.formula -> constraint_system
+\end{ocamldoccode}
+\index{add-underscoremessage-underscoreformula@\verb`add_message_formula`}
+\begin{ocamldocdescription}
+{\tt{add\_message\_formula csys phi}} returns the constraint system {\tt{csys}} with the added message formula {\tt{phi}}
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.add-underscorenew-underscorededucibility-underscoreconstraint}\begin{ocamldoccode}
+val add_new_deducibility_constraint :
+  constraint_system ->
+  Recipe.variable -> Term.term -> constraint_system
+\end{ocamldoccode}
+\index{add-underscorenew-underscorededucibility-underscoreconstraint@\verb`add_new_deducibility_constraint`}
+\begin{ocamldocdescription}
+{\tt{add\_new\_deducibility\_constraint csys X t}} returns the constraint system {\tt{csys}} with the added deducibility constraint
+    $X, i \deduce t$ where $i$  is the maximal support of {\tt{csys}}.
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if {\tt{csys}} is the bottom constraint system.
+\item {\tt{Internal\_error}} if {\tt{t}} is not a constructor term. \highdebug 
+\item {\tt{Internal\_error}} if the support associated to {\tt{X}} is not equal to the maximal support of {\tt{csys}}.
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.add-underscorededucibility-underscoreconstraint}\begin{ocamldoccode}
+val add_deducibility_constraint :
+  constraint_system ->
+  Constraint.Deducibility.elt list -> constraint_system
+\end{ocamldoccode}
+\index{add-underscorededucibility-underscoreconstraint@\verb`add_deducibility_constraint`}
+
+
+
+
+\label{val:Constraint-underscoresystem.add-underscorenew-underscoreaxiom}\begin{ocamldoccode}
+val add_new_axiom : constraint_system ->
+  Term.term -> constraint_system
+\end{ocamldoccode}
+\index{add-underscorenew-underscoreaxiom@\verb`add_new_axiom`}
+\begin{ocamldocdescription}
+{\tt{add\_new\_axiom csys t}} returns the constraint system {\tt{csys}} with the frame $\Phi \cup \{ \ax_i, i \ded t\}$ 
+    where $\Phi$  is the frame of {\tt{csys}} and \$i-1\$ is the maximal support of $\Phi$ .
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{csys}} is the bottom constraint system.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.add-underscoreframe-underscoreconstraint}\begin{ocamldoccode}
+val add_frame_constraint :
+  constraint_system ->
+  Constraint.Frame.elt list -> constraint_system
+\end{ocamldoccode}
+\index{add-underscoreframe-underscoreconstraint@\verb`add_frame_constraint`}
+
+
+
+
+\label{val:Constraint-underscoresystem.frame-underscorereplace}\begin{ocamldoccode}
+val frame_replace :
+  constraint_system ->
+  Constraint.position ->
+  (Constraint.Frame.elt -> Constraint.Frame.elt list) ->
+  Constraint.Frame.elt * constraint_system
+\end{ocamldoccode}
+\index{frame-underscorereplace@\verb`frame_replace`}
+\begin{ocamldocdescription}
+{\tt{frame\_replace c p f}} replace the element in the frame of {\tt{c}} at the position {\tt{p}} by the elements {\tt{f elt}}
+    if {\tt{elt}} is the element in the frame of {\tt{c}} at the position {\tt{p}}.
+
+{\bf Raises} {\tt{Internal\_error}} if the position {\tt{p}} does not correspond to any element in the frame of {\tt{c}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.frame-underscorereplace2}\begin{ocamldoccode}
+val frame_replace2 :
+  constraint_system ->
+  Constraint.position ->
+  (Constraint.Frame.elt ->
+   Constraint.Frame.elt list * Constraint.Frame.elt list) ->
+  Constraint.Frame.elt * constraint_system *
+  constraint_system
+\end{ocamldoccode}
+\index{frame-underscorereplace2@\verb`frame_replace2`}
+\begin{ocamldocdescription}
+{\tt{frame\_replace2 c p f}} returns two constraint systems {\tt{c1,c2}} where {\tt{c1}} (resp. {\tt{c2}}) is the constraint system {\tt{c}} where 
+    the element {\tt{elt}} at the position {\tt{p}} in the frame of {\tt{c}} is replaced by {\tt{elt\_l1}} (resp. {\tt{elt\_l2}}) with {\tt{elt\_l1,elt\_l2}}
+    being the result of {\tt{f elt}}.
+
+{\bf Raises} {\tt{Internal\_error}} if the position {\tt{p}} does not correspond to any element in the frame of {\tt{c}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.frame-underscoresearch-underscoreand-underscorereplace}\begin{ocamldoccode}
+val frame_search_and_replace :
+  constraint_system ->
+  Constraint.support_range ->
+  (Constraint.Frame.elt -> bool) ->
+  (Constraint.Frame.elt -> Constraint.Frame.elt list) ->
+  Constraint.Frame.elt * Constraint.position *
+  constraint_system
+\end{ocamldoccode}
+\index{frame-underscoresearch-underscoreand-underscorereplace@\verb`frame_search_and_replace`}
+\begin{ocamldocdescription}
+{\tt{frame\_search\_and\_replace c s\_range test f}} is an optimisation of
+{\tt{{\char123} let (elt,pos) = Constraint.search s\_range test (get\_frame c) in\
+elt,pos, frame\_replace c pos f{\char125}}}
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.frame-underscoresearch-underscoreand-underscorereplace2}\begin{ocamldoccode}
+val frame_search_and_replace2 :
+  constraint_system ->
+  Constraint.support_range ->
+  (Constraint.Frame.elt -> bool) ->
+  (Constraint.Frame.elt ->
+   Constraint.Frame.elt list * Constraint.Frame.elt list) ->
+  Constraint.Frame.elt * Constraint.position *
+  constraint_system * constraint_system
+\end{ocamldoccode}
+\index{frame-underscoresearch-underscoreand-underscorereplace2@\verb`frame_search_and_replace2`}
+\begin{ocamldocdescription}
+{\tt{frame\_search\_and\_replace2 c s\_range test f}} is an optimisation of
+{\tt{{\char123} let (elt,pos) = Constraint.search s\_range test (get\_frame c) in\
+let set1,set2 = frame\_replace2 c pos f in\
+elt,pos,set1,set2{\char125}}}
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Access functions}
+
+
+
+
+\label{val:Constraint-underscoresystem.get-underscorededucibility-underscoreconstraint-underscoreset}\begin{ocamldoccode}
+val get_deducibility_constraint_set :
+  constraint_system ->
+  Constraint.Deducibility.elt Constraint.support_set
+\end{ocamldoccode}
+\index{get-underscorededucibility-underscoreconstraint-underscoreset@\verb`get_deducibility_constraint_set`}
+\begin{ocamldocdescription}
+{\tt{get\_deducibility\_constraint\_set csys}} returns the set of deducibility constraints of {\tt{csys}}.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{csys}} is the bottom constraint system.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.get-underscoreframe}\begin{ocamldoccode}
+val get_frame :
+  constraint_system ->
+  Constraint.Frame.elt Constraint.support_set
+\end{ocamldoccode}
+\index{get-underscoreframe@\verb`get_frame`}
+\begin{ocamldocdescription}
+{\tt{get\_frame csys}} returns the frame of {\tt{csys}}.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{csys}} is the bottom constraint system.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.get-underscoremessage-underscoreequations}\begin{ocamldoccode}
+val get_message_equations : constraint_system -> (Term.term * Term.term) list
+\end{ocamldoccode}
+\index{get-underscoremessage-underscoreequations@\verb`get_message_equations`}
+\begin{ocamldocdescription}
+{\tt{get\_message\_equations csys}} returns the list {\tt{[(u\_1,v\_1);...;(u\_n,v\_n)]}} where $\bigwedge_{i =1}^n u_i \eqi v_i$  is the conjunction
+    of equations between constructor terms in {\tt{csys}}.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{csys}} is the bottom constraint system.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.get-underscorerecipe-underscoreequations}\begin{ocamldoccode}
+val get_recipe_equations :
+  constraint_system -> (Recipe.recipe * Recipe.recipe) list
+\end{ocamldoccode}
+\index{get-underscorerecipe-underscoreequations@\verb`get_recipe_equations`}
+\begin{ocamldocdescription}
+{\tt{get\_recipe\_equations csys}} returns the list {\tt{[(xi\_1,zeta\_1);...;(xi\_n,zeta\_n)]}} where $\bigwedge_{i =1}^n \xi_i \eqi \zeta_i$  is the conjunction
+    of equations between recipes in {\tt{csys}}.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{csys}} is the bottom constraint system.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.get-underscoremaximal-underscoresupport}\begin{ocamldoccode}
+val get_maximal_support : constraint_system -> int
+\end{ocamldoccode}
+\index{get-underscoremaximal-underscoresupport@\verb`get_maximal_support`}
+\begin{ocamldocdescription}
+{\tt{get\_maximal\_support csys}} returns maximal support of the frame of {\tt{csys}}.
+
+{\bf Raises} {\tt{Internal\_error}} if {\tt{csys}} is the bottom constraint system.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\subsubsection{Testing functions}
+
+
+
+
+\label{val:Constraint-underscoresystem.is-underscoresemi-underscoresolved-underscoreform}\begin{ocamldoccode}
+val is_semi_solved_form : constraint_system -> bool
+\end{ocamldoccode}
+\index{is-underscoresemi-underscoresolved-underscoreform@\verb`is_semi_solved_form`}
+
+
+
+
+\label{val:Constraint-underscoresystem.set-underscoresemi-underscoresolved-underscoreform}\begin{ocamldoccode}
+val set_semi_solved_form : constraint_system -> constraint_system
+\end{ocamldoccode}
+\index{set-underscoresemi-underscoresolved-underscoreform@\verb`set_semi_solved_form`}
+
+
+
+
+\label{val:Constraint-underscoresystem.unset-underscoresemi-underscoresolved-underscoreform}\begin{ocamldoccode}
+val unset_semi_solved_form : constraint_system -> constraint_system
+\end{ocamldoccode}
+\index{unset-underscoresemi-underscoresolved-underscoreform@\verb`unset_semi_solved_form`}
+
+
+
+
+\label{val:Constraint-underscoresystem.is-underscoreno-underscoreuniversal-underscorevariable}\begin{ocamldoccode}
+val is_no_universal_variable : constraint_system -> bool
+\end{ocamldoccode}
+\index{is-underscoreno-underscoreuniversal-underscorevariable@\verb`is_no_universal_variable`}
+
+
+
+
+\label{val:Constraint-underscoresystem.set-underscoreno-underscoreuniversal-underscorevariable}\begin{ocamldoccode}
+val set_no_universal_variable : constraint_system -> constraint_system
+\end{ocamldoccode}
+\index{set-underscoreno-underscoreuniversal-underscorevariable@\verb`set_no_universal_variable`}
+
+
+
+
+\label{val:Constraint-underscoresystem.unset-underscoreno-underscoreuniversal-underscorevariable}\begin{ocamldoccode}
+val unset_no_universal_variable : constraint_system -> constraint_system
+\end{ocamldoccode}
+\index{unset-underscoreno-underscoreuniversal-underscorevariable@\verb`unset_no_universal_variable`}
+
+
+
+
+\label{val:Constraint-underscoresystem.is-underscorebottom}\begin{ocamldoccode}
+val is_bottom : constraint_system -> bool
+\end{ocamldoccode}
+\index{is-underscorebottom@\verb`is_bottom`}
+\begin{ocamldocdescription}
+{\tt{is\_bottom c}} returns {\tt{true}} iff {\tt{c}} is the constraint system $\bot$. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.check-underscoresame-underscorestructure}\begin{ocamldoccode}
+val check_same_structure : constraint_system ->
+  constraint_system -> unit
+\end{ocamldoccode}
+\index{check-underscoresame-underscorestructure@\verb`check_same_structure`}
+\begin{ocamldocdescription}
+{\tt{check\_same\_structure c1 c2}} does nothing if {\tt{c1}} and {\tt{c2}} have same structure else it raises 
+    the exception {\tt{Internal\_error}}. The definition of structure is given in~\thesisL{Section 7.1.2}. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.check-underscoresame-underscoreshape}\begin{ocamldoccode}
+val check_same_shape : constraint_system ->
+  constraint_system -> unit
+\end{ocamldoccode}
+\index{check-underscoresame-underscoreshape@\verb`check_same_shape`}
+\begin{ocamldocdescription}
+{\tt{check\_same\_shape c1 c2}} does nothing if {\tt{c1}} and {\tt{c2}} have same shape else it raises 
+    the exception {\tt{Internal\_error}}. The definition of shape is given in~\thesisL{Definition 7.11}. 
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.display}\begin{ocamldoccode}
+val display : constraint_system -> string
+\end{ocamldoccode}
+\index{display@\verb`display`}
+
+
+
+
+\label{val:Constraint-underscoresystem.is-underscoreunsatisfiable}\begin{ocamldoccode}
+val is_unsatisfiable : constraint_system -> bool
+\end{ocamldoccode}
+\index{is-underscoreunsatisfiable@\verb`is_unsatisfiable`}
+
+
+
+
+\subsection{Functionnalities of Phase 1}
+
+
+
+
+In the strategy on the rules described in~\thesisL{Section 7.4},  there are two different phases
+    of rule application. Hence this section describes the optimised functions used in Phase 1
+    of the strategy. Due to the lack of invariant during this phase, these functions are 
+    quite general.
+
+
+
+\begin{ocamldoccode}
+{\tt{module }}{\tt{Phase\_1}}{\tt{ : }}\end{ocamldoccode}
+\label{module:Constraint-underscoresystem.Phase-underscore1}\index{Phase-underscore1@\verb`Phase_1`}
+
+\begin{ocamldocsigend}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore1.activate-underscorephase}\begin{ocamldoccode}
+val activate_phase :
+  Constraint_system.constraint_system -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{activate-underscorephase@\verb`activate_phase`}
+\begin{ocamldocdescription}
+{\tt{activate\_phase csys}} returns the constraint system {\tt{csys}} optimised for Phase 1 of the strategy.
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Modifications}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore1.deducibility-underscorereplace}\begin{ocamldoccode}
+val deducibility_replace :
+  Constraint_system.constraint_system ->
+  Constraint.position ->
+  (Constraint.Deducibility.elt -> Constraint.Deducibility.elt list) ->
+  Constraint.Deducibility.elt * Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{deducibility-underscorereplace@\verb`deducibility_replace`}
+\begin{ocamldocdescription}
+{\tt{deducibility\_replace c p f}} replace the deducibility constraint of {\tt{c}} at the position {\tt{p}} by the deducibility constraints {\tt{f dc}}
+      if {\tt{dc}} is the deducibility constraint of {\tt{c}} at the position {\tt{p}}.
+
+{\bf Raises} {\tt{Internal\_error}} if the position {\tt{p}} does not correspond to any deducibility constraint in {\tt{c}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore1.deducibility-underscorereplace2}\begin{ocamldoccode}
+val deducibility_replace2 :
+  Constraint_system.constraint_system ->
+  Constraint.position ->
+  (Constraint.Deducibility.elt ->
+   Constraint.Deducibility.elt list * Constraint.Deducibility.elt list) ->
+  Constraint.Deducibility.elt * Constraint_system.constraint_system *
+  Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{deducibility-underscorereplace2@\verb`deducibility_replace2`}
+\begin{ocamldocdescription}
+{\tt{deducibility\_replace2 c p f}} returns two constraint systems {\tt{c1,c2}} where {\tt{c1}} (resp. {\tt{c2}}) is the constraint system {\tt{c}} where 
+      the deducibility constraint {\tt{dc}} at the position {\tt{p}} in {\tt{c}} is replaced by {\tt{dc\_l1}} (resp. {\tt{dc\_l2}}) with {\tt{dc\_l1,dc\_l2}}
+      being the result of {\tt{f dc}}.
+
+{\bf Raises} {\tt{Internal\_error}} if the position {\tt{p}} does not correspond to any deducibility constraint in {\tt{c}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore1.deducibility-underscoresearch-underscoreand-underscorereplace}\begin{ocamldoccode}
+val deducibility_search_and_replace :
+  Constraint_system.constraint_system ->
+  Constraint.support_range ->
+  (Constraint.Deducibility.elt -> bool) ->
+  (Constraint.Deducibility.elt -> Constraint.Deducibility.elt list) ->
+  Constraint.Deducibility.elt * Constraint.position *
+  Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{deducibility-underscoresearch-underscoreand-underscorereplace@\verb`deducibility_search_and_replace`}
+\begin{ocamldocdescription}
+{\tt{deducibility\_search\_and\_replace c s\_range test f}} is an optimisation of
+{\tt{{\char123} let (elt,pos) = Constraint.search s\_range test (get\_deducibility\_constraint\_set c) in\
+elt,pos, deducibility\_replace c pos f{\char125}}}
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore1.deducibility-underscoresearch-underscoreand-underscorereplace2}\begin{ocamldoccode}
+val deducibility_search_and_replace2 :
+  Constraint_system.constraint_system ->
+  Constraint.support_range ->
+  (Constraint.Deducibility.elt -> bool) ->
+  (Constraint.Deducibility.elt ->
+   Constraint.Deducibility.elt list * Constraint.Deducibility.elt list) ->
+  Constraint.Deducibility.elt * Constraint.position *
+  Constraint_system.constraint_system * Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{deducibility-underscoresearch-underscoreand-underscorereplace2@\verb`deducibility_search_and_replace2`}
+\begin{ocamldocdescription}
+{\tt{deducibility\_search\_and\_replace2 c s\_range test f}} is an optimisation of
+{\tt{{\char123} let (elt,pos) = Constraint.search s\_range test (get\_deducibility\_constraint\_set c) in\
+let set1,set2 = deducibility\_replace2 c pos f in\
+elt,pos,set1,set2{\char125}}}
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Substitution}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore1.unify-underscoreand-underscoreapply-underscoremessage-underscoreequations}\begin{ocamldoccode}
+val unify_and_apply_message_equations :
+  Constraint_system.constraint_system ->
+  (Term.term * Term.term) list -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{unify-underscoreand-underscoreapply-underscoremessage-underscoreequations@\verb`unify_and_apply_message_equations`}
+\begin{ocamldocdescription}
+{\tt{unify\_and\_apply\_message\_equations csys eq\_l}} returns the normalised constraint system {\tt{csys}} on which 
+      the most general unifier of {\tt{eq\_l}} was applied.
+
+{\bf Raises} {\tt{Term.Not\_unifiable}} if {\tt{eq\_l}} is no unifiable.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore1.apply-underscoremessage-underscoresubstitution}\begin{ocamldoccode}
+val apply_message_substitution :
+  Constraint_system.constraint_system ->
+  Term.substitution -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{apply-underscoremessage-underscoresubstitution@\verb`apply_message_substitution`}
+\begin{ocamldocdescription}
+{\tt{apply\_message\_equations csys subst}} returns the normalised constraint system {\tt{csys}} on which 
+      {\tt{subst}} was applied.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore1.apply-underscorerecipe-underscoresubstitution}\begin{ocamldoccode}
+val apply_recipe_substitution :
+  Constraint_system.constraint_system ->
+  Recipe.substitution -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{apply-underscorerecipe-underscoresubstitution@\verb`apply_recipe_substitution`}
+\begin{ocamldocdescription}
+{\tt{apply\_recipe\_substitution csys subst}} returns the normalised constraint system {\tt{csys}} on which 
+      {\tt{subst}} was applied.
+
+{\bf Raises} {\tt{Internal\_error}} if the domain of {\tt{subst}} intersects with the left hand side variables of {\tt{csys}}. \highdebug 
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore1.normalise}\begin{ocamldoccode}
+val normalise :
+  Constraint_system.constraint_system -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{normalise@\verb`normalise`}
+\begin{ocamldocdescription}
+{\tt{normalise csys}} returns the constraint system {\tt{csys}} normalised. It may contain destructors function symbol in
+      inequations and equations. This normalisation corresponds to the transformation induced by~\thesisL{Lemma 6.10}. 
+
+
+\end{ocamldocdescription}
+\end{ocamldocsigend}
+
+
+
+
+
+
+\subsection{Functionnalities of Phase 2}
+
+
+
+
+As mention in the previous section, there are two different phases
+    of rule application described in the strategy (see~\thesisL{Section 7.4}).  This section describes the 
+    optimised functions used in Phase 2 of the strategy.
+    These functions will benefit from the fact that the right hand term of constraint system are variables.
+    On the other hand, they consider the association tables in the constraint system.
+
+
+
+\begin{ocamldoccode}
+{\tt{module }}{\tt{Phase\_2}}{\tt{ : }}\end{ocamldoccode}
+\label{module:Constraint-underscoresystem.Phase-underscore2}\index{Phase-underscore2@\verb`Phase_2`}
+
+\begin{ocamldocsigend}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.activate-underscorephase}\begin{ocamldoccode}
+val activate_phase :
+  Constraint_system.constraint_system -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{activate-underscorephase@\verb`activate_phase`}
+\begin{ocamldocdescription}
+{\tt{activate\_phase csys}} returns the constraint system {\tt{csys}} optimised for Phase 2 of the strategy.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.add-underscoremessage-underscoreinequation}\begin{ocamldoccode}
+val add_message_inequation :
+  Constraint_system.constraint_system ->
+  Term.variable ->
+  Term.term ->
+  Recipe.variable -> Recipe.recipe -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{add-underscoremessage-underscoreinequation@\verb`add_message_inequation`}
+
+
+\subsubsection{Modifications}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.deducibility-underscorereplace}\begin{ocamldoccode}
+val deducibility_replace :
+  Constraint_system.constraint_system ->
+  Constraint.position ->
+  (Constraint.Deducibility.elt -> Constraint.Deducibility.elt list) ->
+  Constraint.Deducibility.elt * Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{deducibility-underscorereplace@\verb`deducibility_replace`}
+\begin{ocamldocdescription}
+See {\tt{Phase\_1.deducibility\_replace}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.deducibility-underscorereplace2}\begin{ocamldoccode}
+val deducibility_replace2 :
+  Constraint_system.constraint_system ->
+  Constraint.position ->
+  (Constraint.Deducibility.elt ->
+   Constraint.Deducibility.elt list * Constraint.Deducibility.elt list) ->
+  Constraint.Deducibility.elt * Constraint_system.constraint_system *
+  Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{deducibility-underscorereplace2@\verb`deducibility_replace2`}
+\begin{ocamldocdescription}
+See {\tt{Phase\_1.deducibility\_replace2}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.deducibility-underscoresearch-underscoreand-underscorereplace}\begin{ocamldoccode}
+val deducibility_search_and_replace :
+  Constraint_system.constraint_system ->
+  Constraint.support_range ->
+  (Constraint.Deducibility.elt -> bool) ->
+  (Constraint.Deducibility.elt -> Constraint.Deducibility.elt list) ->
+  Constraint.Deducibility.elt * Constraint.position *
+  Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{deducibility-underscoresearch-underscoreand-underscorereplace@\verb`deducibility_search_and_replace`}
+\begin{ocamldocdescription}
+See {\tt{Phase\_1.deducibility\_search\_and\_replace}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.deducibility-underscoresearch-underscoreand-underscorereplace2}\begin{ocamldoccode}
+val deducibility_search_and_replace2 :
+  Constraint_system.constraint_system ->
+  Constraint.support_range ->
+  (Constraint.Deducibility.elt -> bool) ->
+  (Constraint.Deducibility.elt ->
+   Constraint.Deducibility.elt list * Constraint.Deducibility.elt list) ->
+  Constraint.Deducibility.elt * Constraint.position *
+  Constraint_system.constraint_system * Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{deducibility-underscoresearch-underscoreand-underscorereplace2@\verb`deducibility_search_and_replace2`}
+\begin{ocamldocdescription}
+See {\tt{Phase\_1.deducibility\_search\_and\_replace2}}.
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Substitution}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.unify-underscoreand-underscoreapply-underscoremessage-underscoreequations}\begin{ocamldoccode}
+val unify_and_apply_message_equations :
+  Constraint_system.constraint_system ->
+  (Term.term * Term.term) list -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{unify-underscoreand-underscoreapply-underscoremessage-underscoreequations@\verb`unify_and_apply_message_equations`}
+\begin{ocamldocdescription}
+See {\tt{Phase\_1.unify\_and\_apply\_message\_equations}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.apply-underscoremessage-underscoresubstitution}\begin{ocamldoccode}
+val apply_message_substitution :
+  Constraint_system.constraint_system ->
+  Term.substitution -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{apply-underscoremessage-underscoresubstitution@\verb`apply_message_substitution`}
+\begin{ocamldocdescription}
+See {\tt{Phase\_1.apply\_message\_substitution}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.apply-underscorerecipe-underscoresubstitution}\begin{ocamldoccode}
+val apply_recipe_substitution :
+  Constraint_system.constraint_system ->
+  Recipe.substitution -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{apply-underscorerecipe-underscoresubstitution@\verb`apply_recipe_substitution`}
+\begin{ocamldocdescription}
+See {\tt{Phase\_1.apply\_recipe\_substitution}}.
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Access functions}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.term-underscoreof-underscorerecipe}\begin{ocamldoccode}
+val term_of_recipe :
+  Constraint_system.constraint_system -> Recipe.recipe -> Term.term
+\end{ocamldoccode}
+\index{term-underscoreof-underscorerecipe@\verb`term_of_recipe`}
+\begin{ocamldocdescription}
+{\tt{term\_of\_recipe c xi}} returns the term $\xi\directun{\C}$. 
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if $\xi \not\in \T(\Fc, \Xdeux)$ 
+\item {\tt{Not\_found}} if $\varsdeux(\xi) \smallsetminus \varsdeux(\De(\C)) \neq \emptyset$. 
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.recipe-underscoreof-underscoreterm}\begin{ocamldoccode}
+val recipe_of_term :
+  Constraint_system.constraint_system -> Term.term -> Recipe.recipe
+\end{ocamldoccode}
+\index{recipe-underscoreof-underscoreterm@\verb`recipe_of_term`}
+\begin{ocamldocdescription}
+{\tt{recipe\_of\_term c t}} returns the recipe $\xi$ such that $\xi\directun{\C} = t$. 
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if $t \not\in \T(\Fc, \Xun)$ 
+\item {\tt{Not\_found}} if $\varsun(\xi) \smallsetminus \varsun(\De(\C)) \neq \emptyset$. 
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.get-underscoremax-underscoreparam-underscorecontext}\begin{ocamldoccode}
+val get_max_param_context :
+  Constraint_system.constraint_system -> Recipe.recipe -> int
+\end{ocamldoccode}
+\index{get-underscoremax-underscoreparam-underscorecontext@\verb`get_max_param_context`}
+\begin{ocamldocdescription}
+{\tt{get\_max\_param\_context c xi}} returns the interger $\maxparamC{\C}{\context{\xi}{\C}}$. 
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.get-underscoremax-underscoreparam-underscorecontext-underscorefrom-underscoreterm}\begin{ocamldoccode}
+val get_max_param_context_from_term :
+  Constraint_system.constraint_system -> Term.term -> int
+\end{ocamldoccode}
+\index{get-underscoremax-underscoreparam-underscorecontext-underscorefrom-underscoreterm@\verb`get_max_param_context_from_term`}
+\begin{ocamldocdescription}
+{\tt{get\_max\_param\_context\_from\_term c t}} returns the same result as
+      {\tt{get\_max\_param\_context c (recipe\_of\_term c t)}} but is more efficient.
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Formula inequation functions}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.map-underscoremessage-underscoreinequations}\begin{ocamldoccode}
+val map_message_inequations :
+  (Term.formula ->
+   Recipe.formula option -> Term.formula * Recipe.formula option) ->
+  Constraint_system.constraint_system -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{map-underscoremessage-underscoreinequations@\verb`map_message_inequations`}
+
+
+\label{val:Constraint-underscoresystem.Phase-underscore2.fold-underscoreleft-underscoremessage-underscoreinequation}\begin{ocamldoccode}
+val fold_left_message_inequation :
+  ({\textquotesingle}a -> Term.formula -> Recipe.formula option -> {\textquotesingle}a) ->
+  {\textquotesingle}a -> Constraint_system.constraint_system -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreleft-underscoremessage-underscoreinequation@\verb`fold_left_message_inequation`}
+\end{ocamldocsigend}
+
+
+
+
+
+
+\subsection{Row matrix of constraint system}
+
+
+
+
+The types {\tt{vector}} and {\tt{matrix}} corresponds to the vectors and matrices of constraint
+    systems used in~\thesisL{Chapter 7-8}. 
+
+
+
+\label{type:Constraint-underscoresystem.row-underscorematrix}\begin{ocamldoccode}
+type row_matrix 
+\end{ocamldoccode}
+\index{row-underscorematrix@\verb`row_matrix`}
+
+
+
+
+\begin{ocamldoccode}
+{\tt{module }}{\tt{Row}}{\tt{ : }}\end{ocamldoccode}
+\label{module:Constraint-underscoresystem.Row}\index{Row@\verb`Row`}
+
+\begin{ocamldocsigend}
+
+
+\label{exception:Constraint-underscoresystem.Row.All-underscorebottom}\begin{ocamldoccode}
+exception All_bottom
+\end{ocamldoccode}
+\index{All-underscorebottom@\verb`All_bottom`}
+
+
+\label{val:Constraint-underscoresystem.Row.create}\begin{ocamldoccode}
+val create :
+  int ->
+  Constraint_system.constraint_system list -> Constraint_system.row_matrix
+\end{ocamldoccode}
+\index{create@\verb`create`}
+\begin{ocamldocdescription}
+{\tt{Row.create\_row\_matrix s csys\_l}} creates a row matrix of constraint system of size {\tt{s}} where 
+    the element are the constraint systems in {\tt{csys\_l}}.
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if the constraint systems in {\tt{csys\_l}} do not have the same structure. \highdebug 
+\item {\tt{Internal\_error}} if {\tt{s}} is different from the number of element in {\tt{csys\_l}}
+\item {\tt{Internal\_error}} if the elements of {\tt{csys\_l}} do not have the same maximal support.
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Row.get}\begin{ocamldoccode}
+val get :
+  Constraint_system.row_matrix -> int -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{get@\verb`get`}
+
+
+\label{val:Constraint-underscoresystem.Row.get-underscorenumber-underscorecolumn}\begin{ocamldoccode}
+val get_number_column : Constraint_system.row_matrix -> int
+\end{ocamldoccode}
+\index{get-underscorenumber-underscorecolumn@\verb`get_number_column`}
+\begin{ocamldocdescription}
+{\tt{Row.get\_number\_column rm}} returns the number of column of {\tt{rm}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Row.get-underscoremaximal-underscoresupport}\begin{ocamldoccode}
+val get_maximal_support : Constraint_system.row_matrix -> int
+\end{ocamldoccode}
+\index{get-underscoremaximal-underscoresupport@\verb`get_maximal_support`}
+\begin{ocamldocdescription}
+{\tt{get\_maximal\_support rm}} returns the maximal support of the constraint systems in {\tt{rm}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Row.iter}\begin{ocamldoccode}
+val iter :
+  (Constraint_system.constraint_system -> unit) ->
+  Constraint_system.row_matrix -> unit
+\end{ocamldoccode}
+\index{iter@\verb`iter`}
+
+
+\label{val:Constraint-underscoresystem.Row.map}\begin{ocamldoccode}
+val map :
+  (Constraint_system.constraint_system -> Constraint_system.constraint_system) ->
+  Constraint_system.row_matrix -> Constraint_system.row_matrix
+\end{ocamldoccode}
+\index{map@\verb`map`}
+
+
+\label{val:Constraint-underscoresystem.Row.map2}\begin{ocamldoccode}
+val map2 :
+  ({\textquotesingle}a ->
+   Constraint_system.constraint_system -> Constraint_system.constraint_system) ->
+  {\textquotesingle}a list -> Constraint_system.row_matrix -> Constraint_system.row_matrix
+\end{ocamldoccode}
+\index{map2@\verb`map2`}
+
+
+\label{val:Constraint-underscoresystem.Row.fold-underscoreright}\begin{ocamldoccode}
+val fold_right :
+  (Constraint_system.constraint_system -> {\textquotesingle}a -> {\textquotesingle}a) ->
+  Constraint_system.row_matrix -> {\textquotesingle}a -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreright@\verb`fold_right`}
+
+
+\label{val:Constraint-underscoresystem.Row.fold-underscoreleft}\begin{ocamldoccode}
+val fold_left :
+  ({\textquotesingle}a -> Constraint_system.constraint_system -> {\textquotesingle}a) ->
+  {\textquotesingle}a -> Constraint_system.row_matrix -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreleft@\verb`fold_left`}
+
+
+\label{val:Constraint-underscoresystem.Row.check-underscorestructure}\begin{ocamldoccode}
+val check_structure : Constraint_system.row_matrix -> unit
+\end{ocamldoccode}
+\index{check-underscorestructure@\verb`check_structure`}
+\begin{ocamldocdescription}
+{\tt{check\_structure rm}} does nothing if {\tt{rm}} have is well structured else it raises 
+      the exception {\tt{Internal\_error}}. The definition of well structured row matrix is given in~\thesisL{Section 7.3.2.1}. 
+
+
+\end{ocamldocdescription}
+\end{ocamldocsigend}
+
+
+
+
+
+
+\subsection{Matrix of constraint systems}
+
+
+
+
+\label{type:Constraint-underscoresystem.matrix}\begin{ocamldoccode}
+type matrix 
+\end{ocamldoccode}
+\index{matrix@\verb`matrix`}
+
+
+
+
+\begin{ocamldoccode}
+{\tt{module }}{\tt{Matrix}}{\tt{ : }}\end{ocamldoccode}
+\label{module:Constraint-underscoresystem.Matrix}\index{Matrix@\verb`Matrix`}
+
+\begin{ocamldocsigend}
+
+
+\label{val:Constraint-underscoresystem.Matrix.empty}\begin{ocamldoccode}
+val empty : Constraint_system.matrix
+\end{ocamldoccode}
+\index{empty@\verb`empty`}
+
+
+\label{val:Constraint-underscoresystem.Matrix.matrix-underscoreof-underscorerow-underscorematrix}\begin{ocamldoccode}
+val matrix_of_row_matrix :
+  Constraint_system.row_matrix -> Constraint_system.matrix
+\end{ocamldoccode}
+\index{matrix-underscoreof-underscorerow-underscorematrix@\verb`matrix_of_row_matrix`}
+\begin{ocamldocdescription}
+{\tt{matrix\_of\_row\_matrix rm}} returns the row matrix {\tt{rm}} considered as a matrix with one line.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.add-underscorerow}\begin{ocamldoccode}
+val add_row :
+  Constraint_system.matrix ->
+  Constraint_system.row_matrix -> Constraint_system.matrix
+\end{ocamldoccode}
+\index{add-underscorerow@\verb`add_row`}
+
+
+\subsubsection{Access}
+
+
+\label{val:Constraint-underscoresystem.Matrix.get-underscorenumber-underscorecolumn}\begin{ocamldoccode}
+val get_number_column : Constraint_system.matrix -> int
+\end{ocamldoccode}
+\index{get-underscorenumber-underscorecolumn@\verb`get_number_column`}
+\begin{ocamldocdescription}
+{\tt{get\_number\_column m}} returns the number of column of {\tt{m}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.get-underscorenumber-underscoreline}\begin{ocamldoccode}
+val get_number_line : Constraint_system.matrix -> int
+\end{ocamldoccode}
+\index{get-underscorenumber-underscoreline@\verb`get_number_line`}
+\begin{ocamldocdescription}
+{\tt{get\_number\_line m}} returns the number of line of {\tt{m}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.get-underscoremaximal-underscoresupport}\begin{ocamldoccode}
+val get_maximal_support : Constraint_system.matrix -> int
+\end{ocamldoccode}
+\index{get-underscoremaximal-underscoresupport@\verb`get_maximal_support`}
+\begin{ocamldocdescription}
+{\tt{get\_maximal\_support m}} returns the maximal support of the constraint systems in {\tt{m}}.
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Iterators}
+
+
+\label{val:Constraint-underscoresystem.Matrix.replace-underscorerow}\begin{ocamldoccode}
+val replace_row :
+  (Constraint_system.row_matrix -> Constraint_system.row_matrix list) ->
+  Constraint_system.matrix -> Constraint_system.matrix
+\end{ocamldoccode}
+\index{replace-underscorerow@\verb`replace_row`}
+\begin{ocamldocdescription}
+If {\tt{m}} is the matrix $[V_1;\ldots;V_n]$ where the $V_i$ are row matrices,  then 
+      {\tt{replace\_row m f}} returns the matrix $[V^1_1; \ldots; V^{k_1}_1; V^1_2; \ldots; V^{k_n}_n]$
+      where for all $i \in {1, \ldots, n}$,  the application of {\tt{f}} on $V_i$ is the
+      list of row matrices $V^1_i, \ldots, V^{k_i}_i$. 
+
+{\bf Raises} {\tt{Internal\_error}} if the maximal support of the number of column of the row matrices produced by {\tt{f}} do not match.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.fold-underscoreleft-underscoreon-underscorecolumn}\begin{ocamldoccode}
+val fold_left_on_column :
+  int ->
+  ({\textquotesingle}a -> Constraint_system.constraint_system -> {\textquotesingle}a) ->
+  {\textquotesingle}a -> Constraint_system.matrix -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreleft-underscoreon-underscorecolumn@\verb`fold_left_on_column`}
+\begin{ocamldocdescription}
+{\tt{fold\_left\_column j f acc m}} is {\tt{f (.. f (f acc c1) c2 ..) cn}} where {\tt{[c1;...;cn]}} is the vector 
+      of constraint systems corresponding to the {\tt{j}}th column of {\tt{m}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.fold-underscoreleft-underscoreon-underscorerow}\begin{ocamldoccode}
+val fold_left_on_row :
+  int ->
+  ({\textquotesingle}a -> Constraint_system.constraint_system -> {\textquotesingle}a) ->
+  {\textquotesingle}a -> Constraint_system.matrix -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreleft-underscoreon-underscorerow@\verb`fold_left_on_row`}
+\begin{ocamldocdescription}
+{\tt{fold\_left\_row j f acc m}} is {\tt{f (.. f (f acc c1) c2 ..) cn}} where {\tt{[c1;...;cn]}} is the vector 
+      of constraint systems corresponding to the {\tt{j}}th line of {\tt{m}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.fold-underscoreleft-underscorerow}\begin{ocamldoccode}
+val fold_left_row :
+  ({\textquotesingle}a -> Constraint_system.row_matrix -> {\textquotesingle}a) ->
+  {\textquotesingle}a -> Constraint_system.matrix -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreleft-underscorerow@\verb`fold_left_row`}
+
+
+\label{val:Constraint-underscoresystem.Matrix.fold-underscoreright-underscorerow}\begin{ocamldoccode}
+val fold_right_row :
+  (Constraint_system.row_matrix -> {\textquotesingle}a -> {\textquotesingle}a) ->
+  Constraint_system.matrix -> {\textquotesingle}a -> {\textquotesingle}a
+\end{ocamldoccode}
+\index{fold-underscoreright-underscorerow@\verb`fold_right_row`}
+
+
+\label{val:Constraint-underscoresystem.Matrix.iter}\begin{ocamldoccode}
+val iter :
+  (Constraint_system.constraint_system -> unit) ->
+  Constraint_system.matrix -> unit
+\end{ocamldoccode}
+\index{iter@\verb`iter`}
+\begin{ocamldocdescription}
+{\tt{iter f matrix}} is {\tt{f c\_1\_1; f c\_1\_2; ...; f c\_1\_m; f c\_2\_1; ...; f c\_n\_m}} where {\tt{matrix}} is the matrix
+      \[
+      \left[
+      \begin{array}{ccc}
+      c_{1,1} & \cdots & c_{1,m} \\
+      \vdots & \ddots & \vdots\\
+      c_{n,1} & \cdots & c_{n,m} \\
+      \end{array}
+      \right]
+      \]  
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.iter-underscorerow}\begin{ocamldoccode}
+val iter_row :
+  (Constraint_system.row_matrix -> unit) -> Constraint_system.matrix -> unit
+\end{ocamldoccode}
+\index{iter-underscorerow@\verb`iter_row`}
+
+
+\label{val:Constraint-underscoresystem.Matrix.map}\begin{ocamldoccode}
+val map :
+  (Constraint_system.constraint_system -> Constraint_system.constraint_system) ->
+  Constraint_system.matrix -> Constraint_system.matrix
+\end{ocamldoccode}
+\index{map@\verb`map`}
+
+
+\label{val:Constraint-underscoresystem.Matrix.map-underscoreon-underscorecolumn}\begin{ocamldoccode}
+val map_on_column :
+  int ->
+  (Constraint_system.constraint_system -> Constraint_system.constraint_system) ->
+  Constraint_system.matrix -> Constraint_system.matrix
+\end{ocamldoccode}
+\index{map-underscoreon-underscorecolumn@\verb`map_on_column`}
+
+
+\subsubsection{Matrix searching}
+
+
+\label{val:Constraint-underscoresystem.Matrix.find-underscorein-underscorerow}\begin{ocamldoccode}
+val find_in_row :
+  int ->
+  (Constraint_system.constraint_system -> bool) ->
+  Constraint_system.matrix -> Constraint_system.constraint_system * int
+\end{ocamldoccode}
+\index{find-underscorein-underscorerow@\verb`find_in_row`}
+\begin{ocamldocdescription}
+{\tt{find\_in\_row i f\_test matrix}} searches the first constraint system in the line {\tt{i}} of {\tt{matrix}} that satisfies {\tt{f\_test}}.
+
+{\bf Raises} {\tt{Not\_found}} if no such constraint system exists.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.find-underscorein-underscorecol}\begin{ocamldoccode}
+val find_in_col :
+  int ->
+  (Constraint_system.constraint_system -> bool) ->
+  Constraint_system.matrix -> Constraint_system.constraint_system * int
+\end{ocamldoccode}
+\index{find-underscorein-underscorecol@\verb`find_in_col`}
+\begin{ocamldocdescription}
+{\tt{find\_in\_col j f\_test matrix}} searches the first constraint system in the column {\tt{j}} of {\tt{matrix}} that satisfies {\tt{f\_test}}.
+
+{\bf Raises} {\tt{Not\_found}} if no such constraint system exists.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.find-underscorein-underscorerow-underscorebetween-underscorecol-underscoreindex}\begin{ocamldoccode}
+val find_in_row_between_col_index :
+  int ->
+  int ->
+  int ->
+  (Constraint_system.constraint_system -> bool) ->
+  Constraint_system.matrix -> Constraint_system.constraint_system * int
+\end{ocamldoccode}
+\index{find-underscorein-underscorerow-underscorebetween-underscorecol-underscoreindex@\verb`find_in_row_between_col_index`}
+\begin{ocamldocdescription}
+{\tt{find\_in\_row\_between\_col\_index i j j{\textquotesingle} f\_test matrix}} searches the first constraint system in line {\tt{i}} of {\tt{matrix}} that satisfies {\tt{f\_test}}
+      and whose column index is between {\tt{j}} and {\tt{j{\textquotesingle}}}.
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Not\_found}} if no such constraint system exists.
+\item {\tt{Internal\_error}} if the column indexes are not correct. \lowdebug 
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.find-underscorein-underscorecol-underscorebetween-underscorerow-underscoreindex}\begin{ocamldoccode}
+val find_in_col_between_row_index :
+  int ->
+  int ->
+  int ->
+  (Constraint_system.constraint_system -> bool) ->
+  Constraint_system.matrix -> Constraint_system.constraint_system * int
+\end{ocamldoccode}
+\index{find-underscorein-underscorecol-underscorebetween-underscorerow-underscoreindex@\verb`find_in_col_between_row_index`}
+\begin{ocamldocdescription}
+{\tt{find\_in\_col\_between\_row\_index j i i{\textquotesingle} f\_test matrix}} searches the first constraint system in column {\tt{j}} of {\tt{matrix}} that satisfies {\tt{f\_test}}
+      and whose line index is between {\tt{i}} and {\tt{i{\textquotesingle}}}.
+
+{\bf Raises} {\tt{Not\_found}} if no such constraint system exists.
+
+
+\end{ocamldocdescription}
+
+
+\subsubsection{Matrix scanning}
+
+
+\label{val:Constraint-underscoresystem.Matrix.exists-underscorein-underscorerow}\begin{ocamldoccode}
+val exists_in_row :
+  int ->
+  (Constraint_system.constraint_system -> bool) ->
+  Constraint_system.matrix -> bool
+\end{ocamldoccode}
+\index{exists-underscorein-underscorerow@\verb`exists_in_row`}
+\begin{ocamldocdescription}
+{\tt{exists\_in\_row i f\_test matrix}} retrurns true iff there exists a constraint system in the line {\tt{i}} of {\tt{matrix}} that satisfies {\tt{f\_test}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.exists-underscorein-underscorerow-underscorebetween-underscorecol-underscoreindex}\begin{ocamldoccode}
+val exists_in_row_between_col_index :
+  int ->
+  int ->
+  int ->
+  (Constraint_system.constraint_system -> bool) ->
+  Constraint_system.matrix -> bool
+\end{ocamldoccode}
+\index{exists-underscorein-underscorerow-underscorebetween-underscorecol-underscoreindex@\verb`exists_in_row_between_col_index`}
+\begin{ocamldocdescription}
+{\tt{exists\_in\_row i j j{\textquotesingle} f\_test matrix}} retrurns true iff there exists a constraint system in the line {\tt{i}} of {\tt{matrix}} that satisfies {\tt{f\_test}}
+    and whose column index is between {\tt{j}} and {\tt{j{\textquotesingle}}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.exists-underscorein-underscorecol}\begin{ocamldoccode}
+val exists_in_col :
+  int ->
+  (Constraint_system.constraint_system -> bool) ->
+  Constraint_system.matrix -> bool
+\end{ocamldoccode}
+\index{exists-underscorein-underscorecol@\verb`exists_in_col`}
+\begin{ocamldocdescription}
+{\tt{exists\_in\_col j f\_test matrix}} retrurns true iff there exists a constraint system in the column {\tt{j}} of {\tt{matrix}} that satisfies {\tt{f\_test}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.exists-underscorein-underscorecol-underscorebetween-underscorerow-underscoreindex}\begin{ocamldoccode}
+val exists_in_col_between_row_index :
+  int ->
+  int ->
+  int ->
+  (Constraint_system.constraint_system -> bool) ->
+  Constraint_system.matrix -> bool
+\end{ocamldoccode}
+\index{exists-underscorein-underscorecol-underscorebetween-underscorerow-underscoreindex@\verb`exists_in_col_between_row_index`}
+\begin{ocamldocdescription}
+{\tt{exists\_in\_col j i i{\textquotesingle} f\_test matrix}} retrurns true iff there exists a constraint system in the column {\tt{j}} of {\tt{matrix}} that satisfies {\tt{f\_test}}
+    and whose line index is between {\tt{i}} and {\tt{i{\textquotesingle}}}.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.is-underscoreempty}\begin{ocamldoccode}
+val is_empty : Constraint_system.matrix -> bool
+\end{ocamldoccode}
+\index{is-underscoreempty@\verb`is_empty`}
+\begin{ocamldocdescription}
+{\tt{is\_empty m}} returns {\tt{true}} iff and only {\tt{m}} is the empty matrix.
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.check-underscorestructure}\begin{ocamldoccode}
+val check_structure : Constraint_system.matrix -> unit
+\end{ocamldoccode}
+\index{check-underscorestructure@\verb`check_structure`}
+\begin{ocamldocdescription}
+{\tt{check\_structure m}} does nothing if {\tt{m}} have is well structured else it raises 
+    the exception {\tt{Internal\_error}}. The definition of well structured matrix is given in~\thesisL{Section 7.3.2.1}. 
+
+
+\end{ocamldocdescription}
+
+
+\label{val:Constraint-underscoresystem.Matrix.display}\begin{ocamldoccode}
+val display : Constraint_system.matrix -> string
+\end{ocamldoccode}
+\index{display@\verb`display`}
+
+
+\label{val:Constraint-underscoresystem.Matrix.normalise}\begin{ocamldoccode}
+val normalise : Constraint_system.matrix -> Constraint_system.matrix
+\end{ocamldoccode}
+\index{normalise@\verb`normalise`}
+\end{ocamldocsigend}
+
+
+
+
+
+
+\subsection{Rule applications}
+
+
+
+
+\label{exception:Constraint-underscoresystem.Not-underscoreapplicable}\begin{ocamldoccode}
+exception Not_applicable
+\end{ocamldoccode}
+\index{Not-underscoreapplicable@\verb`Not_applicable`}
+\begin{ocamldocdescription}
+The exception {\tt{Not\_applicable}} is launched when a rule cannot be applied on a row matrix
+    usually due to a condition of the structure of the constraint systems in the row.
+
+
+\end{ocamldocdescription}
+
+
+
+
+The following functions describe the mechanism for applying a rule on matrices of
+    constraint system. Each of these functions have as arguments at least the two following functions:
+    \begin{itemize}
+\item {\tt{search : constraint\_system -> {\textquotesingle}a * constraint\_system * constraint\_system}}
+\item {\tt{apply : {\textquotesingle}a -> constraint\_system -> constraint\_system * constraint\_system}}
+\end{itemize}
+
+    Typically, applying a rule on a constraint system depend on parameter that can depend themselves on
+    elements of the frame, deducibility constraints, equations, $\ldots$ The function {\tt{search}} searches
+    for the correspondances between the paramaters of the rule and the constraint system, then it applies 
+    the rule on the constraint system hence producing two new constraint systems. However, since a rule will 
+    always be applied on row matrices that contains constraint systems of same structure, {\tt{search}} also
+    returns enough informations for the function {\tt{apply}} to apply the rules on a constraint system without 
+    having to search again the correspondance between parameter and the constrain system.
+
+
+    \medskip 
+
+
+
+\label{val:Constraint-underscoresystem.apply-underscorerule-underscoreon-underscorerow-underscorematrix}\begin{ocamldoccode}
+val apply_rule_on_row_matrix :
+  (constraint_system ->
+   {\textquotesingle}a * constraint_system *
+   constraint_system) ->
+  ({\textquotesingle}a ->
+   constraint_system ->
+   constraint_system * constraint_system) ->
+  row_matrix ->
+  row_matrix option * row_matrix option
+\end{ocamldoccode}
+\index{apply-underscorerule-underscoreon-underscorerow-underscorematrix@\verb`apply_rule_on_row_matrix`}
+\begin{ocamldocdescription}
+{\tt{apply\_rule\_on\_row\_matrix search apply r}} apply the rule on the row matrix {\tt{r}}. 
+    It returns a pair of row matrix option {\tt{(r\_left,r\_right)}} where {\tt{r\_left}} (resp. {\tt{r\_right}})
+    is {\tt{None}} if the application of the rule produces an unsatisfiable left (resp. right) row matrix, 
+    i.e. a row matrice with only $\bot$  as constraint systems.
+    See~\thesisL{Definition 7.10} for more detail on the application of a rule on a row matrix. 
+
+{\bf Raises} {\tt{Internal\_error}} if the constraint systems produced by {\tt{search}} or {\tt{apply}} 
+    do not have the same maximal supports as those in {\tt{r}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.apply-underscoreexternal-underscorerule}\begin{ocamldoccode}
+val apply_external_rule :
+  (constraint_system ->
+   {\textquotesingle}a * constraint_system *
+   constraint_system) ->
+  ({\textquotesingle}a ->
+   constraint_system ->
+   constraint_system * constraint_system) ->
+  matrix ->
+  matrix * matrix
+\end{ocamldoccode}
+\index{apply-underscoreexternal-underscorerule@\verb`apply_external_rule`}
+\begin{ocamldocdescription}
+{\tt{apply\_external\_rule search apply m}} apply an external rule on the matrix {\tt{m}}. 
+    See~\thesisL{Section 7.3.2.2} for more detail on the application of an external rule on a matrix. 
+
+{\bf Raises} {\tt{Internal\_error}} if the constraint systems produced by {\tt{search}} or {\tt{apply}} 
+    do not have the same maximal supports as those in {\tt{m}}.
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.apply-underscoreinternal-underscorerule}\begin{ocamldoccode}
+val apply_internal_rule :
+  (constraint_system ->
+   {\textquotesingle}a * constraint_system *
+   constraint_system) ->
+  ({\textquotesingle}a ->
+   constraint_system ->
+   constraint_system * constraint_system) ->
+  int -> matrix -> matrix
+\end{ocamldoccode}
+\index{apply-underscoreinternal-underscorerule@\verb`apply_internal_rule`}
+\begin{ocamldocdescription}
+{\tt{apply\_internal\_rule search apply i m}} apply an internal rule on the {\tt{i}}th line of matrix {\tt{m}}. 
+    See~\thesisL{Section 7.3.2.2} for more detail on the application of an internal rule on a matrix. 
+
+{\bf Raises} \begin{itemize}
+\item {\tt{Internal\_error}} if the constraint systems produced by {\tt{search}} or {\tt{apply}} 
+    do not have the same maximal supports as those in {\tt{m}}.
+\item {\tt{Internal\_error}} if {\tt{i}} is not the index of a line of {\tt{m}}.
+\end{itemize}
+
+
+
+\end{ocamldocdescription}
+
+
+
+
+\label{val:Constraint-underscoresystem.apply-underscoreinternal-underscorerule-underscorefull-underscorecolumn}\begin{ocamldoccode}
+val apply_internal_rule_full_column :
+  (constraint_system ->
+   {\textquotesingle}a * constraint_system *
+   constraint_system) ->
+  ({\textquotesingle}a ->
+   constraint_system ->
+   constraint_system * constraint_system) ->
+  matrix -> matrix
+\end{ocamldoccode}
+\index{apply-underscoreinternal-underscorerule-underscorefull-underscorecolumn@\verb`apply_internal_rule_full_column`}
+\begin{ocamldocdescription}
+{\tt{apply\_internal\_rule\_full\_column search apply m}} apply an internal rule on each line line of matrix {\tt{m}} hence
+    returning a matrix with twice the number of line as {\tt{m}} (when counting the line with only bottom constraint system). 
+    It will be used to apply rule \Dest and \Eqlr .
+    See~\thesisL{Section 7.4.1.1} for more detail on the application of these rules. 
+
+{\bf Raises} {\tt{Internal\_error}} if the constraint systems produced by {\tt{search}} or {\tt{apply}} 
+    do not have the same maximal supports as those in {\tt{m}}.
+
+
+\end{ocamldocdescription}
+
+
+\section{Module {\tt{Process}} : Process}
+\label{module:Process}\index{Process@\verb`Process`}
+
+
+
+
+\ocamldocvspace{0.5cm}
+
+
+
+\label{type:Process.label}\begin{ocamldoccode}
+type label 
+\end{ocamldoccode}
+\index{label@\verb`label`}
+
+
+
+
+\label{val:Process.fresh-underscorelabel}\begin{ocamldoccode}
+val fresh_label : unit -> label
+\end{ocamldoccode}
+\index{fresh-underscorelabel@\verb`fresh_label`}
+
+
+
+
+\label{type:Process.formula}\begin{ocamldoccode}
+type formula =
+  | Eq of Term.term * Term.term
+  | Neq of Term.term * Term.term
+  | And of formula * formula
+  | Or of formula * formula
+\end{ocamldoccode}
+\index{formula@\verb`formula`}
+
+
+
+
+\label{type:Process.pattern}\begin{ocamldoccode}
+type pattern =
+  | Var of Term.variable
+  | Tuple of Term.symbol * pattern list
+\end{ocamldoccode}
+\index{pattern@\verb`pattern`}
+
+
+
+
+\label{type:Process.process}\begin{ocamldoccode}
+type process =
+  | Nil
+  | Choice of process * process
+  | Par of process * process
+  | New of Term.name * process * label
+  | In of Term.term * Term.variable * process * label
+  | Out of Term.term * Term.term * process * label
+  | Let of pattern * Term.term * process * label
+  | IfThenElse of formula * process * process * label
+\end{ocamldoccode}
+\index{process@\verb`process`}
+
+
+
+
+\label{val:Process.refresh-underscorelabel}\begin{ocamldoccode}
+val refresh_label : process -> process
+\end{ocamldoccode}
+\index{refresh-underscorelabel@\verb`refresh_label`}
+
+
+
+
+\label{val:Process.rename}\begin{ocamldoccode}
+val rename : process -> process
+\end{ocamldoccode}
+\index{rename@\verb`rename`}
+
+
+
+
+\label{val:Process.iter-underscoreterm-underscoreprocess}\begin{ocamldoccode}
+val iter_term_process : process -> (Term.term -> Term.term) -> process
+\end{ocamldoccode}
+\index{iter-underscoreterm-underscoreprocess@\verb`iter_term_process`}
+
+
+
+
+\label{val:Process.get-underscorefree-underscorenames}\begin{ocamldoccode}
+val get_free_names : process -> Term.name list
+\end{ocamldoccode}
+\index{get-underscorefree-underscorenames@\verb`get_free_names`}
+
+
+
+
+\label{val:Process.display-underscoreprocess}\begin{ocamldoccode}
+val display_process : process -> string
+\end{ocamldoccode}
+\index{display-underscoreprocess@\verb`display_process`}
+
+
+
+
+\subsection{Symbolic process}
+
+
+
+
+\label{type:Process.symbolic-underscoreprocess}\begin{ocamldoccode}
+type symbolic_process 
+\end{ocamldoccode}
+\index{symbolic-underscoreprocess@\verb`symbolic_process`}
+
+
+
+
+\label{val:Process.create-underscoresymbolic}\begin{ocamldoccode}
+val create_symbolic :
+  (Recipe.recipe * Term.term) list ->
+  process ->
+  Constraint_system.constraint_system -> symbolic_process
+\end{ocamldoccode}
+\index{create-underscoresymbolic@\verb`create_symbolic`}
+
+
+
+
+\label{val:Process.display-underscoretrace}\begin{ocamldoccode}
+val display_trace : symbolic_process -> string
+\end{ocamldoccode}
+\index{display-underscoretrace@\verb`display_trace`}
+
+
+
+
+\label{val:Process.display-underscoretrace-underscoreno-underscoreunif}\begin{ocamldoccode}
+val display_trace_no_unif : symbolic_process -> string
+\end{ocamldoccode}
+\index{display-underscoretrace-underscoreno-underscoreunif@\verb`display_trace_no_unif`}
+
+
+
+
+\subparagraph{Testing}
+
+
+
+
+\label{val:Process.is-underscorebottom}\begin{ocamldoccode}
+val is_bottom : symbolic_process -> bool
+\end{ocamldoccode}
+\index{is-underscorebottom@\verb`is_bottom`}
+
+
+
+
+\subparagraph{Access and modification}
+
+
+
+
+\label{val:Process.get-underscoreconstraint-underscoresystem}\begin{ocamldoccode}
+val get_constraint_system :
+  symbolic_process -> Constraint_system.constraint_system
+\end{ocamldoccode}
+\index{get-underscoreconstraint-underscoresystem@\verb`get_constraint_system`}
+
+
+
+
+\label{val:Process.replace-underscoreconstraint-underscoresystem}\begin{ocamldoccode}
+val replace_constraint_system :
+  Constraint_system.constraint_system ->
+  symbolic_process -> symbolic_process
+\end{ocamldoccode}
+\index{replace-underscoreconstraint-underscoresystem@\verb`replace_constraint_system`}
+
+
+
+
+\label{val:Process.simplify}\begin{ocamldoccode}
+val simplify : symbolic_process -> symbolic_process
+\end{ocamldoccode}
+\index{simplify@\verb`simplify`}
+
+
+
+
+\label{val:Process.size-underscoretrace}\begin{ocamldoccode}
+val size_trace : symbolic_process -> int
+\end{ocamldoccode}
+\index{size-underscoretrace@\verb`size_trace`}
+
+
+
+
+\label{val:Process.instanciate-underscoretrace}\begin{ocamldoccode}
+val instanciate_trace : symbolic_process -> symbolic_process
+\end{ocamldoccode}
+\index{instanciate-underscoretrace@\verb`instanciate_trace`}
+
+
+
+
+\subparagraph{Transition application}
+
+
+
+
+\label{val:Process.apply-underscoreinternal-underscoretransition}\begin{ocamldoccode}
+val apply_internal_transition :
+  bool ->
+  (symbolic_process -> unit) -> symbolic_process -> unit
+\end{ocamldoccode}
+\index{apply-underscoreinternal-underscoretransition@\verb`apply_internal_transition`}
+
+
+
+
+\label{val:Process.apply-underscoreinput}\begin{ocamldoccode}
+val apply_input :
+  (symbolic_process -> unit) ->
+  Recipe.variable -> Recipe.variable -> symbolic_process -> unit
+\end{ocamldoccode}
+\index{apply-underscoreinput@\verb`apply_input`}
+
+
+
+
+\label{val:Process.apply-underscoreoutput}\begin{ocamldoccode}
+val apply_output :
+  (symbolic_process -> unit) ->
+  Recipe.variable -> symbolic_process -> unit
+\end{ocamldoccode}
+\index{apply-underscoreoutput@\verb`apply_output`}
+
+
+
+
+\subsubsection{Optimisation}
+
+
+
+
+\label{val:Process.is-underscoresame-underscoreinput-underscoreoutput}\begin{ocamldoccode}
+val is_same_input_output : symbolic_process -> symbolic_process -> bool
+\end{ocamldoccode}
+\index{is-underscoresame-underscoreinput-underscoreoutput@\verb`is_same_input_output`}
+
+

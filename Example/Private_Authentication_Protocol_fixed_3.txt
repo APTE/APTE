@@ -1,0 +1,178 @@
+############################################################
+### Private Authentication Protocol for time equivalence ###
+############################################################
+
+### Definitions of the classic length functions
+
+length aenc [constant=0; arguments = 1,0].
+length pk [constant=0; arguments = 2].
+length tuple(2) [constant=1; arguments = 1,1].
+
+### Definitions of the new functions for the time equivalences
+
+fun hide/2.
+fun plus/2.
+
+fun tname/0.
+fun tvar/0.
+fun error/0.
+
+# The time functions of asymmetric encryption scheme
+fun taenc/2.
+fun tadec/2.
+fun tpk/1.
+
+# The time functions of projections
+fun ttuple/2.
+fun tprojun/1.
+fun tprojdeux/1.
+
+### Definitions of the length functions for the new functions
+
+length hide [constant=0; arguments = 1,0].
+length plus [constant = 0; arguments = 1,1].
+length error [constant = 20].
+
+length tname [constant=10].
+length tvar [constant = 1].
+
+length taenc [constant=0; arguments = 1,1].
+length tadec [constant=0; arguments = 1,1].
+length tpk [constant=0; arguments = 0].
+
+length ttuple [constant=1; arguments = 0,0].
+length tprojun [constant=1; arguments = 0].
+length tprojdeux [constant=1; arguments = 0].
+
+free c.
+
+### Description of the role of Alice
+
+let process_Alice k_a k_b =
+  new N_a;
+  out(c,aenc((N_a,pk(k_a)),pk(k_b))); 
+  in(c,x).
+
+let process_Alice_transformed k_a k_b =
+  # Time term of the name creation
+  let time_N_a = tname in
+
+  # The process
+  new N_a;
+
+  # Time term of the output
+  let transterm_c = tvar in
+  let transterm_pka = plus(tvar,tpk(k_a)) in
+  let transterm_pair = plus(tvar,plus(transterm_pka,ttuple(N_a,pk(k_a)))) in
+  let transterm_pkb = plus(tvar,tpk(k_b)) in
+  let transterm_aenc = plus(transterm_pair,plus(transterm_pkb,taenc((N_a,pk(k_a)),pk(k_b)))) in
+  
+  # The process
+  new k;
+  let taille_term = plus(time_N_a,plus(transterm_c,transterm_aenc)) in
+  out(c,(aenc((N_a,pk(k_a)),pk(k_b)),hide(taille_term,k)));
+  in(c,x).
+
+### Description of the role of Bob
+
+let process_Bob k_a k_b =
+  new N_b;
+  in(c,x); 
+  let (na,pka) = adec(x,k_b) in	
+  if pka = pk(k_a)
+  then out(c,aenc((na,(N_b,pk(k_b))),pk(k_a)))
+  else out(c,aenc((na,(N_b,error)),pk(k_a))).
+
+let process_Bob_transformed k_a k_b =
+  let length_term_0 = tname in
+  new N_b;
+
+  # Time term of input
+  let transterm_c = tvar in
+  let length_term_1 = plus(length_term_0,transterm_c) in
+
+  # The process 
+  in(c,z);
+
+  # Time term of let_1
+  let transterm_proj1 = plus(tvar,tprojun(z)) in
+  let length_term_2 = plus(length_term_1,transterm_proj1) in
+
+  let (x,w) = z in
+  if x = x then
+    let transterm_adec = plus(tvar,plus(tvar,tadec(x,k_b))) in
+    let length_term_3 = plus(length_term_2,transterm_adec) in
+
+    let x_1 = adec(x,k_b) in
+    if x_1 = x_1 then
+      let transterm_na = plus(tvar,tprojun(x_1)) in
+      let length_term_4 = plus(length_term_3,transterm_na) in
+
+      let (na,pka) = x_1 in
+      if na = na then
+        let transterm_pka = plus(tvar,tprojdeux(x_1)) in
+        let length_term_5 = plus(length_term_4,transterm_pka) in
+
+        if pka = pka then
+          let transterm_equals = plus(tvar, plus(plus(tvar,tpk(k_a)), plus(pka,pk(k_a)))) in
+          let length_term_6 = plus(length_term_5,transterm_equals) in
+          
+          if pka = pk(k_a) then
+            
+
+  	    let transterm_pk_kb = plus(tvar,tpk(k_b)) in
+            let transterm_pk_ka = plus(tvar,tpk(k_a)) in
+  	    let transterm_pair_1 = plus(tvar,plus(transterm_pk_kb,ttuple(N_b,pk(k_b)))) in
+     	    let transterm_pair_2 = plus(tvar,plus(transterm_pair_1,ttuple(na,(N_b,pk(k_b))))) in
+            let transterm_aenc = plus(transterm_pair_2,plus(transterm_pk_ka,taenc((na,(N_b,pk(k_b))),pk(k_a)))) in
+
+            let length_term_7 = plus(length_term_6, plus(transterm_c,transterm_aenc)) in
+            new k;
+	    out(c,(aenc((na,(N_b,pk(k_b))),pk(k_a)), hide(length_term_7,k)))
+
+          else
+            let transterm_pk_ka = plus(tvar,tpk(k_a)) in
+            let transterm_pair_1 = plus(tvar,plus(tvar,ttuple(N_b,error))) in
+  	    let transterm_pair_2 = plus(tvar,plus(transterm_pair_1,ttuple(na,(N_b,error)))) in
+  	    
+	    let transterm_aenc = plus(transterm_pair_2,plus(transterm_pk_ka,taenc((na,(N_b,error)),pk(k_a)))) in
+            
+            let length_term_7 = plus(length_term_6, plus(transterm_c,transterm_aenc)) in
+	    new k;
+            out(c,(aenc((na,(N_b,error)),pk(k_a)),hide(length_term_7,k)))
+
+ 	else 0
+      else 0
+    else 0   
+  else 0.
+		
+### Main
+
+let instance_1 =
+  new k_a ; new k_b ; new k_c ; out(c,pk(k_a)) ; out(c,pk(k_b)) ; out(c,pk(k_c)); 
+  ( process_Alice k_a k_b | process_Bob k_a k_b ).
+
+let instance_2 =
+  new k_a ; new k_b ; new k_c ; out(c,pk(k_a)) ; out(c,pk(k_b)) ; out(c,pk(k_c)); 
+  ( process_Alice k_c k_b | process_Bob k_c k_b ).
+  
+### Main with time
+
+let instance_time_1 =
+  new k_a ; new k_b ; new k_c ; out(c,pk(k_a)) ; out(c,pk(k_b)) ; out(c,pk(k_c)); 
+  ( process_Alice_transformed k_a k_b | process_Bob_transformed k_a k_b ).
+
+let instance_time_2 =
+  new k_a ; new k_b ; new k_c ; out(c,pk(k_a)) ; out(c,pk(k_b)) ; out(c,pk(k_c)); 
+  ( process_Alice_transformed k_c k_b | process_Bob_transformed k_c k_b ).
+  
+##### The requests
+  
+# Classic trace equivalence
+equivalence instance_1 and instance_2.
+
+# Length trace equivalence
+equivalence length instance_1 and instance_2.
+
+# Time trace equivalence transformed into length trace equivalence
+equivalence length instance_time_1 and instance_time_2.

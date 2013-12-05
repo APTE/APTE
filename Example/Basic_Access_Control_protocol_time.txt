@@ -1,0 +1,302 @@
+######################################################################
+### Unlinkability of the e-passport protocol with time equivalence ###
+######################################################################
+
+### Definitions of the classic length functions
+
+fun mac/2.
+
+length senc [constant=0; arguments = 1,0].
+length tuple(2) [constant=16; arguments = 1,1].
+length tuple(3) [constant=24; arguments = 1,1,1].
+length mac [ constant=256; arguments = 0,0].
+
+### Definitions of the new functions for the time equivalences
+
+fun hide/2.
+fun plus/2.
+
+fun tname/0.
+fun tvar/0.
+
+# The time functions of symmetric encryption scheme
+
+fun tsenc/2.
+fun tsdec/2.
+fun tmac/2.
+
+# The time functions of projections
+fun ttuple/2.
+fun tprojun/1.
+fun tprojdeux/1.
+
+fun ttupletrois/3.
+fun tprojuntrois/1.
+fun tprojdeuxtrois/1.
+fun tprojtroistrois/1.
+
+### Definitions of the length functions for the new functions
+
+length hide [constant=0; arguments = 1,0].
+length plus [constant = 0; arguments = 1,1].
+
+length tname [constant=10].
+length tvar [constant = 1].
+
+length tsenc [constant=0; arguments = 1,1].
+length tsdec [constant=0; arguments = 1,1].
+length tmac [constant=0; arguments = 2,1].
+
+length ttuple [constant=1; arguments = 0,0].
+length tprojun [constant=1; arguments = 0].
+length tprojdeux [constant=1; arguments = 0].
+
+length ttupletrois [constant=1; arguments = 0,0,0].
+length tprojuntrois [constant=1; arguments = 0].
+length tprojdeuxtrois [constant=1; arguments = 0].
+length tprojtroistrois [constant=1; arguments = 0].
+
+### Definition of the protocol
+
+free c.
+free Error_6300.
+free get_challenge.
+
+# Description of the reader role
+
+let reader k_e k_m =
+  out(c,get_challenge);
+  in(c,n_t);
+  new n_r; new k_r;
+  let m = senc((n_r,n_t,k_r),k_e) in
+  out(c,(m,mac(m,k_m)));
+  in(c,y).
+  
+let reader_transformed k_e k_m =
+  # Step 1: Output
+  let time_acc_1 = plus(tvar,tvar) in
+  new k1;
+  out(c,(get_challenge,hide(time_acc_1,k1)));
+  
+  # Step 2: Input
+  let time_acc_2 = plus(time_acc_1,tvar) in
+  in(c,z);
+  let (n_t,z2) = z in
+  if n_t = n_t then
+  
+  # Step 3: Name restriction
+  let time_acc_3 = plus(plus(time_acc_2,tname),tname) in
+  new n_r; new k_r;
+  
+  # Step 4: Creation name
+  let ctime_triplet = plus(tvar,plus(tvar,plus(tvar,ttupletrois(n_r,n_t,k_r)))) in
+  let ctime_senc = plus(ctime_triplet,plus(tvar,tsenc((n_r,n_t,k_r),k_e))) in
+  let time_acc_4 = plus(time_acc_3,ctime_senc) in
+  let m = senc((n_r,n_t,k_r),k_e) in
+  
+  # Step 5: Output
+  let ctime_mac = plus(tvar,plus(tvar,tmac(m,k_m))) in
+  let ctime_pair = plus(tvar,plus(ctime_mac,ttuple(m,mac(m,k_m)))) in
+  let time_acc_5 = plus(time_acc_4,ctime_pair) in
+  new k2;
+  out(c,((m,mac(m,k_m)),hide(time_acc_5,k2)));
+  in(c,y).
+
+# Description of the passport role 
+
+let passport k_e k_m =
+  in(c,x);
+  if x = get_challenge
+  then
+    new n_t;
+    out(c,n_t);
+    in(c,y);
+    let (m_e,m_m) = y in
+
+    (if m_m = mac(m_e,k_m)
+    then
+      let (n_r,n_t_2,k_r) = sdec(m_e,k_e) in
+			
+      if n_t_2 = n_t
+      then 
+	new k_t; 
+	let m = senc((n_t,n_r,k_t),k_e) in
+	out(c,(m,mac(m,k_m)))
+      else out(c,Error_6300)
+    else out(c,Error_6300)).
+
+let passport_transformed k_e k_m =
+  # Step 1: Input
+  let time_acc_1 = plus(tvar,tvar) in
+  in(c,z);
+  let (x,z2) = z in
+  
+  # Step 2 : Test
+  if x = get_challenge
+  then
+    let ctime_equals = plus(tvar,plus(tvar,plus(x,get_challenge))) in
+    let time_acc_2 = plus(time_acc_1,ctime_equals) in
+    
+    # Step 3 : Name restriction
+    let time_acc_3 = plus(time_acc_2,tname) in
+    new n_t;
+    
+    # Step 4 : Output 1
+    let time_acc_4 = plus(time_acc_3,plus(tvar,tvar)) in
+    new k1;
+    out(c,(n_t,hide(time_acc_4,k1)));
+    
+    # Step 5 : Input
+    let time_acc_5 = plus(time_acc_4,tvar) in
+    in(c,z3);
+    let (y,z4) = z3 in
+    
+    # Step 6 : Projection
+    let ctime_proj = plus(plus(tvar,tprojun(y)),plus(tvar,tprojdeux(y))) in
+    let (m_e,m_m) = y in
+    let time_acc_6 = plus(time_acc_5,ctime_proj) in
+    
+    if m_e = m_e
+    then
+      # Step 7 : Test 2
+      let ctime_equals2 = plus(tvar,plus(plus(tvar,plus(tvar,tmac(m_e,k_m))),plus(m_m,mac(m_e,k_m)))) in
+      (if m_m = mac(m_e,k_m)
+      then
+        let time_acc_7 = plus(time_acc_6,ctime_equals) in
+        
+        # Step 8 : Test 3
+        let z5 = sdec(m_e,k_e) in
+        let ctime_dec = plus(tvar,plus(tvar,tsdec(m_e,k_e))) in
+        let time_acc_8 = plus(time_acc_7,ctime_dec) in
+        
+        if z5 = z5
+        then
+	  # Step 9 : Projection
+	  let ctime_projtrois = plus(plus(tvar,tprojuntrois(z5)),plus(plus(tvar,tprojdeuxtrois(z5)),plus(tvar,tprojtroistrois(z5)))) in
+	  let time_acc_9 = plus(time_acc_8,ctime_projtrois) in
+	  
+	  let (n_r,n_t_2,k_r) = z5 in
+	  if n_r = n_r
+	  then
+            # Step 10 : Test equality
+            let ctime_equals3 = plus(tvar,plus(tvar,plus(n_t_2,n_t))) in
+            let time_acc_10 = plus(time_acc_9,ctime_equals3) in
+            
+            if n_t_2 = n_t
+            then 
+	      # Step 11 : Name restriction
+	      let time_acc_11 = plus(time_acc_10,tname) in
+              new k_t; 
+              
+              # Step 12 : Let in
+	      let m = senc((n_t,n_r,k_t),k_e) in
+	      let ctime_tupletrois = plus(tvar,plus(tvar,plus(tvar,ttupletrois(n_t,n_r,k_t)))) in
+	      let ctime_senc2 = plus(ctime_tupletrois,plus(tvar,tsenc((n_t,n_r,k_t),k_e))) in
+	      let time_acc_12 = plus(time_acc_11,ctime_senc2) in
+	      
+	      # Step 13 : Output 2
+	      let ctime_pair_mac = plus(tvar,plus(plus(tvar,plus(tvar,tmac(m,k_m))),ttuple(m,mac(m,k_m)))) in
+	      let time_acc_13 = plus(time_acc_12,plus(tvar,ctime_pair_mac)) in
+	      new k2;
+	      out(c,((m,mac(m,k_m)),hide(time_acc_13,k2)))
+            else 
+              # Step 11 : Output 2
+              let time_acc_11 = plus(time_acc_10,plus(tvar,tvar)) in
+              new k2;
+              out(c,(Error_6300,hide(time_acc_11,k2)))
+          else
+            # Step 10 : Output 2
+            let time_acc_10 = plus(time_acc_9,plus(tvar,tvar)) in
+            new k2;
+            out(c,(Error_6300,hide(time_acc_10,k2)))
+        else
+          # Step 9 : Output 2
+          let time_acc_9 = plus(time_acc_8,plus(tvar,tvar)) in
+          new k2;
+          out(c,(Error_6300,hide(time_acc_9,k2)))
+      else 
+        let time_acc_7 = plus(time_acc_6,ctime_equals) in
+        
+        # Step 8 : Output
+        let time_acc_8 = plus(time_acc_7,plus(tvar,tvar)) in
+        new k2;
+        out(c,(Error_6300,hide(time_acc_8,k2)))
+      ).    
+
+#####################################
+### Unlinkability on two sessions ### 
+#####################################
+
+### The normal protocol
+
+let system_2sessions_1  =
+  (new k_e; new k_m; (passport  k_e k_m | reader k_e k_m ))
+  |
+  (new k_e; new k_m; (passport  k_e k_m | reader k_e k_m )).
+
+let system_2sessions_2 =
+  new k_e; new k_m; (passport k_e k_m | reader k_e k_m | passport k_e k_m | reader k_e k_m).
+ 
+### The transformed protocol  
+  
+let system_2sessions_transformed_1  =
+  (new k_e; new k_m; (passport_transformed  k_e k_m | reader_transformed k_e k_m ))
+  |
+  (new k_e; new k_m; (passport_transformed  k_e k_m | reader_transformed k_e k_m )).
+
+let system_2sessions_transformed_2 =
+  new k_e; new k_m; (passport_transformed k_e k_m | reader_transformed k_e k_m | passport_transformed k_e k_m | reader_transformed k_e k_m).
+  
+#### The requests
+
+# Trace equivalence
+#equivalence system_2sessions_1 and system_2sessions_2.
+
+# Length trace equivalence
+#equivalence length system_2sessions_1 and system_2sessions_2.
+
+# Time trace equivalence
+#equivalence length system_2sessions_transformed_1 and system_2sessions_transformed_2.
+
+#####################################
+### Unlinkability on three sessions ### 
+#####################################
+
+### The normal protocol
+
+let system_3sessions_1  =
+  (new k_e; new k_m; (passport  k_e k_m | reader k_e k_m ))
+  |
+  (new k_e; new k_m; (passport  k_e k_m | reader k_e k_m ))
+  |
+  (new k_e; new k_m; (passport  k_e k_m | reader k_e k_m )).
+
+let system_3sessions_2 =
+  (new k_e; new k_m; (passport k_e k_m | reader k_e k_m | passport k_e k_m | reader k_e k_m))
+  |
+  (new k_e; new k_m; (passport k_e k_m | reader k_e k_m)).
+ 
+### The transformed protocol  
+  
+let system_3sessions_transformed_1  =
+  (new k_e; new k_m; (passport_transformed  k_e k_m | reader_transformed k_e k_m ))
+  |
+  (new k_e; new k_m; (passport_transformed  k_e k_m | reader_transformed k_e k_m ))
+  |
+  (new k_e; new k_m; (passport_transformed  k_e k_m | reader_transformed k_e k_m )).
+
+let system_3sessions_transformed_2 =
+  (new k_e; new k_m; (passport_transformed k_e k_m | reader_transformed k_e k_m | passport_transformed k_e k_m | reader_transformed k_e k_m))
+  |
+  (new k_e; new k_m; (passport_transformed  k_e k_m | reader_transformed k_e k_m )).
+  
+#### The requests
+
+# Trace equivalence
+#equivalence system_3sessions_1 and system_3sessions_2.
+
+# Length trace equivalence
+equivalence length system_3sessions_1 and system_3sessions_2.
+
+# Time trace equivalence
+equivalence length system_3sessions_transformed_1 and system_3sessions_transformed_2.

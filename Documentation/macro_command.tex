@@ -1,0 +1,535 @@
+%%
+%%% General 
+%%
+
+\newcommand{\defi}{\;\stackrel{\mathit{def}}{=}\;}		% Formal definition
+
+% --------------------------------------------------------------------- %
+% Typesetting definitions:              Sample output:                  %
+%                                                                       %
+% \begin{defn}                                                          %
+% \category{M,N}{terms}\\               M, N ::=        terms           %
+% \entry{x}{variable}\\                   x               variable      %
+% \entry{M\ N}{application}\\             M N             application   %
+% \entry{\lambda x.\ M}{abstraction}      \x.M            abstraction   %
+% \end{defn}                                                            %
+%                                                                       %
+% This is a tabbing environment; the last entry should have no \\.      %
+% --------------------------------------------------------------------- %
+
+\newenvironment{defn}{\begin{tabbing}
+  \hspace{1.5em} \= \hspace{.30\linewidth - 1.5em} \= \hspace{1.5em} \= \kill}{
+  \end{tabbing}}
+
+\newcommand{\entry}[2]{\>$#1$\>\>#2}
+\newcommand{\clause}[2]{$#1$\>\>#2}
+\newcommand{\category}[2]{\clause{#1::=}{#2}}
+\newcommand{\subclause}[1]{\>\>\>#1}
+
+
+%%
+%%% Term algebra
+%%
+
+% Set
+\newcommand{\N}{\mathcal{N}} 				% Set of names
+\newcommand{\Nb}{\N_b}					% Set of names of base type
+\newcommand{\Nc}{\N_{ch}}					% Set of names of channel type
+
+\newcommand{\Ch}{\mathcal{C}h}				% Specific set of names of channel type used
+										%	in the intermediate semantics
+\newcommand{\ch}{\mathit{ch}}				% Default channel name in \Ch
+
+\newcommand{\X}{\mathcal{X}}  				% Set of variables
+\newcommand{\Xb}{\X_b}						% Set of variables of base type
+\newcommand{\Xc}{\X_{ch}}					% Set of variables of channel type
+
+\newcommand{\Xun}{\mathcal{X}^1}  			% Set of first order variables
+\newcommand{\Xdeux}{\mathcal{X}^2}  			% Set of second order variables
+
+\newcommand{\AX}{\mathcal{AX}}				% Set of parameters
+\newcommand{\ax}{\mathit{ax}}  				% Parameter
+\newcommand{\param}{\mathit{param}}			% The set of parameter in a recipe   
+
+\newcommand{\Rr}{\Pi_n}						% Sets of normalised recipe
+
+\newcommand{\F}{\mathcal{F}}					% Signature, i.e. set of function symbol
+\newcommand{\Fc}{\mathcal{F}_c}				% Signature for constructive function symbol
+\newcommand{\Fd}{\mathcal{F}_d}				% Signature for destructive function symbol
+\newcommand{\Fzero}{\F_0}					% Common signature for composition
+\newcommand{\Fzeroprime}{\F'_0}				% Common signature for composition				
+
+% Typing
+\newcommand{\Type}{\mathsf{Type}}			% Set of types
+\newcommand{\type}[1]{\mathit{#1}}				% Syntax of a type
+
+% Function symbol
+\newcommand{\ar}{\mathsf{ar}}					% Arity
+
+\newcommand{\ffun}{\mathsf{f}}				% Standard function : f
+\newcommand{\gfun}{\mathsf{g}}				% Standard function : g
+\newcommand{\hfun}{\mathsf{h}}				% Standard function : h
+
+\newcommand{\pair}[2]{\langle#1,#2\rangle}		% Paring
+\newcommand{\proj}{\mathsf{proj}}				% Projection of pairing
+\newcommand{\senc}{\mathsf{senc}}			% Symmetric encryption
+\newcommand{\sdec}{\mathsf{sdec}}			% Symmetric decryption
+\newcommand{\aenc}{\mathsf{aenc}}			% Asymmetric encryption
+\newcommand{\adec}{\mathsf{adec}}			% Asymmetric decryption
+\newcommand{\arenc}{\mathsf{aenc}_r}			% Asymmetric randomized encryption
+\newcommand{\ardec}{\mathsf{adec}_r}			% Asymmetric randomized decryption
+\newcommand{\pk}{\mathsf{pk}}				% Public key
+\newcommand{\sign}{\mathsf{sign}}				% Signature
+\newcommand{\checksign}{\mathsf{check}}		% Check signature
+\newcommand{\vk}{\mathsf{vk}}				% Verification key
+\newcommand{\h}{\mathsf{h}}					% Hash function
+\newcommand{\mac}{\mathsf{mac}}				% Mac function
+
+\newcommand{\glet}{\mathsf{glet}}
+\newcommand{\gletin}{\mathsf{gletin}}
+\newcommand{\Failsnd}{\mathsf{c_o}}
+\newcommand{\isfail}{\mathsf{notfail}}
+
+% Boolean function
+\newcommand{\eq}{\mathsf{eq}}				% Equality destructor
+\newcommand{\true}{\mathsf{true}}				% True
+\newcommand{\false}{\mathsf{false}}			% False
+
+
+% Terms
+\newcommand{\T}{\mathcal{T}}					% Terms definition
+\newcommand{\M}{\T(\Fc, \N)}					% Constructor terms
+
+\newcommand{\Pos}{\mathcal{P}os}				% Set of position
+\newcommand{\replacepos}[3]{#1[#3]_{#2}}		% Replace in #1 at position #2  by the term #3
+\newcommand{\getpos}[2]{#1|_{#2}}				% Get the term in #1# at position #2
+
+\newcommand{\vars}{\mathit{vars}}				% Set of variables of a term
+\newcommand{\varsun}{\mathit{vars}^1}			% Set of first order variables of a term
+\newcommand{\varsdeux}{\mathit{vars}^2}		% Set of second order variables of a term
+
+\newcommand{\fv}{\mathit{fvars}}				% Free variable of a term
+\newcommand{\bv}{\mathit{bvars}}				% Bounded variables of a term
+
+\newcommand{\names}{\mathit{names}}			% Set of names of a term
+\newcommand{\fn}{\mathit{fnames}}				% Free names of a term
+\newcommand{\bn}{\mathit{bnames}}			% Bounded names of a term
+
+\newcommand{\st}{\mathit{st}}   				% Set of subterm
+\newcommand{\St}[1]{\mathit{st}(#1)}   			% Set of subterm
+\newcommand{\racine}{\mathsf{root}}			% Root of a term
+\newcommand{\Top}[1]{\mathsf{root}(#1)}			% Root of a term
+
+\newcommand{\fct}{\mathit{Fct}}				% Factors of a terms
+\newcommand{\fctFzero}{\fct_{\Fzero}}			% Factors for the common signature
+
+\newcommand{\occurence}[2]{\mathsf{len}_{#2}(#1)}
+
+\newcommand{\valid}[1]{\mathsf{Message}(#1)}	% Predicate that check if a term is a message (CCS chapter)
+
+\newcommand{\mgu}{\mathsf{mgu}}				% Most general unfier
+
+
+%%
+%%% Rewriting
+%%
+
+% Equationnal theory
+\newcommand{\E}{\mathsf{E}}					% Standard equational theory
+\newcommand{\Ezero}{\E_0}					% Common equational theory for composition
+
+\newcommand{\Or}{\mathcal{O}}				% Sets of equational theory for ordered rewriting
+\newcommand{\Orzero}{{\mathcal{O}_0}}			% Sets of common equational theory for ordered rewriting
+
+% Rewriting system
+\newcommand{\mydownarrow}{\mathord\downarrow}	% Normal form
+\newcommand{\narrowing}{\rightarrowtail_{\cal R}}  % The narrowing relation
+
+
+%%
+%%% Protocol syntax
+%%
+
+% Protocol
+\newcommand{\Out}{\mathsf{out}}				% Output of a message
+\newcommand{\In} {\mathsf{in}}				% Input of a message
+\newcommand{\IfP}{\mathsf{if}\;}
+\newcommand{\ThenP} {\ \mathsf{then}\ }
+\newcommand{\ElseP}{\ \mathsf{else}\ }
+\newcommand{\Phase}{\mathsf{Phase}}
+\newcommand{\Nil}{0}
+\newcommand{\Bang}{!\,}
+\newcommand{\LetP}{\mathsf{let}\ }
+\newcommand{\InP}{\ \mathsf{in}\ }
+\newcommand{\LetFun}[4]{\LetP{#1}={#2}\InP{#3}\ElseP{#4}}
+
+\newcommand{\q}{\mathcal{Q}}
+\newcommand{\p}{\mathcal{P}}
+
+\newcommand{\tok}{\mathit{token}}				% Usual term for a token in the choice operator
+
+% Substitution
+\newcommand{\substbis}[2]{^{#1}/{}_{#2}}	% Active substitution
+\newcommand{\activesubst}[2]{\{^{#1}/{}_{#2}\}}	% Active substitution
+\newcommand{\Dom}{\operatorname{dom}}		% Domain of a substitution
+\newcommand{\Img}{\operatorname{img}}		% Image of a substitution
+
+%%
+%%% Semantics
+%%
+
+\makeatletter
+\def\rightarrowfillstar@{\arrowfill@\relbar\relbar{\rightarrow\smash{^*}}}						
+\newcommand{\xrightarrowstar}[2][]{\ext@arrow 0{13}{15}8\rightarrowfillstar@{#1}{#2}}
+\newcommand{\lrstep}{\@ifstar{\xrightarrowstar}{\xrightarrow}}		% Labeled semantics step
+\makeatother
+
+\newcommand{\LRstep}[1]{\stackrel{#1}{\Rightarrow}}	% Labeled semantics step (without \tau)
+\newcommand{\clrstep}[1]{\xmapsto{#1}}						
+\newcommand{\CLRstep}[1]{\stackrel{#1}{\Mapsto}}
+
+\newcommand{\A}{\mathcal{A}}					% Action alphabet
+\newcommand{\trace}{\textsf{trace}}					% Set of trace
+\newcommand{\tr}{\mathsf{tr}}						% Default labeled sequence of actions
+
+%%
+%%% Equivalence
+%%
+
+\newcommand{\statequiv}{\sim}					% Static equivalence
+\newcommand{\statequivC}{\sim_c}					% Static equivalence for concrete frame
+\newcommand{\statequivFC}{\sim}			% Static equivalence for constructor frame
+\newcommand{\statequivName}{\sim_{\T(\F,\AX)}}		% Static equivalence for recipe without names
+\newcommand{\statequivRr}{\sim_{\Rr}}		 		% Static equivalence for recipe in \Rr
+
+\newcommand{\mayequiv}{\approx_m}				% May equivalence
+\newcommand{\traceequiv}{\approx_t}				% Trace equivalence
+\newcommand{\R}{\mathcal{R}}					% Equivalence relation
+
+\newcommand{\symbequiv}{\approx_s}				% Symbolic equivalence of constraint systems.
+\newcommand{\symbequivC}{\approx^{c}_s}			% Symbolic equivalence of concrete constraint systems.
+\newcommand{\symbequivFC}{\approx_{s}}		% Symbolic equivalence of constructor constraint systems.
+\newcommand{\symbequivName}{\approx^{\T(F, \AX)}_s}% Symbolic equivalence of concrete constraint system (no names in recipe).
+\newcommand{\symbequivRr}{\approx^{\Rr}_{s}}		% Symbolic equivalence of concrete constraint systems (recipe in Rr)
+
+\newcommand{\myDownarrow}{\mathord\Downarrow}	% Tests for may equivalence
+\newcommand{\notmyDownarrow}{\not\Downarrow}	% Negation of tests for may equivalence
+
+%%
+%%% Example Security Property
+%%
+
+\newcommand{\id}{\mathit{id}}
+\newcommand{\idzero}{\mathit{id}_0}
+\newcommand{\sk}{\mathit{sk}}
+
+%The E-passport protocol
+\newcommand{\KPrAA}{\mathit{sk_P}}
+\newcommand{\KPrDS}{\mathit{sk_{DS}}}
+\newcommand{\DG}{\mathit{dg}}
+\newcommand{\SOD}{\mathit{sod}}
+\newcommand{\PAuth}{\textit{PA}}
+\newcommand{\AAuth}{\textit{AA}}
+\newcommand{\BAC}{\textit{BAC}}
+\newcommand{\ksenc}{\mathit{ksenc}}
+\newcommand{\ksmac}{\mathit{ksmac}}
+\newcommand{\ke}{\mathit{ke}}
+\newcommand{\km}{\mathit{km}}
+\newcommand{\getchallenge}{\mathsf{challenge}}
+\newcommand{\key}{\mathit{key}}
+
+
+
+%%
+%%% Intermediate processes
+%%
+
+\newcommand{\pinter}[3]{(#1 ; #2 ; #3)}				% Definition of intermediate process
+\newcommand{\pconcrete}[3]{(#1 ; #2 ; #3)}			% Definition of concrete process
+\newcommand{\Ec} {\mathcal{E}}					% Sets of private names
+\newcommand{\ded}{\vartriangleright}				% Frame deduction	
+\newcommand{\subst}[2]{\{#2 \mapsto #1\}}			% Substitution
+
+\newcommand{\lrstepi}[1]{\lrstep{#1}_i}				% Intermediate step
+\newcommand{\LRstepi}[1]{\LRstep{#1}_i}			% Intermediate step without \tau 
+
+\newcommand{\lrstepc}[1]{\lrstep{#1}_c}				% Concrete step
+\newcommand{\LRstepc}[1]{\LRstep{#1}_c}			% Concrete step without \tau 
+
+\newcommand{\tracei}{\trace_i}					% Set of intermediate trace
+\newcommand{\tracec}{\trace_c}					% Set of concrete trace
+
+
+%%
+%%% Constraint system
+%%
+
+\newcommand{\csys}[4]{(#1;#2;#3;#4)}				% Definition of a constraint system
+\newcommand{\csysCons}[3]{(#1;#2;#3)}				% Definition of a constructor constraint system
+\newcommand{\C}{\mathcal{C}}					% Default constraint system
+
+
+\newcommand{\De}{D}							% Set of deducible constraints
+\newcommand{\Eqm}{Eq}							% Set of equations and inequations of first order term
+
+\newcommand{\vDashC}{\vDash_c}					% Satisfiability of concrete formula
+
+\newcommand{\deduce}{\stackrel{?}{\vdash}}			% Deduct for constraint
+\newcommand{\eqi}{\stackrel{?}{=}}					% Equality sign for equations
+\newcommand{\neqi}{\stackrel{?}{\neq}}				% Inequality sign for inequations
+
+\newcommand{\Sol}[1]{\mathsf{Sol}(#1)}				% Set of solutions of a constraint system
+\newcommand{\SolC}[1]{\mathsf{Sol}_c(#1)}			% Set of concrete solutions of a constraint system
+\newcommand{\SolRr}[1]{\mathsf{Sol}^{\Rr}_c(#1)}			% Set of concrete solutions of a constraint system
+\newcommand{\SolFC}[1]{\mathsf{Sol}(#1)}			% Set of constructor solutions of a constraint system
+
+%%
+%%% Symbolic semantics
+%%
+
+\newcommand{\psymb}[5]{(#1 ; #2 ; #3; #4; #5)}		% Definition of a symbolic process
+
+\newcommand{\lrsteps}[1]{\lrstep{#1}_s}				% Symbolic step
+\newcommand{\LRsteps}[1]{\LRstep{#1}_s}			% Symbolic step without \tau
+
+\newcommand{\lrstepCS}[1]{\lrstep{#1}_{cs}}			% Concrete symbolic step
+\newcommand{\LRstepCS}[1]{\LRstep{#1}_{cs}}		% Concrete symbolic step without \tau
+
+\newcommand{\traces}{\trace_s}					% Set of symbolic trace
+\newcommand{\traceCS}{\trace_{cs}}				% Set of concrete symbolic trace
+
+%%
+%%% Composition of equivalence
+%%
+
+\newcommand{\seq}[1]{\overline{#1}}				% Sequence of protocol
+
+\newcommand{\Tag}{\mathsf{tag}}					% The tagging function
+\newcommand{\unTag}{\mathsf{untag}}				% The untagging function
+\newcommand{\TAG}[2]{[#1]_{{#2}}}					% The tagged version for #2 of the process #1 
+\newcommand{\TestTag}[2]{\mathsf{test}_{#2}(#1)}		% Test that a term is wel-tagged.
+
+\newcommand{\Flawed}[1]{\mathsf{Flawed}(#1)}		% Term computed by the intruder
+\newcommand{\col}{\mathsf{col}}					% Color of a process
+
+\newcommand{\Kzero}{\mathcal{K}_0}				% Set of initial shared key
+
+\newcommand{\Mlex}{\mathcal{M}}					% Lexical measure on terms
+
+%%
+%%% Decision procedure of symbol equivalence
+%%
+
+% Recipes & messages
+\newcommand{\mpath}{\mathsf{path}}				% Path of a recipe
+\newcommand{\context}[2]{{\mathsf{C}\lfloor#1\rfloor_{#2}}}   % The context of the recipe #1 w.r.t. #2
+
+\newcommand{\directun}[1]{\mathsf{acc}^1(#1)}		% The direct access mapping of #1 for messages
+\newcommand{\directdeux}[1]{\mathsf{acc}^2(#1)}		% The direct access mapping of #1 for recipes
+
+\newcommand{\maxparam}[2]{\mathsf{param^{#2}_{max}}(#1)}	% The index of maximal parameter of the recipe #1 in #2
+\newcommand{\maxparamC}[2]{\mathsf{paramC^{#1}_{max}}(#2)}	% Maxparam pour les context.
+\newcommand{\indexvars}[2]{\mathsf{ind}_{#1}(#2)}		% The min max of maxparam of a first order term
+
+\newcommand{\VarInf}[1]{<_{#1}}                                         % Relation on second order variable in a constraint system
+\newcommand{\layercons}{\ \mathcal{R}_{\Fc}\ }                   % Constructor layer equivalence on ground recipe
+
+\newcommand{\mydownarrowEqr}{\mathord{\rotatebox[origin=c]{270}{\mbox{$\rightsquigarrow$\hspace{1pt}}}}}  
+
+% Frame
+\newcommand{\Init}{\mathsf{Init}}					% The constructor frame of an extended frame
+
+% Constraint system
+\newcommand{\excsS}[8]{(#1;#2;#3;#4;#5;#6;#7;#8)}	% Definition of an extended constraint system
+\newcommand{\NDe}{\mathit{ND}}					% Set of no-deducible constraint
+\newcommand{\Eqr}{Er}							% Set of equations and inequations of second order term
+\newcommand{\flag}{\mathsf{NoUse}}				% Set of useless frame element
+\newcommand{\barre}[1]{\overline{#1}}				% Constraint system without NDe
+
+% Invariants
+\newcommand{\InvRightHandVar}[1]{\mathsf{InvVarConstraint}(#1)}
+\newcommand{\InvFrameVar}[1]{\mathsf{InvVarFrame}(#1)}
+\newcommand{\InvGeneral}{\mathsf{InvGeneral}}
+\newcommand{\InvNoUseVar}[1]{\mathsf{InvNoUse}(#1)}
+\newcommand{\InvFrameDest}[1]{\mathsf{InvDest}(#1)}
+\newcommand{\InvUntouched}[1]{\mathsf{InvUntouched}(#1)}
+\newcommand{\InvFrameDedSub}{\mathsf{InvDedsub}}
+\newcommand{\InvMatrix}[1]{\mathsf{InvMatrix}(#1)}
+
+% Phase properties
+\newcommand{\PropPhaseUn}[1]{\mathsf{PP1}(#1)}
+\newcommand{\PropPhaseUnStepA}[1]{\mathsf{PP1Sa}(#1)}
+\newcommand{\PropPhaseUnStepAEnd}[1]{\mathsf{PP1SaE}(#1)}
+\newcommand{\PropPhaseUnStepB}[2]{\mathsf{PP1Sb}(#1,#2)}
+\newcommand{\PropPhaseUnStepBEnd}[2]{\mathsf{PP1SbE}(#1,#2)}
+\newcommand{\PropPhaseUnStepCEnd}[2]{\mathsf{PP1ScE}(#1,#2)}
+\newcommand{\PropPhaseUnStepBCEnd}[2]{\mathsf{PP1SbcE}(#1,#2)}
+\newcommand{\PropPhaseUnEnd}{\mathsf{PP1E}}
+
+%Rules
+\newcommand{\Rule}{\textsc{Rule}\xspace}
+\newcommand{\Cons}{\textsc{Cons}\xspace}
+\newcommand{\Axiom}{\textsc{Axiom}\xspace}
+\newcommand{\Dest}{\textsc{Dest}\xspace}
+\newcommand{\Eqll}{\textsc{Eq-left-left}\xspace}
+\newcommand{\Eqrr}{\textsc{Eq-right-right}\xspace}
+\newcommand{\Eqlr}{\textsc{Eq-left-right}\xspace}
+\newcommand{\DedSubterms}{\textsc{Ded-st}\xspace}
+
+%Measure for termination
+\newcommand{\measureL}[2]{\mathcal{L}^1_{#1}(#2)}
+
+\newcommand{\measurePunStepA}[1]{\mu_{1.a}(#1)}
+\newcommand{\measurePunStepAM}[1]{\mu^m_{1.a}(#1)}
+\newcommand{\measurePunStepB}[1]{\mu_{1.b}(#1)}
+\newcommand{\measurePunStepBM}[2]{\mu_{1.b}^{#1}(#2)}
+\newcommand{\measurePunStepC}[1]{\mu_{1.c}(#1)}
+\newcommand{\measurePunStepCM}[2]{\mu_{1.c}^{#1}(#2)}
+\newcommand{\measurePunStepBCM}[2]{\mu_{1.b+c}^{#1}(#2)}
+\newcommand{\measurePunStepD}[2]{\mu_{1.d}^{#1}(#2)}
+
+\newcommand{\measurePdeuxStepAM}[1]{\mu_{2.a}(#1)}
+\newcommand{\measurePdeuxStepB}[1]{\mu_{2.b}(#1)}
+\newcommand{\measurePdeuxStepC}[1]{\mu_{2.c}(#1)}
+
+\newcommand{\measureDeq}[2]{L^1_{#1}(#2)}
+\newcommand{\measureDeqR}[2]{L^2_{#1}(#2)}
+\newcommand{\measureGen}[1]{\mu_{gen}(#1)}
+\newcommand{\measureGenUn}[1]{\mu^1_{gen}(#1)}
+\newcommand{\measureGenDeux}[1]{\mu^2_{gen}(#1)}
+
+\newcommand{\measureCons}[2]{\mu^{#1}_{cons}(#2)}
+\newcommand{\measureConsUn}[2]{\mu^{#1}_{cons,1}(#2)}
+\newcommand{\measureConsDeux}[2]{\mu^{#1}_{cons,2}(#2)}
+\newcommand{\measureNbVar}[2]{\mu^{#1}_{var}(#2)}
+
+\newcommand{\Hun}{\mathsf{H}^1}
+\newcommand{\Hdeux}{\mathsf{H}^2}
+
+% Others
+\newcommand{\SetX}[1]{\mathsf{X}^1(#1)}			% The subset of right hand term variable of the deducible constraint not in S_2
+
+%Graphic Macro %%%%%
+
+\newcommand{\myitem}[1]{\psframebox[linestyle=none]{\raisebox{.2cm}{#1}}}
+\newcommand{\splitone}[3]{$#2$
+\begin{picture}(60,30)
+\put(2,2){\vector(4,0){#1}}
+\put(#1,0){\hspace{5pt}$#3$}
+\end{picture} \\[2mm]}
+
+\newcommand{\splittwo}[4]{$#2$
+\begin{picture}(60,30)
+\put(2,2){\vector(4,1){#1}}
+%\put(20,13){$\ell$}
+\put(2,2){\vector(4,-1){#1}}
+%\put(20,-13){r}
+\put(#1,15){\hspace{5pt}$#3$}
+\put(#1,-15){\hspace{5pt}$#4$}
+\end{picture} \\[6mm]}
+
+\newcommand{\splitthree}[5]{$#2$
+\begin{picture}(60,30)
+\put(2,2){\vector(2,1){#1}}
+\put(20,15){$\ell$}
+\put(2,2){\vector(1,0){#1}}
+\put(20,4){m}
+\put(2,2){\vector(2,-1){#1}}
+\put(20,-15){r}
+\put(#1,25){\hspace{5pt}$#3$}
+\put(#1,0){\hspace{5pt}$#4$}
+\put(#1,-25){\hspace{5pt}$#5$}
+\end{picture} \\[10mm]}
+
+
+%%
+%%% Proverif
+%%
+
+\newcommand{\arel}{\mathrel{{\cal R}}}
+
+% Destructor
+\newcommand{\Fail}{\mathsf{fail}}					% May-fail Failure
+\newcommand{\deffun}[2]{\mathrm{def}_{#2}({#1})}		% Destructors definition
+\newcommand{\with}{\;||\;}							% Link side condition and destruction
+
+% Destructor example
+\newcommand{\error}{\mathsf{error}}				% Error message
+\newcommand{\gifthenelse}{\mathsf{gIf}}				% destructor for if then else
+\newcommand{\equals}{\mathsf{equals}}
+
+% Term evaluation
+\newcommand{\eval}[1]{\mathrm{eval}\ {#1}}			% Term Evaluation
+\newcommand{\teval}[1]{\mathop{\downarrow_{#1}}}			% Reduction of a term evaluation
+\newcommand{\notteval}[1]{\mathop{\not\downarrow_{#1}}}
+\newcommand{\tevalpseq}{\mathrel{\downarrow'}}
+\newcommand{\tevalp}{\mathrel{\downarrow'}}
+
+% Biprocess
+\newcommand{\diff}{\mathsf{diff}}					% Choice for biprocess
+\newcommand{\diffsnd}{\mathsf{diff}'}				% Choice for merging and simplify of processes
+
+\newcommand{\fst}{\mathsf{fst}}					% First element of a bi term
+\newcommand{\snd}{\mathsf{snd}}					% Second element of a bi term
+\newcommand{\fstd}{\fst}							% First element of a bi term evaluation
+\newcommand{\sndd}{\snd}						% Second element of a bi term evaluation
+\newcommand{\fstp}{\fst}							% First element of a biprocess
+\newcommand{\sndp}{\snd}						% Second element of a biprocess
+
+\newcommand{\fstsnd}{\mathsf{fst'}}					% First element of merging
+\newcommand{\sndsnd}{\mathsf{snd'}}				% Second element of merging
+
+\newcommand{\merging}{\mathit{merge}}				% Merging of two process
+\newcommand{\simplify}{\mathit{simpl}}				% Simplification of a process
+
+\newcommand{\unevaluated}{\mathrm{unevaluated}}
+
+% Rewrite rules
+\newcommand{\s}{\mathcal{S}}						% Set of rewrite rules
+\newcommand{\subeqs}{\mathrm{nf}_{\s, \Sigma}}
+\newcommand{\addeval}{\mathrm{addeval}}
+\newcommand{\removeeval}{\mathrm{removeeval}}
+
+% Clause generation
+\newcommand{\rewrite}{\rightarrow}
+\newcommand{\lp}{[\![}
+\newcommand{\rp}{]\!]}
+\newcommand{\hyp}{H}
+\newcommand{\emptyseq}{\emptyset}
+\newcommand{\Bstd}{{\cal R}}
+\newcommand{\K}{\mathcal{K}}
+\newcommand{\Label}{\mathcal{I}}
+\newcommand{\rset}{\mathcal{R}}
+
+
+% Fact
+\newcommand{\bad}{\mathrm{bad}}					% Bad 
+\newcommand{\attp}{\mathrm{att}'}					% Knowledge of the attacker biprocess	
+\newcommand{\att}{\mathrm{att}}					% Knowledge of the attacker process			
+\newcommand{\messp}{\mathrm{msg}'}				% Message send
+\newcommand{\pinputp}{\mathrm{input}'}				% Input on a channel
+\newcommand{\formula}{\mathrm{formula}}			% Formula
+\newcommand{\nounif}{\mathrm{nounif}}				% NoUnif of previous paper
+
+\newcommand{\fails}{\mathit{fails}}
+
+%Simplification of formula
+\newcommand{\simpsepar}{\mathit{separate}}
+\newcommand{\simpand}{\mathit{conjunction}}
+\newcommand{\simpunifdiseq}{\mathit{unifydiseq}}
+\newcommand{\simpuniversal}{\mathit{elim universal}}
+\newcommand{\simpunify}{\mathit{unifyeq}}
+\newcommand{\simpdevelop}{\mathit{develop}}
+\newcommand{\simpsubs}{\mathit{applysubs}}
+\newcommand{\simelimexi}{\mathit{elim existential}}
+\newcommand{\simunivfailed}{\mathit{univfailed}}
+\newcommand{\testunif}{\mathrm{testunif}}
+\newcommand{\simpelimvar}{\mathit{elimvar}}
+\newcommand{\simpelimany}{\mathit{elimattx}}
+\newcommand{\simpeq}{\mathit{simpeq}}
+\newcommand{\simpunif}{\mathit{unify}}
+\newcommand{\simpswap}{\mathit{swap}}
+\newcommand{\simpelimsv}{\mathit{elimGVar}}
+\newcommand{\simpnouniffalse}{\mathit{elimformula}}
+\newcommand{\saturate}{\mathsf{saturate}}
+\newcommand{\decomp}{\mathit{decomp}}
