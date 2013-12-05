@@ -36,15 +36,21 @@ let display_size_trace_cutted ()=
   
 (** [final_test_on_matrix] does nothing if the final test succeed otherwise it raise one of the two exception [Not_equivalent_left] and [Not_equivalent_right] *)
 let final_test_on_matrix index_right_process left_set right_set matrix = 
+  let nb_column = Constraint_system.Matrix.get_number_column matrix in
+  let nb_line = Constraint_system.Matrix.get_number_line matrix in
+
+
   final_test_count := !final_test_count + 1;
   if (!final_test_count / 1000) * 1000 = !final_test_count then 
     begin
-      Printf.printf "Final test reached = %d, number_of_branches_cut = %d (%s)\n" !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
+      let size_trace = 
+        if left_set = []
+        then Process.size_trace (List.hd right_set)
+        else Process.size_trace (List.hd left_set)
+      in
+      Printf.printf "Size trace = %d; Current matrix size %d lines, %d columns. Final test reached = %d, number_of_branches_cut = %d (%s)\n" size_trace nb_line nb_column !final_test_count !number_of_branches_cut (display_size_trace_cutted ());
       flush_all ()
     end;
-
-  let nb_column = Constraint_system.Matrix.get_number_column matrix in
-  let nb_line = Constraint_system.Matrix.get_number_line matrix in
   
   for i = 1 to nb_line do
     if index_right_process = nb_column + 1

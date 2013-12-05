@@ -48,7 +48,7 @@ main:
   | LENGTH ident LBRACE length_definition RBRACE DOT
       { LengthDecl($2,$4) }
   | LENGTH TUPLE LPAR INT RPAR LBRACE length_definition RBRACE DOT
-      { LengthTupleDecl($4,$7) }
+      { LengthTupleDecl($4,$7,(Parsing.symbol_start_pos ()).Lexing.pos_lnum) }
   | FREE ident DOT
       { FreeNameDecl($2) }
   | EQUIVALENCE process AND process DOT

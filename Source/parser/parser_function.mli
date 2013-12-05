@@ -56,7 +56,7 @@ type declaration =
   | ProcDecl of ident * ident list * process
   | FuncDecl of ident * int
   | LengthDecl of ident * (float * float list)
-  | LengthTupleDecl of int * (float * float list)
+  | LengthTupleDecl of int * (float * float list) * int
   | FreeNameDecl of ident
   | Equivalence of process * process
   | EquivalenceLength of process * process

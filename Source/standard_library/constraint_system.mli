@@ -1,22 +1,3 @@
-(*************************************************************************
-** APTE v0.3.2beta - Algorithm for Proving Trace Equivalence            **
-**                                                                      **
-** Copyright (C) 2013  Vincent Cheval                                   **
-**                                                                      **
-** This program is free software: you can redistribute it and/or modify **
-** it under the terms of the GNU General Public License as published by **
-** the Free Software Foundation, either version 3 of the License, or    **
-** any later version.                                                   **
-**                                                                      **
-** This program is distributed in the hope that it will be useful,      **
-** but WITHOUT ANY WARRANTY; without even the implied warranty of       **
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 **
-** See the GNU General Public License for more details.                 **
-**                                                                      **
-** You should have received a copy of the GNU General Public License    **
-** along with this program.  If not, see http://www.gnu.org/licenses/   **
-**************************************************************************)
-
 (** Operations on (matrices of) constraint systems *)
 
 (** This module regrous all the functions that manipulate the constraint systems and the
@@ -57,10 +38,6 @@ val add_message_formula : constraint_system -> Term.formula -> constraint_system
 val add_new_deducibility_constraint : constraint_system -> Recipe.variable -> Term.term -> constraint_system
 
 val add_deducibility_constraint : constraint_system -> Constraint.Deducibility.elt list -> constraint_system
-
-(** [add_new_dependency_constraint csys dep] add the constraint [dep] to the dependency
-constraints of [csys]. *)
-val add_new_dependency_constraint : constraint_system -> Recipe.recipe list -> Recipe.axiom list -> constraint_system
 
 (** [add_new_axiom csys t] returns the constraint system [csys] with the frame {% $\Phi \cup \\{ \ax_i, i \ded t\\}$ %}
     where {% $\Phi$ %} is the frame of [csys] and $i-1$ is the maximal support of {% $\Phi$ %}.
@@ -128,9 +105,6 @@ val get_message_equations : constraint_system -> (Term.term * Term.term) list
     @raise Internal_error if [csys] is the bottom constraint system.*)
 val get_recipe_equations : constraint_system -> (Recipe.recipe * Recipe.recipe) list
 
-(** [get_dependency_constraints csys] returns the dependency constraints. *)
-val get_dependency_constraints : constraint_system -> (Recipe.recipe list * Recipe.axiom list) list
-
 (** [get_maximal_support csys] returns maximal support of the frame of [csys].
     @raise Internal_error if [csys] is the bottom constraint system.*)
 val get_maximal_support : constraint_system -> int
@@ -162,8 +136,6 @@ val check_same_structure : constraint_system -> constraint_system -> unit
 val check_same_shape : constraint_system -> constraint_system -> unit
 
 val display : constraint_system -> string
-
-val display_dependency_constraints : constraint_system -> string
 
 val is_unsatisfiable : constraint_system -> bool
 

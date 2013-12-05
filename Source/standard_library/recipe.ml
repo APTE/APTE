@@ -1,22 +1,3 @@
-(*************************************************************************
-** APTE v0.3.2beta - Algorithm for Proving Trace Equivalence            **
-**                                                                      **
-** Copyright (C) 2013  Vincent Cheval                                   **
-**                                                                      **
-** This program is free software: you can redistribute it and/or modify **
-** it under the terms of the GNU General Public License as published by **
-** the Free Software Foundation, either version 3 of the License, or    **
-** any later version.                                                   **
-**                                                                      **
-** This program is distributed in the hope that it will be useful,      **
-** but WITHOUT ANY WARRANTY; without even the implied warranty of       **
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 **
-** See the GNU General Public License for more details.                 **
-**                                                                      **
-** You should have received a copy of the GNU General Public License    **
-** along with this program.  If not, see http://www.gnu.org/licenses/   **
-**************************************************************************)
-
 (***************************
 ***         Recipe       ***
 ****************************)
@@ -112,11 +93,6 @@ let variable_of_recipe = function
   | Var v -> v
   | _ -> Debug.internal_error "[recipe.ml >> variable_of_recipe] A variable was expected"
 
-let rec get_variables_of_recipe = function
-  | Var v -> [v]
-  | Axiom _ -> []
-  | Func (_, list) -> List.concat (List.map get_variables_of_recipe list)
-
 let apply_function symbol list_sons = 
   (***[BEGIN DEBUG]***)
   Debug.low_debugging (fun () ->
@@ -141,11 +117,6 @@ let rec occurs var = function
   | Var(v) when v == var -> true
   | Var{link = RLink t;_} -> occurs var t
   | Func(_,args) -> List.exists (occurs var) args
-  | _ -> false
-
-let rec ax_occurs ax = function
-  | Axiom(a) when a == ax -> true
-  | Func(_,args) -> List.exists (ax_occurs ax) args
   | _ -> false
   
 let is_equal_variable v1 v2 = v1 == v2  

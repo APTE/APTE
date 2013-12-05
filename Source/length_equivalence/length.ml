@@ -19,7 +19,7 @@
 
 open Standard_library
 
-let names_length = ref 1.0
+let names_length = ref 10.0
 
 let length_functions = ref []
 

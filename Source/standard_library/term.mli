@@ -1,22 +1,3 @@
-(*************************************************************************
-** APTE v0.3.2beta - Algorithm for Proving Trace Equivalence            **
-**                                                                      **
-** Copyright (C) 2013  Vincent Cheval                                   **
-**                                                                      **
-** This program is free software: you can redistribute it and/or modify **
-** it under the terms of the GNU General Public License as published by **
-** the Free Software Foundation, either version 3 of the License, or    **
-** any later version.                                                   **
-**                                                                      **
-** This program is distributed in the hope that it will be useful,      **
-** but WITHOUT ANY WARRANTY; without even the implied warranty of       **
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 **
-** See the GNU General Public License for more details.                 **
-**                                                                      **
-** You should have received a copy of the GNU General Public License    **
-** along with this program.  If not, see http://www.gnu.org/licenses/   **
-**************************************************************************)
-
 (** Operations on terms *)
 
 (** {% This module regroups all the functions that manipulate terms. In~\thesis, the terms
@@ -276,13 +257,6 @@ val is_name : term -> bool
 
 (** [is_name_status s t] returns [true] iff the term [t] is a name with status [s]. *)
 val is_name_status : name_status -> term -> bool
-
-(** Raised when the argument of the following function is not a name. *)
-exception Not_a_name
-
-(** [get_id_of_name t] raises Not_a_name if [t] is not a name and returns the id of
-[t] otherwise. *)
-val get_id_of_name : term -> string
 
 (** [is_function t] returns [true] iff the term [t] is a function symbol application. *)
 val is_function : term -> bool

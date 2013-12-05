@@ -1,22 +1,3 @@
-(*************************************************************************
-** APTE v0.3.2beta - Algorithm for Proving Trace Equivalence            **
-**                                                                      **
-** Copyright (C) 2013  Vincent Cheval                                   **
-**                                                                      **
-** This program is free software: you can redistribute it and/or modify **
-** it under the terms of the GNU General Public License as published by **
-** the Free Software Foundation, either version 3 of the License, or    **
-** any later version.                                                   **
-**                                                                      **
-** This program is distributed in the hope that it will be useful,      **
-** but WITHOUT ANY WARRANTY; without even the implied warranty of       **
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 **
-** See the GNU General Public License for more details.                 **
-**                                                                      **
-** You should have received a copy of the GNU General Public License    **
-** along with this program.  If not, see http://www.gnu.org/licenses/   **
-**************************************************************************)
-
 (** Operations on recipes *)
 
 (** This module regroups all the functions that manipulate recipes. In {% ~\thesis %}, the terms
@@ -81,9 +62,6 @@ val recipe_of_axiom : axiom -> recipe
     @raise Internal_error if [r] is not a variable.*)
 val variable_of_recipe : recipe -> variable
 
-(** [get_variables_of_recipe r] returns the list of variables in [r]. *)
-val get_variables_of_recipe : recipe -> variable list
-
 (** [axiom_of_recipe r] returns the recipe [r] as an axiom.
     @raise Internal_error if [r] is not an axiom.*)
 val axiom_of_recipe : recipe -> axiom
@@ -117,9 +95,6 @@ val is_equal_recipe : recipe -> recipe -> bool
 
 (** [occurs v r] return true iff the variable [v] is in the recipe [r] *)
 val occurs : variable -> recipe -> bool
-
-(** [ax_occurs a r] return true iff the axiom [a] is in the recipe [r] *)
-val ax_occurs : axiom -> recipe -> bool
 
 (** [is_free_variable v] returns [true] iff [v] is free.*)
 val is_free_variable : variable -> bool

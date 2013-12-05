@@ -1,22 +1,3 @@
-(*************************************************************************
-** APTE v0.3.2beta - Algorithm for Proving Trace Equivalence            **
-**                                                                      **
-** Copyright (C) 2013  Vincent Cheval                                   **
-**                                                                      **
-** This program is free software: you can redistribute it and/or modify **
-** it under the terms of the GNU General Public License as published by **
-** the Free Software Foundation, either version 3 of the License, or    **
-** any later version.                                                   **
-**                                                                      **
-** This program is distributed in the hope that it will be useful,      **
-** but WITHOUT ANY WARRANTY; without even the implied warranty of       **
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 **
-** See the GNU General Public License for more details.                 **
-**                                                                      **
-** You should have received a copy of the GNU General Public License    **
-** along with this program.  If not, see http://www.gnu.org/licenses/   **
-**************************************************************************)
-
 (** {2 Process} *)
 
 type label
@@ -63,12 +44,9 @@ val display_trace : symbolic_process -> string
 
 val display_trace_no_unif : symbolic_process -> string
 
-val add_dependency_constraint : symbolic_process -> Recipe.recipe list -> Recipe.axiom list -> symbolic_process
-
 (** {4 Testing} *)
 
 val is_bottom : symbolic_process -> bool
-
 
 (** {4 Access and modification} *)
 
@@ -93,18 +71,3 @@ val apply_output : (symbolic_process -> unit) -> Recipe.variable -> symbolic_pro
 (** {3 Optimisation} *)
 
 val is_same_input_output : symbolic_process -> symbolic_process -> bool
-
-(** [is_improper symP] return true if [symP] has not yet performed any improper block
-and false otherwise. *)
-val is_improper : symbolic_process -> bool
-
-
-(** {4 Optimisation: Reduced semantics} **)
-
-(**  [test_dependency_constraints symP] test whether dependency constraints of
-     [symP] hold. *)
-val test_dependency_constraints : symbolic_process -> bool
-
-(**  [generate_dependency_constraints symP] add to the set of dependency constrants
-     of symP the dependency constraint for the last action of the trace.  *)
-val generate_dependency_constraints : symbolic_process -> symbolic_process

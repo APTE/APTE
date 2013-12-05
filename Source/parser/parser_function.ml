@@ -62,7 +62,7 @@ type declaration =
   | ProcDecl of ident * ident list * process
   | FuncDecl of ident * int
   | LengthDecl of ident * (float * float list)
-  | LengthTupleDecl of int * (float * float list)
+  | LengthTupleDecl of int * (float * float list) * int
   | FreeNameDecl of ident
   | Equivalence of process * process
   | EquivalenceLength of process * process
@@ -310,8 +310,11 @@ let parse_one_declaration = function
       environment := parse_process_declaration !environment id var_list proc
   | LengthDecl (id,(cst,args)) ->
       parse_length_declaration !environment id (cst,args)
-  | LengthTupleDecl (ar,(cst,args)) ->  
-      Length_equivalence.Length.length_functions := (Term.get_tuple ar,(cst,args)):: !Length_equivalence.Length.length_functions
+  | LengthTupleDecl (ar,(cst,args),line) ->  
+      let f = Term.get_tuple ar in
+      if ar = List.length args
+      then Length_equivalence.Length.length_functions := (f,(cst,args)):: !Length_equivalence.Length.length_functions
+      else error_message line (Printf.sprintf "The function tuple(%d) is given %d length coefficients for its arguments but is expecting %d coefficients" ar (List.length args) ar);
   | FuncDecl (id,arity) -> 
       environment := parse_function_declaration !environment id arity
   | FreeNameDecl id ->

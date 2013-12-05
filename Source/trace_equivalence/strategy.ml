@@ -1,22 +1,3 @@
-(*************************************************************************
-** APTE v0.3.2beta - Algorithm for Proving Trace Equivalence            **
-**                                                                      **
-** Copyright (C) 2013  Vincent Cheval                                   **
-**                                                                      **
-** This program is free software: you can redistribute it and/or modify **
-** it under the terms of the GNU General Public License as published by **
-** the Free Software Foundation, either version 3 of the License, or    **
-** any later version.                                                   **
-**                                                                      **
-** This program is distributed in the hope that it will be useful,      **
-** but WITHOUT ANY WARRANTY; without even the implied warranty of       **
-** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                 **
-** See the GNU General Public License for more details.                 **
-**                                                                      **
-** You should have received a copy of the GNU General Public License    **
-** along with this program.  If not, see http://www.gnu.org/licenses/   **
-**************************************************************************)
-
 open Standard_library
 
 (********************************************
@@ -900,6 +881,26 @@ let apply_phase_1_input support function_next matrix =
     function_next (Constraint_system.Matrix.map Constraint_system.unset_semi_solved_form matrix_0)
   ) matrix
   
+(******* Phase 1 of the strategy ********)
+  
+let apply_phase_1 function_next matrix = 
+
+  let max_support = Constraint_system.Matrix.get_maximal_support matrix in
+  
+  let rec apply_each_support support matrix_1 =
+    if support > max_support 
+    then function_next matrix_1
+    else
+      let matrix_2 = apply_step_a_phase_1 support matrix_1 in
+      let matrix_3 = apply_pre_cycle_b_c support matrix_2 in
+      let matrix_4 = Constraint_system.Matrix.normalise matrix_3 in
+      apply_step_b_c_d_phase_1 support 1 (fun matrix_5 ->
+        let matrix_6 = Constraint_system.Matrix.map Constraint_system.unset_semi_solved_form matrix_5 in
+        apply_each_support (support + 1) (apply_step_e_phase_1 support matrix_6)
+      ) matrix_4
+  in
+  
+  apply_each_support 1 matrix
   
 (***************************************************
 ***     Functions for Phase 2 of the strategy    ***
@@ -1472,6 +1473,13 @@ let apply_strategy_input function_next matrix =
 
 let apply_strategy_output function_next matrix = 
   apply_phase_1_output (Constraint_system.Matrix.get_maximal_support matrix) (fun matrix_1 ->
+    apply_phase_2 (fun matrix_2 ->
+      function_next (phase_2_to_phase_1 matrix_2)
+    ) (phase_1_to_phase_2 matrix_1)
+  ) matrix
+  
+let apply_full_strategy function_next matrix = 
+  apply_phase_1 (fun matrix_1 ->
     apply_phase_2 (fun matrix_2 ->
       function_next (phase_2_to_phase_1 matrix_2)
     ) (phase_1_to_phase_2 matrix_1)
