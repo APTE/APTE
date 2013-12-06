@@ -72,6 +72,7 @@ let apply_step_a_phase_1 support matrix =
     | [] -> matrix
     | (path,var)::q -> 
         let matrix' = Rules.apply_full_column_eqlr support path var matrix in
+        
         apply_several_eqlr q matrix'
   in
   
@@ -141,7 +142,7 @@ let apply_step_a_phase_1 support matrix =
         Rules.apply_full_column_eqlr_frame support (Recipe.axiom_path (Recipe.axiom support)) s path m
       ) matrix_1 old_path_support
     in
-          
+              
     apply_dest old_path_support matrix_2
     
 (************************************************
@@ -585,11 +586,17 @@ let apply_step_c_phase_1 support column_k function_next matrix =
           then Debug.internal_error "[strategy.ml >>  apply_step_c_phase_1] No rule Axiom or Cons external should be applicable at this point";
         );
         (***[END DEBUG]***)
+        
+        (***[Statistic]***)
+        Statistic.record_matrix Statistic.POne_SC matrix;
     
         function_next matrix
     | (v,f_l,ax_apps)::q ->
         
         apply_external_axiom_phase_1 (fun matrix' ->
+          (***[Statistic]***)
+          Statistic.record_matrix Statistic.POne_SC matrix';
+        
           (***[BEGIN DEBUG]***)
           Debug.high_debugging (fun () ->
             try
@@ -604,6 +611,9 @@ let apply_step_c_phase_1 support column_k function_next matrix =
         ) ax_apps matrix
   
   and go_through_eqrr matrix = 
+    (***[Statistic]***)
+    Statistic.record_matrix Statistic.POne_SC matrix;
+    
     try
       search_and_apply_internal_eqrr support column_k 
         (apply_step_b_phase_1 support column_k go_through_all)
@@ -613,6 +623,9 @@ let apply_step_c_phase_1 support column_k function_next matrix =
       Not_found -> go_through_all matrix
   
   and go_through_all matrix = 
+    (***[Statistic]***)
+    Statistic.record_matrix Statistic.POne_SC matrix;
+        
     let list_apps = get_axiom_cons_list_apps matrix in
     if list_apps = []
     then function_next matrix
@@ -828,8 +841,14 @@ let apply_step_e_phase_1 support matrix =
   
 let rec apply_cycle_b_c_phase_1 support column function_next matrix = 
   apply_step_b_phase_1 support column (fun matrix' ->
+    (***[Statistic]***)
+    Statistic.record_matrix Statistic.POne_SB matrix';
+    
     try
       apply_step_c_phase_1 support column (fun matrix'' ->
+        (***[Statistic]***)
+        Statistic.record_matrix Statistic.POne_SC matrix'';
+        
         apply_cycle_b_c_phase_1 support column function_next matrix''
       ) matrix'
     with
@@ -842,6 +861,9 @@ let rec apply_step_b_c_d_phase_1 support column function_next matrix =
   else
     apply_cycle_b_c_phase_1 support column (fun matrix_1 ->
       apply_step_d_phase_1 support column (fun matrix_2 ->
+        (***[Statistic]***)
+        Statistic.record_matrix Statistic.POne_SD matrix_2;
+        
         apply_step_b_c_d_phase_1 support (column + 1) function_next matrix_2
       ) matrix_1
     ) matrix
@@ -857,6 +879,9 @@ let rec apply_step_d_all_column_phase_1 support column function_next matrix =
   then function_next matrix
   else
     apply_step_d_phase_1 support column (fun matrix_1 ->
+      (***[Statistic]***)
+      Statistic.record_matrix Statistic.POne_SD matrix_1;
+        
       apply_step_d_all_column_phase_1 support (column + 1) function_next matrix_1
     ) matrix
     
@@ -866,11 +891,21 @@ let apply_phase_1_output support function_next matrix =
   apply_step_d_all_column_phase_1 (support-1) 1 (fun matrix_0 ->
     let matrix_1 = Constraint_system.Matrix.map Constraint_system.unset_semi_solved_form matrix_0 in
     let matrix_2 = apply_step_a_phase_1 support matrix_1 in
+    
+    (***[Statistic]***)
+    Statistic.record_matrix Statistic.POne_SA matrix_2;
+    
     let matrix_3 = apply_pre_cycle_b_c support matrix_2 in
     let matrix_4 = Constraint_system.Matrix.normalise matrix_3 in
     apply_step_b_c_d_phase_1 support 1 (fun matrix_5 ->
       let matrix_6 = Constraint_system.Matrix.map Constraint_system.unset_semi_solved_form matrix_5 in
-      function_next (apply_step_e_phase_1 support matrix_6)
+      let matrix_7 = apply_step_e_phase_1 support matrix_6 in
+      
+      (***[Statistic]***)
+      Statistic.record_matrix Statistic.POne_SE matrix_7;
+      
+      function_next matrix_7
+        
     ) matrix_4
   ) matrix
   
@@ -892,11 +927,20 @@ let apply_phase_1 function_next matrix =
     then function_next matrix_1
     else
       let matrix_2 = apply_step_a_phase_1 support matrix_1 in
+      
+      (***[Statistic]***)
+      Statistic.record_matrix Statistic.POne_SA matrix_2;
+      
       let matrix_3 = apply_pre_cycle_b_c support matrix_2 in
       let matrix_4 = Constraint_system.Matrix.normalise matrix_3 in
       apply_step_b_c_d_phase_1 support 1 (fun matrix_5 ->
         let matrix_6 = Constraint_system.Matrix.map Constraint_system.unset_semi_solved_form matrix_5 in
-        apply_each_support (support + 1) (apply_step_e_phase_1 support matrix_6)
+        let matrix_7 = apply_step_e_phase_1 support matrix_6 in
+        
+        (***[Statistic]***)
+        Statistic.record_matrix Statistic.POne_SE matrix_7;
+        
+        apply_each_support (support + 1) matrix_7
       ) matrix_4
   in
   
@@ -1389,7 +1433,11 @@ let rec apply_cycle_b_c_phase_2 function_next matrix =
     ) matrix;
   );
   (***[END DEBUG]***)
+  
   apply_step_b_phase_2 (fun matrix_1 -> 
+    (***[Statistic]***)
+    Statistic.record_matrix Statistic.PTwo_SB matrix_1;
+      
     try
       (***[BEGIN DEBUG]***)
       Debug.high_debugging (fun () ->
@@ -1405,7 +1453,11 @@ let rec apply_cycle_b_c_phase_2 function_next matrix =
         ) matrix_1;
       );
       (***[END DEBUG]***)
+      
       apply_step_c_phase_2 (fun matrix_2 ->
+        (***[Statistic]***)
+        Statistic.record_matrix Statistic.PTwo_SC matrix_2;
+      
         (***[BEGIN DEBUG]***)
         Debug.high_debugging (fun () ->
           Constraint_system.Matrix.iter (fun csys ->
@@ -1448,7 +1500,12 @@ let apply_phase_2 function_next matrix =
   
   if Constraint_system.Matrix.is_empty matrix
   then function_next matrix
-  else apply_step_a_phase_2 (apply_cycle_b_c_phase_2 function_next) matrix
+  else apply_step_a_phase_2 (fun matrix_1 ->
+    (***[Statistic]***)
+    Statistic.record_matrix Statistic.PTwo_SA matrix_1;
+      
+    apply_cycle_b_c_phase_2 function_next matrix_1
+    ) matrix
   
 (********************************************
 ***        Matrix Phase 1 - Phase2        ***
