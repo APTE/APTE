@@ -15,7 +15,7 @@ OCAMLOPTFLAGS = $(INCLUDES) $(INDLUDES_MOD) -w Ae # add other options for ocamlo
 
 # STANDARD LIBRARY
 
-OBJ= rules.cmx invariant.cmx strategy.cmx algorithm.cmx
+OBJ= statistic.cmx rules.cmx invariant.cmx strategy.cmx algorithm.cmx
 OBJ_DEBUG = $(OBJ:%.cmx=%.cmo)
 
 COMPILE = $(OBJ:%.cmx=%.ml) $(OBJ:%.cmx=%.mli) $(OBJ:%.cmx=%.cmi) $(OBJ)
