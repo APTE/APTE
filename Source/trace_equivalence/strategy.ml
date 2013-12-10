@@ -13,7 +13,7 @@ let is_dest_applicable support matrix =
     then
       try
         let frame_elt, _ = 
-          Constraint.search Constraint.SAll (fun fc ->
+          Constraint.search (Constraint.SUntil support) (fun fc ->
             if Constraint.Frame.is_noUse fc
               || Constraint.Frame.is_yesDest fc
               || Constraint.Frame.is_noDest fc support
@@ -124,6 +124,7 @@ let apply_step_a_phase_1 support matrix =
         
         (* Application of the eqlr on the frame *)
         let matrix_3 = apply_several_eqlr_frame old_path_supp path symbol matrix_2 in
+        
         
         (* Recurrence *)
         apply_dest old_path_supp matrix_3
@@ -926,6 +927,7 @@ let apply_phase_1 function_next matrix =
     if support > max_support 
     then function_next matrix_1
     else
+      begin
       let matrix_2 = apply_step_a_phase_1 support matrix_1 in
       
       (***[Statistic]***)
@@ -942,6 +944,7 @@ let apply_phase_1 function_next matrix =
         
         apply_each_support (support + 1) matrix_7
       ) matrix_4
+      end
   in
   
   apply_each_support 1 matrix
@@ -1524,6 +1527,9 @@ let phase_1_to_phase_2 matrix =
 let apply_strategy_input function_next matrix = 
   apply_phase_1_input (Constraint_system.Matrix.get_maximal_support matrix) (fun matrix_1 ->
     apply_phase_2 (fun matrix_2 -> 
+      (***[Statistic]***)
+      Statistic.record_matrix Statistic.Leaf matrix_2;
+      
       function_next (phase_2_to_phase_1 matrix_2)
     ) (phase_1_to_phase_2 matrix_1)
   ) matrix
@@ -1531,6 +1537,9 @@ let apply_strategy_input function_next matrix =
 let apply_strategy_output function_next matrix = 
   apply_phase_1_output (Constraint_system.Matrix.get_maximal_support matrix) (fun matrix_1 ->
     apply_phase_2 (fun matrix_2 ->
+      (***[Statistic]***)
+      Statistic.record_matrix Statistic.Leaf matrix_2;
+    
       function_next (phase_2_to_phase_1 matrix_2)
     ) (phase_1_to_phase_2 matrix_1)
   ) matrix
@@ -1538,6 +1547,9 @@ let apply_strategy_output function_next matrix =
 let apply_full_strategy function_next matrix = 
   apply_phase_1 (fun matrix_1 ->
     apply_phase_2 (fun matrix_2 ->
+      (***[Statistic]***)
+      Statistic.record_matrix Statistic.Leaf matrix_2;
+      
       function_next (phase_2_to_phase_1 matrix_2)
     ) (phase_1_to_phase_2 matrix_1)
   ) matrix

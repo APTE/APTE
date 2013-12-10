@@ -16,6 +16,8 @@ type step_strategy =
 
 val initialise_statistic : statistic_mode -> unit
 
+val reset_statistic : unit -> unit 
+
 (** Records functions *)
   
 val record_matrix : step_strategy -> Constraint_system.matrix -> unit
