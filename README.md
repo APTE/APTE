@@ -24,7 +24,8 @@ Once the installation is done, an executable 'apte' is created in the directory 
 
 #####Synopsis :
 
-	apte [-debug high|low|none] [-unfold] [-no_comm] [-no_erase] [-verbose [<int>]] [-display size|step] [-log <int>] file
+	apte [-debug high|low|none] [-unfold] [-no_comm] [-no_erase] [-verbose [<int>]] [-display size|step]
+	[-log <int>] file
 
 #####Options :
 
