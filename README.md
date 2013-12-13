@@ -1,7 +1,7 @@
 #APTE : Algorithm for Proving Trace Equivalence
 Version : 0.4beta
 
-For more information, visit the [dedicated website.](http://projects.lsv.ens-cachan.fr/APTE/).
+For more information, visit the [dedicated website](http://projects.lsv.ens-cachan.fr/APTE/).
 
 
 1. Installation
