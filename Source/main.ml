@@ -170,7 +170,7 @@ let _ =
 	  i := !i + 2
       | "-log" when not (!i+1 = (Array.length Sys.argv)) -> 
           begin try 
-            Trace_equivalence.Statistic.option_size_trace_log := int_of_string (Sys.argv).(!i+1)
+            Trace_equivalence.Statistic.initialise_log (int_of_string (Sys.argv).(!i+1))
           with _ -> arret := true
           end;
 	  i := !i + 2

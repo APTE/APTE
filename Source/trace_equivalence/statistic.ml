@@ -126,14 +126,6 @@ let reset_statistic () =
   temporary_buffer := [initial];
   main_out_channel
 
-(** Record functions **)
-
-let record_matrix_function = ref (fun _ _ -> ())
-
-let start_transition_function = ref (fun _ _ -> ())
-
-let end_transition_function = ref (fun _ -> ())
-
 (** Auxilliary functions **)
 
 let add_matrix_statistic m1 m2 =
@@ -471,6 +463,14 @@ let sub_end_transition () =
   
   temporary_buffer := List.tl (!temporary_buffer)
 
+(** Record functions **)
+
+let record_matrix_function = ref (fun _ _ -> ())
+
+let start_transition_function = ref (fun _ _ -> ())
+
+let end_transition_function = ref (fun _ -> ())  
+  
 (** Final function **)
   
 let record_matrix s m = !record_matrix_function s m
@@ -487,6 +487,12 @@ let initialise_display = function
 let display_statistic () = !display_statistic_function ()
   
 (** Initialise statistic *)
+
+let initialise_log size_trace = 
+  option_size_trace_log := size_trace;
+  record_matrix_function := sub_record_matrix;
+  start_transition_function := sub_start_transition;
+  end_transition_function := sub_end_transition
 
 let initialise_statistic = function
   | Final -> 
