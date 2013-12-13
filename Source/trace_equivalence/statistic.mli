@@ -16,7 +16,9 @@ type step_strategy =
 
 val initialise_statistic : statistic_mode -> unit
 
-val reset_statistic : unit -> unit 
+val reset_statistic : unit -> out_channel
+
+val option_size_trace_log : int ref
 
 (** Records functions *)
   

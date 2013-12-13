@@ -880,9 +880,6 @@ let rec apply_step_d_all_column_phase_1 support column function_next matrix =
   then function_next matrix
   else
     apply_step_d_phase_1 support column (fun matrix_1 ->
-      (***[Statistic]***)
-      Statistic.record_matrix Statistic.POne_SD matrix_1;
-        
       apply_step_d_all_column_phase_1 support (column + 1) function_next matrix_1
     ) matrix
     
@@ -890,6 +887,9 @@ let rec apply_step_d_all_column_phase_1 support column function_next matrix =
 
 let apply_phase_1_output support function_next matrix = 
   apply_step_d_all_column_phase_1 (support-1) 1 (fun matrix_0 ->
+    (***[Statistic]***)
+    Statistic.record_matrix Statistic.POne_SD matrix_0;
+      
     let matrix_1 = Constraint_system.Matrix.map Constraint_system.unset_semi_solved_form matrix_0 in
     let matrix_2 = apply_step_a_phase_1 support matrix_1 in
     
@@ -913,7 +913,10 @@ let apply_phase_1_output support function_next matrix =
 (******* Phase 1 of the strategy after an input ********)
 
 let apply_phase_1_input support function_next matrix =
-  apply_step_d_all_column_phase_1 support 1 (fun matrix_0 ->
+  apply_step_d_all_column_phase_1 support 1 (fun matrix_0 -> 
+    (***[Statistic]***)
+    Statistic.record_matrix Statistic.POne_SD matrix_0;
+      
     function_next (Constraint_system.Matrix.map Constraint_system.unset_semi_solved_form matrix_0)
   ) matrix
   

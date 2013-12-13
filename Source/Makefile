@@ -69,6 +69,7 @@ debug: display .depend $(COMPILE_DEBUG) $(MODULES_DEBUG)
 clean: $(MODULES_CLEAN)
 	@echo ----- Clean $(NAME_PROGRAMME) -----
 	rm -f $(EXECUTABLE) $(EXECUTABLE)_debug
+	rm -r ../log
 	rm -f *~ *.cm[iox] *.o
 	
 # Dependencies 

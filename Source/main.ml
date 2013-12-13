@@ -15,7 +15,7 @@ let print_help () =
   Printf.printf "          algorithm slower.\n";
   Printf.printf "          The Low debugging option only checks basic invariants. (default) \n";
   Printf.printf "          The None debugging option does not check any invariant. Chose this option\n";
-  Printf.printf "          for optimal running time.\n"
+  Printf.printf "          for optimal running time.\n"  
   
 (************************
 ***       Parsing     ***
@@ -49,59 +49,64 @@ let parse_file path =
 ***    Decide trace equivalence     ***
 ***************************************)
 
+let display_channel_and_stdout channel str =
+  Printf.printf "%s" str;
+  Printf.fprintf channel "%s" str
+
 let decide_trace_equivalence process1 process2 =
-  Printf.printf "------------\n";
-  Printf.printf "Equivalence between the two following processes:\n\n";
+  let channel = Trace_equivalence.Statistic.reset_statistic () in
+
+  display_channel_and_stdout channel "------------\n";
+  display_channel_and_stdout channel "Equivalence between the two following processes:\n\n";
   
-  Printf.printf "Process 1 =\n";
-  print_string (Standard_library.Process.display_process process1);
   
-  Printf.printf "\n\nProcess2 =\n";
-  print_string (Standard_library.Process.display_process process2);
+  display_channel_and_stdout channel "Process 1 =\n";
+  display_channel_and_stdout channel (Standard_library.Process.display_process process1);
   
- 
-  Printf.printf "\n\nStarting the decision procedure...\n";
+  display_channel_and_stdout channel "\n\nProcess2 =\n";
+  display_channel_and_stdout channel (Standard_library.Process.display_process process2);
+  
+  display_channel_and_stdout channel "\n\nStarting the decision procedure...\n";
   flush_all ();
-  
-  Trace_equivalence.Statistic.reset_statistic ();
   
   let begin_time = Sys.time () in
   let result = Trace_equivalence.Algorithm.decide_trace_equivalence process1 process2 in
   let end_time = Sys.time () in
   let time_spent = end_time -. begin_time in
-  Printf.printf "Result : The trace equivalence is %b\n" result;
-  Printf.printf "Result obtained in %f seconds\n" time_spent;
+  display_channel_and_stdout channel (Printf.sprintf "Result : The trace equivalence is %b\n" result);
+  display_channel_and_stdout channel (Printf.sprintf "Result obtained in %f seconds\n" time_spent);
   Trace_equivalence.Statistic.display_statistic ();
-  flush_all ()
+  flush_all ();
+  close_out channel
   
 (****************************************************
 ***    Decide trace equivalence w.r.t. length     ***
 *****************************************************)
 
 let decide_trace_equivalence_length process1 process2 =
-  Printf.printf "------------\n";
-  Printf.printf "Trace equivalence w.r.t. length between the two following processes:\n\n";
+  let channel = Trace_equivalence.Statistic.reset_statistic () in
   
-  Printf.printf "Process 1 =\n";
-  print_string (Standard_library.Process.display_process process1);
+  display_channel_and_stdout channel "------------\n";
+  display_channel_and_stdout channel "Trace equivalence w.r.t. length between the two following processes:\n\n";
   
-  Printf.printf "\n\nProcess2 =\n";
-  print_string (Standard_library.Process.display_process process2);
+  display_channel_and_stdout channel "Process 1 =\n";
+  display_channel_and_stdout channel (Standard_library.Process.display_process process1);
   
- 
-  Printf.printf "\n\nStarting the decision procedure...\n";
+  display_channel_and_stdout channel "\n\nProcess2 =\n";
+  display_channel_and_stdout channel (Standard_library.Process.display_process process2);
+  
+  display_channel_and_stdout channel "\n\nStarting the decision procedure...\n";
   flush_all ();
-  
-  Trace_equivalence.Statistic.reset_statistic ();
   
   let begin_time = Sys.time () in
   let result = Length_equivalence.Algorithm.decide_trace_equivalence process1 process2 in
   let end_time = Sys.time () in
   let time_spent = end_time -. begin_time in
-  Printf.printf "Result : The trace equivalence w.r.t. length is %b\n" result;
-  Printf.printf "Result obtained in %f seconds\n" time_spent;
+  display_channel_and_stdout channel (Printf.sprintf "Result : The trace equivalence w.r.t. length is %b\n" result);
+  display_channel_and_stdout channel (Printf.sprintf "Result obtained in %f seconds\n" time_spent);
   Trace_equivalence.Statistic.display_statistic ();
-  flush_all ()
+  flush_all ();
+  close_out channel
   
 (************************
 ***        Main       ***
@@ -111,7 +116,7 @@ let _ =
   let path = ref "" in
   let arret = ref false in
   let i = ref 1 in
-  
+
   while !i < Array.length Sys.argv && not !arret do
     match (Sys.argv).(!i) with
       | "-no_comm" -> Trace_equivalence.Algorithm.option_internal_communication := false;
@@ -155,6 +160,12 @@ let _ =
           else if (Sys.argv).(!i+1) = "step"
           then Trace_equivalence.Statistic.initialise_display Trace_equivalence.Statistic.Per_step
           else arret := true;
+	  i := !i + 2
+      | "-log" when not (!i+1 = (Array.length Sys.argv)) -> 
+          begin try 
+            Trace_equivalence.Statistic.option_size_trace_log := int_of_string (Sys.argv).(!i+1)
+          with _ -> arret := true
+          end;
 	  i := !i + 2
       | str_path -> 
           if !i = Array.length Sys.argv - 1

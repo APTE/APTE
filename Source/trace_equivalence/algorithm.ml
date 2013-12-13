@@ -273,12 +273,28 @@ let apply_strategy_one_transition next_function_output next_function_input left_
 
 let rec apply_complete_unfolding left_symb_proc_list right_symb_proc_list = 
   let next_function left_list right_list = 
+    if Process.size_trace (List.hd left_list) = 1
+    then begin
+  
     (***[Statistic]***)
     Statistic.start_transition left_list right_list;
+    
+    (** DEBUG **)
+    Printf.printf "----------\nLeft list\n";
+    List.iter (fun symb_proc -> Printf.printf "%s\n" (Process.display_trace_no_unif symb_proc)) left_list;
+    Printf.printf "Right list\n";
+    List.iter (fun symb_proc -> Printf.printf "%s\n" (Process.display_trace_no_unif symb_proc)) right_list;
+    
+    
     apply_strategy_for_matrices (fun _ _ -> ()) Strategy.apply_full_strategy left_list right_list;
+    
     (***[Statistic]***)
     Statistic.end_transition ();
-    apply_complete_unfolding left_list right_list;
+    end;
+    if Process.size_trace (List.hd left_list) <= 1
+    then
+    apply_complete_unfolding left_list right_list
+    
   in
 
   apply_strategy_one_transition next_function next_function left_symb_proc_list right_symb_proc_list
