@@ -1,7 +1,7 @@
 #APTE : Algorithm for Proving Trace Equivalence
 Version : 0.4beta
 
-For more information, visit the [dedicated website.](http://projects.lsv.ens-cachan.fr/APTE/).
+For more information, visit the [dedicated website](http://projects.lsv.ens-cachan.fr/APTE/).
 
 
 1. Installation
@@ -24,7 +24,8 @@ Once the installation is done, an executable 'apte' is created in the directory 
 
 #####Synopsis :
 
-	apte [-debug high|low|none] [-unfold] [-no_comm] [-no_erase] [-verbose [<int>]] [-display size|step] [-log <int>] file
+	apte [-debug high|low|none] [-unfold] [-no_comm] [-no_erase] [-verbose [<int>]] [-display size|step]
+	[-log <int>] file
 
 #####Options :
 
