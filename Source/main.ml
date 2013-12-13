@@ -5,7 +5,7 @@
 let print_help () = 
   Printf.printf "Name : APTE\n";
   Printf.printf "   Algorithm for Proving Trace Equivalence\n\n";
-  Printf.printf "Version 0.3.2beta\n\n";
+  Printf.printf "Version 0.4beta\n\n";
   Printf.printf "Synopsis :\n";
   Printf.printf "      apte [-debug high|low|none] [-unfold] [-no_comm] [-no_erase] [-verbose [<int>]]\n";
   Printf.printf "           [-display size|step] [-log <int>] file\n\n";
