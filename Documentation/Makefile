@@ -1,4 +1,4 @@
-VERSION=0.3.2beta
+VERSION=0.4beta
 NAME_PROGRAMME = APTE
 
 PATH_SOURCE = ../Source/
