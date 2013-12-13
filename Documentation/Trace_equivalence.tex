@@ -283,11 +283,105 @@ val apply_full_strategy :
 \index{apply-underscorefull-underscorestrategy@\verb`apply_full_strategy`}
 
 
-\section{Module {\tt{Algorithm}}}
+\section{Module {\tt{Algorithm}} : Option for the algorithm}
 \label{module:Algorithm}\index{Algorithm@\verb`Algorithm`}
 
 
+
+
 \ocamldocvspace{0.5cm}
+
+
+
+\label{exception:Algorithm.Not-underscoreequivalent-underscoreleft}\begin{ocamldoccode}
+exception Not_equivalent_left of Standard_library.Process.symbolic_process
+\end{ocamldoccode}
+\index{Not-underscoreequivalent-underscoreleft@\verb`Not_equivalent_left`}
+
+
+
+
+\label{exception:Algorithm.Not-underscoreequivalent-underscoreright}\begin{ocamldoccode}
+exception Not_equivalent_right of Standard_library.Process.symbolic_process
+\end{ocamldoccode}
+\index{Not-underscoreequivalent-underscoreright@\verb`Not_equivalent_right`}
+
+
+
+
+Option for the algorithm
+
+
+
+\label{val:Algorithm.option-underscoreinternal-underscorecommunication}\begin{ocamldoccode}
+val option_internal_communication : bool Pervasives.ref
+\end{ocamldoccode}
+\index{option-underscoreinternal-underscorecommunication@\verb`option_internal_communication`}
+
+
+
+
+\label{val:Algorithm.option-underscoreerase-underscoredouble}\begin{ocamldoccode}
+val option_erase_double : bool Pervasives.ref
+\end{ocamldoccode}
+\index{option-underscoreerase-underscoredouble@\verb`option_erase_double`}
+
+
+
+
+\label{val:Algorithm.option-underscorealternating-underscorestrategy}\begin{ocamldoccode}
+val option_alternating_strategy : bool Pervasives.ref
+\end{ocamldoccode}
+\index{option-underscorealternating-underscorestrategy@\verb`option_alternating_strategy`}
+
+
+
+
+Functions for the strategy
+
+
+
+\label{val:Algorithm.partionate-underscorematrix}\begin{ocamldoccode}
+val partionate_matrix :
+  (Standard_library.Process.symbolic_process list ->
+   Standard_library.Process.symbolic_process list -> unit) ->
+  Standard_library.Process.symbolic_process list ->
+  Standard_library.Process.symbolic_process list ->
+  int -> Standard_library.Constraint_system.matrix -> unit
+\end{ocamldoccode}
+\index{partionate-underscorematrix@\verb`partionate_matrix`}
+
+
+
+
+\label{val:Algorithm.apply-underscorestrategy-underscorefor-underscorematrices}\begin{ocamldoccode}
+val apply_strategy_for_matrices :
+  (int -> Standard_library.Constraint_system.matrix -> unit) ->
+  ((Standard_library.Constraint_system.matrix -> unit) ->
+   Standard_library.Constraint_system.matrix -> unit) ->
+  Standard_library.Process.symbolic_process list ->
+  Standard_library.Process.symbolic_process list -> unit
+\end{ocamldoccode}
+\index{apply-underscorestrategy-underscorefor-underscorematrices@\verb`apply_strategy_for_matrices`}
+
+
+
+
+\label{val:Algorithm.apply-underscorestrategy-underscoreone-underscoretransition}\begin{ocamldoccode}
+val apply_strategy_one_transition :
+  (Standard_library.Process.symbolic_process list ->
+   Standard_library.Process.symbolic_process list -> unit) ->
+  (Standard_library.Process.symbolic_process list ->
+   Standard_library.Process.symbolic_process list -> unit) ->
+  Standard_library.Process.symbolic_process list ->
+  Standard_library.Process.symbolic_process list -> unit
+\end{ocamldoccode}
+\index{apply-underscorestrategy-underscoreone-underscoretransition@\verb`apply_strategy_one_transition`}
+
+
+
+
+The strategy
 
 
 
@@ -296,13 +390,5 @@ val decide_trace_equivalence :
   Standard_library.Process.process -> Standard_library.Process.process -> bool
 \end{ocamldoccode}
 \index{decide-underscoretrace-underscoreequivalence@\verb`decide_trace_equivalence`}
-
-
-
-
-\label{val:Algorithm.internal-underscorecommunication}\begin{ocamldoccode}
-val internal_communication : bool Pervasives.ref
-\end{ocamldoccode}
-\index{internal-underscorecommunication@\verb`internal_communication`}
 
 

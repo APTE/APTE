@@ -1,7 +1,7 @@
 OCAMLC=ocamlc
 OCAMLOPT=ocamlopt
 OCAMLDEP=ocamldep
-VERSION=0.3.2beta
+VERSION=0.4beta
 
 EXECUTABLE = ../apte
 NAME_PROGRAMME = APTE
@@ -69,7 +69,7 @@ debug: display .depend $(COMPILE_DEBUG) $(MODULES_DEBUG)
 clean: $(MODULES_CLEAN)
 	@echo ----- Clean $(NAME_PROGRAMME) -----
 	rm -f $(EXECUTABLE) $(EXECUTABLE)_debug
-	rm -r ../log
+	rm -rf ../log
 	rm -f *~ *.cm[iox] *.o
 	
 # Dependencies 
