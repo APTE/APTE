@@ -1,3 +1,4 @@
+let version = "0.4beta"
 
 let is_ml_mli file = 
   let size = String.length file in
@@ -27,7 +28,7 @@ let rec get_all_adress curdir =
     if Sys.is_directory new_adress && List.exists (fun t -> t = vect.(i)) authorise_dir
     then 
       begin
-        let cmd = Printf.sprintf "mkdir Extract/%s" new_adress in
+        let cmd = Printf.sprintf "mkdir APTE-%s/%s" version new_adress in
         Printf.printf "%s\n" cmd;
         ignore (Sys.command cmd);
         get_all_adress new_adress
@@ -36,7 +37,7 @@ let rec get_all_adress curdir =
     if is_ml_mli new_adress 
     then 
       begin
-        let cmd = Printf.sprintf "cat Source/licence.txt %s >> Extract/%s" new_adress new_adress in
+        let cmd = Printf.sprintf "cat Source/licence.txt %s >> APTE-%s/%s" new_adress version new_adress in
         Printf.printf "%s\n" cmd;
         ignore (Sys.command cmd)
       end;
@@ -44,18 +45,22 @@ let rec get_all_adress curdir =
     if vect.(i) = "Makefile" || is_mll_mly new_adress
     then 
       begin
-        let cmd = Printf.sprintf "cp %s Extract/%s" new_adress new_adress in
+        let cmd = Printf.sprintf "cp %s APTE-%s/%s" new_adress version new_adress in
         Printf.printf "%s\n" cmd;
         ignore (Sys.command cmd)
       end;
   done
+ 
 
 let _ = 
-  ignore (Sys.command "rm -rf Extract");
-  ignore (Sys.command "mkdir Extract");
-  ignore (Sys.command "mkdir Extract/Source");
-  ignore (Sys.command "mkdir Extract/Example");
-  ignore (Sys.command "cp Example/*.txt Extract/Example");
-  ignore (Sys.command "cp README Extract/README");
-  ignore (Sys.command "cp Documentation.pdf Extract/Documentation.pdf");
-  get_all_adress "Source"
+  ignore (Sys.command (Printf.sprintf "rm -rf APTE-%s" version));
+  ignore (Sys.command (Printf.sprintf "mkdir APTE-%s" version));
+  ignore (Sys.command (Printf.sprintf "mkdir APTE-%s/Source" version));
+  ignore (Sys.command (Printf.sprintf "mkdir APTE-%s/Example" version));
+  ignore (Sys.command (Printf.sprintf "cp Example/*.txt APTE-%s/Example" version));
+  ignore (Sys.command (Printf.sprintf "cp README.md APTE-%s/README.md" version));
+  ignore (Sys.command (Printf.sprintf "cp LICENSE APTE-%s/LICENSE" version));
+  ignore (Sys.command (Printf.sprintf "cp ChangeLog APTE-%s/ChangeLog" version));
+  ignore (Sys.command (Printf.sprintf "cp Documentation.pdf APTE-%s/Documentation.pdf" version));
+  get_all_adress "Source";
+  ignore (Sys.command (Printf.sprintf "zip -r APTE-%s.zip APTE-%s/" version version));
