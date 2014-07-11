@@ -387,3 +387,9 @@ sig
   
   val display : elt -> string
 end
+
+  (** {3 Helping functions for reduced semantics *)
+
+(** [is_subset_noUse listAxioms frame] returns true if all axioms in [listAxioms]
+ occurs in [frame] labelled with noUse *)
+val is_subset_noUse : Recipe.axiom list -> Frame.elt support_set -> bool

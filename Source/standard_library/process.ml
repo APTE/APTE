@@ -924,40 +924,44 @@ let debug_f = ref false                 (* Do we print debugging information ?  
 (* ********************************************************************** *)
 let test_dependency_constraints symP =
   (* Test whether one dep. cst hold *)
-  let rec test_cst = function
+  let rec test_cst frame = function
     | (_, []) -> true
     | ([], _) -> false
-    | (r::lr , la) -> if Recipe.get_variables_of_recipe r != []
+    | (r::lr , la) ->
+       not (Constraint.is_subset_noUse la frame)      (* = la \notsusbseteq NoUse *)
+       && 
+       if Recipe.get_variables_of_recipe r != []
       (* It is better to first check that r :: lr do not contain any
       non-ground recipes ? *)
       then true                         (* cst is not ground *)
       else (
         if List.exists (fun ax -> Recipe.ax_occurs ax r) la
         then true                     (* cst hold thanks to r *)
-        else test_cst (lr, la))
+        else test_cst frame (lr, la))
   in
   (* Scan the list of dep. csts*)
-  let rec scan_dep_csts = function
+  let rec scan_dep_csts frame = function
     | [] -> true
     | cst :: l ->
-      if test_cst cst
-      then scan_dep_csts l
-      else false in
+       if test_cst frame cst
+       then scan_dep_csts frame l
+       else false in
+
+  let csys = get_constraint_system symP in
+  let frame = Constraint_system.get_frame csys in
 
   (* BEGIN DEBUG *)
   if !Debug.red then begin
-    let csts = (Constraint_system.get_dependency_constraints
-                  (get_constraint_system symP)) in
+    let csts = (Constraint_system.get_dependency_constraints csys) in
     if List.length csts <> 0 then begin
       Printf.printf "We will check those dependency constraints: %s\n"
-        (Constraint_system.display_dependency_constraints (get_constraint_system symP));
-      Printf.printf "Do those constraints hold?: %B.\n" (scan_dep_csts csts);
+        (Constraint_system.display_dependency_constraints csys);
+      Printf.printf "Do those constraints hold?: %B.\n" (scan_dep_csts frame csts);
     end;
   end;
   (* END DEBUG *)
 
-  scan_dep_csts (Constraint_system.get_dependency_constraints
-                   (get_constraint_system symP))
+  scan_dep_csts frame (Constraint_system.get_dependency_constraints csys)
 
 (* ********************************************************************** *)
 (*                 Build dependency constraints given a symbolic process  *)
