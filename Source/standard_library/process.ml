@@ -491,8 +491,8 @@ let apply_internal_transition_without_comm function_next symb_proc =
     | [] -> function_next { symb_proc with process = prev_proc; constraint_system = csys }
     | (Nil,_)::q -> go_through prev_proc csys q 
     | (Choice(p1,p2), i)::q -> 
-      if !debug_simple then
-        Debug.internal_error "[process.ml >> apply_one_internal_transition_without_comm] The process is not simple (forbidden construction: Choice).";
+      (* if !debug_simple then *)
+      (*   Debug.internal_error "[process.ml >> apply_one_internal_transition_without_comm] The process is not simple (forbidden construction: Choice)."; *)
       go_through prev_proc csys ((p1,i)::q);
       go_through prev_proc csys ((p2,i)::q)
     | (Par(p1,p2) as proc,i)::q ->
