@@ -15,7 +15,7 @@ open Parser_function
 %token AND
 %token FUN SLASH FREE
 %token LET IN OUT NEW
-%token LPAR RPAR BARRE CHOICE
+%token LPAR RPAR BARRE CHOICE PLUS
 %token VIR PVIR DOT
 %token IF THEN ELSE
 %token CST ARGS LBRACE RBRACE TUPLE
