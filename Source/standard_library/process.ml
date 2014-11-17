@@ -280,15 +280,19 @@ let refresh_label proc =
 	   Symbolic process
 **************************************)
 
+type par_label = int list
+		 
 type trace_label =
-  | Output of label * Recipe.recipe * Term.term * Recipe.axiom * Term.term
-  | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term
-  | Comm of internal_communication
+  | Output of label * Recipe.recipe * Term.term * Recipe.axiom * Term.term * par_label
+  | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term * par_label
+  | Comm of internal_communication  (* won't be produced *)
   
+
 type symbolic_process = 
   {
     axiom_name_assoc : (Recipe.recipe * Term.term) list;
     process : process list; (* Represent a multiset of processes *)
+    has_focus : bool;	    (* if true: process[0] is under focus, otherwise: no focus *)
     constraint_system : Constraint_system.constraint_system;
     forbidden_comm : internal_communication list;
     trace : trace_label list;
@@ -299,6 +303,7 @@ let create_symbolic axiom_name_assoc proc csys =
   {
     axiom_name_assoc = axiom_name_assoc;
     process = [proc];
+    has_focus = false;
     constraint_system = csys;
     forbidden_comm = [];
     trace = [];
@@ -307,26 +312,35 @@ let create_symbolic axiom_name_assoc proc csys =
   
 (******* Display *******)
 
+let ps = Printf.sprintf
+
+let display_parallel_label pl = 
+  (List.fold_left
+     (fun str_acc i -> (str_acc^(string_of_int i)^" "))
+     "[" pl)^"]"
+	       
 let display_trace_label r_subst m_subst recipe_term_assoc = function 
-  | Output(label,r_ch,m_ch,ax,t) -> 
+  | Output(label,r_ch,m_ch,ax,t,pl) -> 
       let r_ch' = Recipe.apply_substitution r_subst r_ch (fun t f -> f t) in
       let m_ch' = Term.apply_substitution m_subst m_ch (fun t f -> f t) in
       let t' = Term.apply_substitution m_subst t (fun t f -> f t) in
         
-      Printf.sprintf "Output {%d} on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
+      Printf.sprintf "Output {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
         label 
+	(display_parallel_label pl)
         (Term.display_term m_ch')
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch')
         (Term.display_term t')
         (Recipe.display_axiom ax)
-  | Input(label,r_ch,m_ch,r_t,m_t) ->
+  | Input(label,r_ch,m_ch,r_t,m_t,pl) ->
       let r_ch' = Recipe.apply_substitution r_subst r_ch (fun t f -> f t) in
       let m_ch' = Term.apply_substitution m_subst m_ch (fun t f -> f t) in
       let r_t' = Recipe.apply_substitution r_subst r_t (fun t f -> f t) in
       let m_t' = Term.apply_substitution m_subst m_t (fun t f -> f t) in
         
-      Printf.sprintf "Input {%d} on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
+      Printf.sprintf "Input {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
         label 
+	(display_parallel_label pl)
         (Term.display_term m_ch')
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch')
         (Term.display_term m_t')
@@ -388,15 +402,15 @@ let size_trace symb_proc = List.length symb_proc.trace
 
 let map_subst_term trace_l f_apply = 
   List.map (function 
-    | Output(label,r_ch,m_ch,ax,t) -> Output(label,r_ch,f_apply m_ch, ax, f_apply t)
-    | Input(label,r_ch,m_ch,r_t,m_t) -> Input(label,r_ch,f_apply m_ch, r_t, f_apply m_t)
+    | Output(label,r_ch,m_ch,ax,t,pl) -> Output(label,r_ch,f_apply m_ch, ax, f_apply t,pl)
+    | Input(label,r_ch,m_ch,r_t,m_t,pl) -> Input(label,r_ch,f_apply m_ch, r_t, f_apply m_t,pl)
     | Comm(intern) -> Comm(intern)
   ) trace_l
   
 let map_subst_recipe trace_l f_apply = 
   List.map (function 
-    | Output(label,r_ch,m_ch,ax,t) -> Output(label,f_apply r_ch,m_ch, ax, t)
-    | Input(label,r_ch,m_ch,r_t,m_t) -> Input(label,f_apply r_ch,m_ch, f_apply r_t, m_t)
+    | Output(label,r_ch,m_ch,ax,t,pl) -> Output(label,f_apply r_ch,m_ch, ax, t, pl)
+    | Input(label,r_ch,m_ch,r_t,m_t,pl) -> Input(label,f_apply r_ch,m_ch, f_apply r_t, m_t, pl)
     | Comm(intern) -> Comm(intern)
   ) trace_l
 
@@ -573,7 +587,7 @@ let apply_input function_next ch_var_r t_var_r symb_proc =
             process = (sub_proc::q)@prev_proc;
             constraint_system = new_csys_3;
             forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
-            trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v))::symb_proc.trace
+            trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v, []))::symb_proc.trace (* TODO: [] -> pl *)
           }
         in
         
@@ -608,7 +622,9 @@ let apply_output function_next ch_var_r symb_proc =
             process = (sub_proc::q)@prev_proc;
             constraint_system = new_csys_4;
             forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
-            trace = (Output (label,ch_r,Term.term_of_variable y,Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),Term.term_of_variable x))::symb_proc.trace
+            trace = (Output (label,ch_r,Term.term_of_variable y,
+			     Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),
+			     Term.term_of_variable x, []))::symb_proc.trace (* TODO [] -> pl *)
           }
         in
         
@@ -722,16 +738,18 @@ let rec sub_display_process n_tab prev_choice prev_par prev_in_out = function
 let display_process = sub_display_process 0 false false false
 
 let display_trace_label_no_unif m_subst recipe_term_assoc = function 
-  | Output(label,r_ch,m_ch,ax,t) -> 
-      Printf.sprintf "Output {%d} on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
+  | Output(label,r_ch,m_ch,ax,t,pl) -> 
+      Printf.sprintf "Output {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
         label 
+	(display_parallel_label pl)
         (Term.display_term (Term.apply_substitution m_subst m_ch (fun t f -> f t)))
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch)
         (Term.display_term (Term.apply_substitution m_subst t (fun t f -> f t)))
         (Recipe.display_axiom ax)
-  | Input(label,r_ch,m_ch,r_t,m_t) ->
-      Printf.sprintf "Input {%d} on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
+  | Input(label,r_ch,m_ch,r_t,m_t,pl) ->
+      Printf.sprintf "Input {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
         label 
+	(display_parallel_label pl)
         (Term.display_term (Term.apply_substitution m_subst m_ch (fun t f -> f t)))
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch)
         (Term.display_term (Term.apply_substitution m_subst m_t (fun t f -> f t)))
@@ -769,14 +787,14 @@ let is_same_input_output symb_proc1 symb_proc2 =
     | [], [] -> true
     | [], _ -> false
     | _,[] -> false
-    | Output(l1,_,_,_,_)::q1, Output(l2,_,_,_,_)::q2 when l1 = l2 -> same_trace (q1,q2)
-    | Input(l1,_,_,_,_)::q1, Input(l2,_,_,_,_)::q2 when l1 = l2 -> same_trace (q1,q2)
+    | Output(l1,_,_,_,_,_)::q1, Output(l2,_,_,_,_,_)::q2 when l1 = l2 -> same_trace (q1,q2)
+    | Input(l1,_,_,_,_,_)::q1, Input(l2,_,_,_,_,_)::q2 when l1 = l2 -> same_trace (q1,q2)
     | Comm({in_label = l1in; out_label = l1out})::q1,Comm({in_label = l2in; out_label = l2out})::q2 when l1in = l2in && l1out = l2out -> same_trace (q1,q2)
-    | Input(l1,_,ch1,_,t1)::q1, Input(l2,_,ch2,_,t2)::q2 when Term.is_equal_and_closed_term ch1 ch2 && Term.is_equal_and_closed_term t1 t2 ->
+    | Input(l1,_,ch1,_,t1,_)::q1, Input(l2,_,ch2,_,t2,_)::q2 when Term.is_equal_and_closed_term ch1 ch2 && Term.is_equal_and_closed_term t1 t2 ->
         switch_label_1 := add_sorted l1 !switch_label_1;
         switch_label_2 := add_sorted l2 !switch_label_2;
         same_trace (q1,q2)
-    | Output(l1,_,ch1,_,t1)::q1, Output(l2,_,ch2,_,t2)::q2 when Term.is_equal_and_closed_term ch1 ch2 && Term.is_equal_and_closed_term t1 t2 ->
+    | Output(l1,_,ch1,_,t1,_)::q1, Output(l2,_,ch2,_,t2,_)::q2 when Term.is_equal_and_closed_term ch1 ch2 && Term.is_equal_and_closed_term t1 t2 ->
         switch_label_1 := add_sorted l1 !switch_label_1;
         switch_label_2 := add_sorted l2 !switch_label_2;
         same_trace (q1,q2)
