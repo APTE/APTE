@@ -16,11 +16,14 @@ exception Not_equivalent_right of Process.symbolic_process
 
 (** Parameters *)
 
-let option_internal_communication = ref true
+(* TODO: for the release, set booleans to false, true, true, true *)
+let option_por = ref true
 
-let option_erase_double = ref true
+let option_internal_communication = ref false
 
-let option_alternating_strategy = ref true
+let option_erase_double = ref false
+
+let option_alternating_strategy = ref false
   
 (************************************
 ***    Partition of the matrix    ***

@@ -23,6 +23,9 @@ let print_help () =
   Printf.printf "          traces.\n\n";
   Printf.printf "      -log <int> : Log all the symbolic processes and the matrices obtained on the\n";
   Printf.printf "          leaves for all traces of size smaller than or equal to <int>.\n\n";
+  Printf.printf "      -with_por : Uses Partial Order Reductions techniques to significantly improve performance.\n";
+  Printf.printf "          Note : This option automatically activates the option '-no_comm'.\n";
+  Printf.printf "          WARNING : This option should only be used for action-determinate processes.\n\n";
   Printf.printf "      -no_comm : Does not consider the internal communication in the trace equivalence.\n";
   Printf.printf "          WARNING : This option should not be used in presence of private channel.\n\n";
   Printf.printf "      -no_erase : Does not consider a slight optimisation that consists of removing\n";
@@ -136,6 +139,9 @@ let _ =
 
   while !i < Array.length Sys.argv && not !arret do
     match (Sys.argv).(!i) with
+      | "-with_por" -> 
+          Trace_equivalence.Algorithm.option_por := true;
+          i := !i + 1
       | "-no_comm" -> Trace_equivalence.Algorithm.option_internal_communication := false;
           i := !i + 1
       | "-unfold" -> 

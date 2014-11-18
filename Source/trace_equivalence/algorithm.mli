@@ -5,6 +5,9 @@ exception Not_equivalent_right of Process.symbolic_process
 
 (** Option for the algorithm *)
 
+(** true if POR techniques will be used (only for action-determinate proc.) *)
+val option_por : bool ref
+
 val option_internal_communication : bool ref
 
 val option_erase_double : bool ref
