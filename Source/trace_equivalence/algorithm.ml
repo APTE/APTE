@@ -145,7 +145,7 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
   
   let index_right_process = number_left_symb_proc + 1 in
 
-  (* Creation of the matrix *)
+  (* ** Creation of the matrix *)
   
   let complete_csys_list = 
     List.fold_right (fun left_symb acc -> 
@@ -160,7 +160,7 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
     )
   in
   
-  (* Application of the strategy on matrices *)
+  (* ** Application of the strategy on matrices *)
   
   strategy_for_matrix (fun matrix_1 ->
     if Constraint_system.Matrix.is_empty matrix_1
@@ -177,7 +177,7 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
 
 let apply_strategy_one_transition next_function_output next_function_input left_symb_proc_list right_symb_proc_list = 
 
-  (* Option Erase Double *)
+  (* ** Option Erase Double *)
   
   let left_erase_set = 
     if !option_erase_double 
@@ -189,11 +189,16 @@ let apply_strategy_one_transition next_function_output next_function_input left_
     else right_symb_proc_list
   in
 
-  (* First step : apply the internal transitions *)
+
+  (* ** First step : apply the internal transitions (including conditionals) *)
   
   let left_internal = ref []
   and right_internal = ref [] in
   
+  (* Scan all symbolic processes, flatten all parallels/choices and perform all available
+   conditionals and branch  for then/else and for the different ways (disjunction)
+   to satisfy the  conditional's test. Thanks to our "function_next", we then pu
+   all those alternatives together in left/right_internal lists. *)
   List.iter (fun symb_proc_1 ->
     Process.apply_internal_transition !option_internal_communication (fun symb_proc_2 -> 
       left_internal := symb_proc_2::!left_internal
@@ -206,7 +211,8 @@ let apply_strategy_one_transition next_function_output next_function_input left_
     ) symb_proc_1
   ) right_erase_set;
   
-  (* Second step : apply the output transitions *)
+
+  (* ** Second step : apply the output transitions *)
   
   let support = 
     if !left_internal = []
@@ -219,6 +225,9 @@ let apply_strategy_one_transition next_function_output next_function_input left_
   
   let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
   
+  (* Scan all symbolic processes and look for one starting with an output and
+   apply function_next to the resulting symbolic process. We thus store in
+   left/right_output_set all the alternatives of performing an output. *)
   List.iter (fun symb_proc_1 ->
     Process.apply_output (fun symb_proc_2 -> 
       let simplified_symb_proc = Process.simplify symb_proc_2 in
@@ -235,10 +244,19 @@ let apply_strategy_one_transition next_function_output next_function_input left_
     ) var_r_ch symb_proc_1
   ) !right_internal;
     
+  (* We pass those alternatives to the next step which consists in:
+     1. put all csys in a row matrix
+     2. apply Strategy.apply_strategy_input/output resulting in a branching
+        process ending with many matrices (for leaves: in solved form)
+     3. apply final_test_on_matrix on all those leaves, if OK:
+     4. apply partitionate_matrix giving many pairs of symbolic processes
+     5. recursive calls on each of them
+   *)
   if !left_output_set <> [] || !right_output_set <> []
   then next_function_output !left_output_set !right_output_set;
   
-  (* Third step : apply the input transitions *)
+
+  (* ** Third step : apply the input transitions *)
   
   let left_input_set = ref []
   and right_input_set = ref [] in
@@ -246,6 +264,9 @@ let apply_strategy_one_transition next_function_output next_function_input left_
   let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
   and var_r_t = Recipe.fresh_free_variable_from_id "Y" support in
   
+  (* Scan all symbolic processes and look for one starting with an input and
+   apply function_next to the resulting symbolic process. We thus store in
+   left/right_input_set all the alternatives of performing an input. *)
   List.iter (fun symb_proc_1 ->
     Process.apply_input (fun symb_proc_2 -> 
       let simplified_symb_proc = Process.simplify symb_proc_2 in
@@ -262,8 +283,10 @@ let apply_strategy_one_transition next_function_output next_function_input left_
     ) var_r_ch var_r_t symb_proc_1
   ) !right_internal;
     
+  (* We pass those alternatives to the next step (same desc. as for out.) *)
   if !left_input_set <> [] || !right_input_set <> []
   then next_function_input !left_input_set !right_input_set
+
 
 (*************************************
 ***         The strategies         ***
@@ -291,6 +314,8 @@ let rec apply_complete_unfolding left_symb_proc_list right_symb_proc_list =
 (** The alternating strategy *)
 
 let rec apply_alternating left_symb_proc_list right_symb_proc_list =
+  (* 'next_function [some Strategy]' will be applied on every pairs resulting from
+   the execution of one symbolic action *)
   let next_function f_strat_m left_list right_list =
     (***[Statistic]***)
     Statistic.start_transition left_list right_list;
