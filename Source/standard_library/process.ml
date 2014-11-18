@@ -414,6 +414,7 @@ let instanciate_trace symb_proc =
 let apply_internal_transition_without_comm function_next symb_proc = 
 
   let rec go_through prev_proc csys = function
+    (* when we have gone trough all processes (no more conditionals at top level) *)
     | [] -> function_next { symb_proc with process = prev_proc; constraint_system = csys }
     | Nil::q -> go_through prev_proc csys q 
     | Choice(p1,p2)::q -> 
@@ -428,7 +429,7 @@ let apply_internal_transition_without_comm function_next symb_proc =
     | IfThenElse(formula,proc_then,proc_else,_)::q ->
         let disj_conj_then = conjunction_from_formula formula
         and disj_conj_else = conjunction_from_formula (negation formula) in
-        
+	(* for any way to satisfy formula or not(formula), branch and (recursive) call go_through *)
         List.iter (fun conj_then ->
           let new_csys = 
             List.fold_left (fun csys_acc -> function
@@ -452,6 +453,8 @@ let apply_internal_transition_without_comm function_next symb_proc =
           in
           go_through prev_proc new_csys (proc_else::q)            
         ) disj_conj_else
+    (* otherwise, proc starts with an input our output -> add it to prev_proc and keep scanning
+     the rest of processes *)
     | proc::q -> go_through (proc::prev_proc) csys q
   in
   
