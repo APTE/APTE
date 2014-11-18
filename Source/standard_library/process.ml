@@ -425,7 +425,7 @@ let instanciate_trace symb_proc =
 
 (******* Transition application ********)  
   
-let apply_internal_transition_without_comm function_next symb_proc = 
+let apply_internal_transition_without_comm with_por function_next symb_proc = 
 
   let rec go_through prev_proc csys = function
     (* when we have gone trough all processes (no more conditionals at top level) *)
@@ -475,7 +475,7 @@ let apply_internal_transition_without_comm function_next symb_proc =
   go_through [] symb_proc.constraint_system symb_proc.process
   
 (* We assume in this function that the internal transition except the communication have been applied. *)  
-let rec apply_one_internal_transition_with_comm function_next symb_proc = 
+let rec apply_one_internal_transition_with_comm with_por function_next symb_proc = 
 
   let rec go_through prev_proc_1 forbid_comm_1 = function
     | [] -> function_next { symb_proc with forbidden_comm = forbid_comm_1 }
@@ -503,8 +503,8 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                     }
                   in
                   
-                  apply_internal_transition_without_comm 
-                    (apply_one_internal_transition_with_comm function_next) symb_proc_1;
+                  apply_internal_transition_without_comm with_por
+                    (apply_one_internal_transition_with_comm with_por function_next) symb_proc_1;
                     
                   (* Case where the internal communication did not happen *)
                     
@@ -540,8 +540,8 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                     }
                   in
                   
-                  apply_internal_transition_without_comm 
-                    (apply_one_internal_transition_with_comm function_next) symb_proc_1;
+                  apply_internal_transition_without_comm with_por
+                    (apply_one_internal_transition_with_comm with_por function_next) symb_proc_1;
                     
                   (* Case where the internal communication did not happen *)
                     
@@ -557,20 +557,20 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
   in
   go_through [] symb_proc.forbidden_comm symb_proc.process
   
-let apply_internal_transition with_comm function_next symb_proc = 
+let apply_internal_transition with_comm with_por function_next symb_proc = 
   if with_comm
   then 
-    apply_internal_transition_without_comm (
-      apply_one_internal_transition_with_comm function_next
+    apply_internal_transition_without_comm with_por (
+      apply_one_internal_transition_with_comm with_por function_next
       ) symb_proc
-  else apply_internal_transition_without_comm function_next symb_proc
+  else apply_internal_transition_without_comm with_por function_next symb_proc
   
 (*************************************
 	   External Transition
 **************************************)  
  
 (* We assume in this function that all internal transitions have been applied *)  
-let apply_input function_next ch_var_r t_var_r symb_proc = 
+let apply_input with_por function_next ch_var_r t_var_r symb_proc = 
   
   let rec go_through prev_proc = function
     | [] -> ()
@@ -602,7 +602,7 @@ let apply_input function_next ch_var_r t_var_r symb_proc =
   
   go_through [] symb_proc.process
   
-let apply_output function_next ch_var_r symb_proc = 
+let apply_output with_por function_next ch_var_r symb_proc = 
   
   let rec go_through prev_proc = function
     | [] -> ()

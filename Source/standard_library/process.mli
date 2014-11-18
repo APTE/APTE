@@ -62,11 +62,14 @@ val instanciate_trace : symbolic_process -> symbolic_process
 
 (** {4 Transition application} *)
 
-val apply_internal_transition : bool -> (symbolic_process -> unit) -> symbolic_process -> unit
+(** booleans: with_comm, with_por *)
+val apply_internal_transition : bool -> bool -> (symbolic_process -> unit) -> symbolic_process -> unit
 
-val apply_input : (symbolic_process -> unit) -> Recipe.variable -> Recipe.variable -> symbolic_process -> unit
+(** boolean: with_por *)
+val apply_input : bool -> (symbolic_process -> unit) -> Recipe.variable -> Recipe.variable -> symbolic_process -> unit
 
-val apply_output : (symbolic_process -> unit) -> Recipe.variable -> symbolic_process -> unit
+(** boolean: with_por *)
+val apply_output : bool -> (symbolic_process -> unit) -> Recipe.variable -> symbolic_process -> unit
 
 (** {3 Optimisation} *)
 
