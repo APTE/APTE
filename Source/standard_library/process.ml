@@ -806,3 +806,8 @@ let is_same_input_output symb_proc1 symb_proc2 =
   
   same_trace (symb_proc1.trace,symb_proc2.trace) && !switch_label_1 = !switch_label_2
  
+let rec first_output = function
+  | [] -> None
+  | Output(_,_,ch,_,_,_)::q -> Some ch
+  | _ :: q ->  first_output q
+			    
