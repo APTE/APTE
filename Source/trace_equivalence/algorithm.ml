@@ -298,9 +298,9 @@ let apply_strategy_one_transition next_function_output next_function_input left_
 (** Strategy for the complete unfolding with POR *)
 let apply_strategy_one_transition_por next_function_output next_function_input left_symb_proc_list right_symb_proc_list = 
 
-  (* ** Option Erase Double *)
-  (* DELETED: USELESS FOR action-det (TODO: check that) *)
-
+  Printf.printf "Avant de commencer apply_strategy_one. Taille des listes: %d,%d.\n"
+		(List.length left_symb_proc_list)
+		(List.length right_symb_proc_list);
 
   (* ** First step : apply the internal transitions (including conditionals) *)
   
@@ -325,6 +325,9 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
   
 
   (* ** Second step : apply the output transitions *)
+  Printf.printf "Après les TESTS. Taille des listes: %d,%d.\n"
+		(List.length left_symb_proc_list)
+		(List.length right_symb_proc_list);
   
   let support = 
     if !left_internal = []
@@ -388,6 +391,10 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
      4. apply partitionate_matrix giving many pairs of symbolic processes
      5. recursive calls on each of them
    *)
+  Printf.printf "Après les OUT. Taille des listes: %d,%d.\n"
+		(List.length left_symb_proc_list)
+		(List.length right_symb_proc_list);
+
   if !left_output_set_channel <> [] || !right_output_set_channel <> []
   then List.iter (fun (ch,left_output_set) ->
 		  try let right_output_set = List.assoc ch !right_output_set_channel in
@@ -397,6 +404,7 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
 		 
   (* ** Third step : apply the input transitions *)
   
+
   let left_input_set = ref []
   and right_input_set = ref [] in
   
@@ -422,6 +430,10 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
     ) var_r_ch var_r_t symb_proc_1
   ) !right_internal;
     
+  Printf.printf "Après les OUT. Taille des listes: %d,%d.\n"
+		(List.length left_symb_proc_list)
+		(List.length right_symb_proc_list);
+
   (* We pass those alternatives to the next step (same desc. as for out.) *)
   if !left_input_set <> [] || !right_input_set <> []
   then next_function_input !left_input_set !right_input_set
