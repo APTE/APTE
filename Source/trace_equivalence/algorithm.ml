@@ -326,8 +326,8 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
 
   (* ** Second step : apply the output transitions *)
   Printf.printf "Après les TESTS. Taille des listes: %d,%d.\n"
-		(List.length left_symb_proc_list)
-		(List.length right_symb_proc_list);
+		(List.length !left_internal)
+		(List.length !right_internal);
   
   let support = 
     if !left_internal = []
@@ -335,10 +335,8 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
     else Constraint_system.get_maximal_support (Process.get_constraint_system (List.hd !left_internal))
   in
   
-  (* two following lists: associations lists: one channel -> list of corresponding alternatives
-(from executing output on this channel) *)
-  let left_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref []
-  and right_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref [] in
+  let left_output_set = ref []
+  and right_output_set = ref [] in
   
   let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
   
@@ -355,32 +353,20 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
   
   List.iter (fun symb_proc_1 ->
 	     Process.apply_output
-	       true (fun (symb_proc_2,ch) -> 
-		     (* For any resulting symbolic process from executing an output on channel ch: *)
-		     let simplified_symb_proc = Process.simplify symb_proc_2 in
-		     if not (Process.is_bottom simplified_symb_proc)
-		     then (try begin
-			       let l_ch = List.assoc ch !left_output_set_channel in
-			       l_ch := simplified_symb_proc :: !l_ch;
-			     end with
-			   | Not_found -> 
-			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel)
-		    ) var_r_ch symb_proc_1
+	       !option_por (fun (symb_proc_2,_) -> 
+			    let simplified_symb_proc = Process.simplify symb_proc_2 in
+			    if not (Process.is_bottom simplified_symb_proc)
+			    then left_output_set := simplified_symb_proc::!left_output_set
+			   ) var_r_ch symb_proc_1
 	    ) !left_internal;
   
   List.iter (fun symb_proc_1 ->
 	     Process.apply_output
-	       true (fun (symb_proc_2,ch) -> 
-		     (* For any resulting symbolic process from executing an output on channel ch: *)
-		     let simplified_symb_proc = Process.simplify symb_proc_2 in
-		     if not (Process.is_bottom simplified_symb_proc)
-		     then (try begin
-			       let l_ch = List.assoc ch !left_output_set_channel in
-			       l_ch := simplified_symb_proc :: !l_ch;
-			     end with
-			   | Not_found -> 
-			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel)
-		    ) var_r_ch symb_proc_1
+	       !option_por (fun (symb_proc_2,_) -> 
+			    let simplified_symb_proc = Process.simplify symb_proc_2 in
+			    if not (Process.is_bottom simplified_symb_proc)
+			    then right_output_set := simplified_symb_proc::!right_output_set
+			   ) var_r_ch symb_proc_1
 	    ) !right_internal;
   
   (* We pass those alternatives to the next step which consists in:
@@ -392,15 +378,50 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
      5. recursive calls on each of them
    *)
   Printf.printf "Après les OUT. Taille des listes: %d,%d.\n"
-		(List.length left_symb_proc_list)
-		(List.length right_symb_proc_list);
+		(List.length !left_output_set)
+		(List.length !right_output_set);
 
-  if !left_output_set_channel <> [] || !right_output_set_channel <> []
-  then List.iter (fun (ch,left_output_set) ->
-		  try let right_output_set = List.assoc ch !right_output_set_channel in
-		      next_function_output !left_output_set !right_output_set
-		  with |Not_found -> next_function_output !left_output_set []
-		 ) !left_output_set_channel;
+  if !left_output_set <> [] || !right_output_set <> []
+  then next_function_output !left_output_set !right_output_set;
+
+
+
+
+
+(*   (\* two following lists: associations lists: one channel -> list of corresponding alternatives *)
+(* (from executing output on this channel) *\) *)
+(*   let left_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref [] *)
+(*   and right_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref [] in *)
+(*     let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in *)
+(*   List.iter (fun symb_proc_1 -> *)
+(* 	     Process.apply_output *)
+(* 	       true (fun (symb_proc_2,ch) ->  *)
+(* 		     (\* For any resulting symbolic process from executing an output on channel ch: *\) *)
+(* 		     let simplified_symb_proc = Process.simplify symb_proc_2 in *)
+(* 		     if not (Process.is_bottom simplified_symb_proc) *)
+(* 		     then (try begin *)
+(* 			       let l_ch = List.assoc ch !left_output_set_channel in *)
+(* 			       l_ch := simplified_symb_proc :: !l_ch; *)
+(* 			     end with *)
+(* 			   | Not_found ->  *)
+(* 			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel) *)
+(* 		    ) var_r_ch symb_proc_1 *)
+(* 	    ) !left_internal; *)
+(*   List.iter (fun symb_proc_1 -> *)
+(* 	     Process.apply_output *)
+(* 	       true (fun (symb_proc_2,ch) ->  *)
+(* 		     (\* For any resulting symbolic process from executing an output on channel ch: *\) *)
+(* 		     let simplified_symb_proc = Process.simplify symb_proc_2 in *)
+(* 		     if not (Process.is_bottom simplified_symb_proc) *)
+(* 		     then (try begin *)
+(* 			       let l_ch = List.assoc ch !left_output_set_channel in *)
+(* 			       l_ch := simplified_symb_proc :: !l_ch; *)
+(* 			     end with *)
+(* 			   | Not_found ->  *)
+(* 			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel) *)
+(* 		    ) var_r_ch symb_proc_1 *)
+(* 	    ) !right_internal; *)
+
 		 
   (* ** Third step : apply the input transitions *)
   
@@ -430,9 +451,9 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
     ) var_r_ch var_r_t symb_proc_1
   ) !right_internal;
     
-  Printf.printf "Après les OUT. Taille des listes: %d,%d.\n"
-		(List.length left_symb_proc_list)
-		(List.length right_symb_proc_list);
+  Printf.printf "Après les IN. Taille des listes: %d,%d.\n"
+		(List.length !left_input_set)
+		(List.length !right_input_set);
 
   (* We pass those alternatives to the next step (same desc. as for out.) *)
   if !left_input_set <> [] || !right_input_set <> []
