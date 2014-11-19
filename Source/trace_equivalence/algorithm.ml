@@ -23,7 +23,7 @@ let option_internal_communication = ref false
 
 let option_erase_double = ref false
 
-let option_alternating_strategy = ref false
+let option_alternating_strategy = ref true
   
 (************************************
 ***    Partition of the matrix    ***
@@ -233,7 +233,7 @@ let apply_strategy_one_transition next_function_output next_function_input left_
    left/right_output_set all the alternatives of performing an output. *)
   List.iter (fun symb_proc_1 ->
 	     Process.apply_output
-	       !option_por (fun symb_proc_2 -> 
+	       !option_por (fun (symb_proc_2,_) -> 
 			    let simplified_symb_proc = Process.simplify symb_proc_2 in
 			    if not (Process.is_bottom simplified_symb_proc)
 			    then left_output_set := simplified_symb_proc::!left_output_set
@@ -242,7 +242,7 @@ let apply_strategy_one_transition next_function_output next_function_input left_
   
   List.iter (fun symb_proc_1 ->
 	     Process.apply_output
-	       !option_por (fun symb_proc_2 -> 
+	       !option_por (fun (symb_proc_2,_) -> 
 			    let simplified_symb_proc = Process.simplify symb_proc_2 in
 			    if not (Process.is_bottom simplified_symb_proc)
 			    then right_output_set := simplified_symb_proc::!right_output_set
@@ -274,7 +274,7 @@ let apply_strategy_one_transition next_function_output next_function_input left_
    left/right_input_set all the alternatives of performing an input. *)
   List.iter (fun symb_proc_1 ->
 	     Process.apply_input
-	       !option_por (fun symb_proc_2 -> 
+	       !option_por (fun (symb_proc_2,_) -> 
 			    let simplified_symb_proc = Process.simplify symb_proc_2 in
 			    if not (Process.is_bottom simplified_symb_proc)
 			    then left_input_set := simplified_symb_proc::!left_input_set
@@ -283,7 +283,7 @@ let apply_strategy_one_transition next_function_output next_function_input left_
   
   List.iter (fun symb_proc_1 ->
 	     Process.apply_input
-	       !option_por (fun symb_proc_2 -> 
+	       !option_por (fun (symb_proc_2,_) -> 
 			    let simplified_symb_proc = Process.simplify symb_proc_2 in
 			    if not (Process.is_bottom simplified_symb_proc)
 			    then right_input_set := simplified_symb_proc::!right_input_set
@@ -312,16 +312,16 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
    to satisfy the  conditional's test. Thanks to our "function_next", we then pu
    all those alternatives together in left/right_internal lists. *)
   List.iter (fun symb_proc_1 ->
-    Process.apply_internal_transition !option_internal_communication !option_por (fun symb_proc_2 -> 
+    Process.apply_internal_transition !option_internal_communication true (fun symb_proc_2 -> 
       left_internal := symb_proc_2::!left_internal
     ) symb_proc_1
-  ) left_erase_set;
+  ) left_symb_proc_list;
   
   List.iter (fun symb_proc_1 ->
-    Process.apply_internal_transition !option_internal_communication !option_por (fun symb_proc_2 -> 
+    Process.apply_internal_transition !option_internal_communication true (fun symb_proc_2 -> 
       right_internal := symb_proc_2::!right_internal
     ) symb_proc_1
-  ) right_erase_set;
+  ) right_symb_proc_list;
   
 
   (* ** Second step : apply the output transitions *)
@@ -332,8 +332,10 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
     else Constraint_system.get_maximal_support (Process.get_constraint_system (List.hd !left_internal))
   in
   
-  let left_output_set = ref []
-  and right_output_set = ref [] in
+  (* two following lists: associations lists: one channel -> list of corresponding alternatives
+(from executing output on this channel) *)
+  let left_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref []
+  and right_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref [] in
   
   let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
   
@@ -350,20 +352,32 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
   
   List.iter (fun symb_proc_1 ->
 	     Process.apply_output
-	       !option_por (fun symb_proc_2 -> 
-			    let simplified_symb_proc = Process.simplify symb_proc_2 in
-			    if not (Process.is_bottom simplified_symb_proc)
-			    then left_output_set := simplified_symb_proc::!left_output_set
-			   ) var_r_ch symb_proc_1
+	       true (fun (symb_proc_2,ch) -> 
+		     (* For any resulting symbolic process from executing an output on channel ch: *)
+		     let simplified_symb_proc = Process.simplify symb_proc_2 in
+		     if not (Process.is_bottom simplified_symb_proc)
+		     then (try begin
+			       let l_ch = List.assoc ch !left_output_set_channel in
+			       l_ch := simplified_symb_proc :: !l_ch;
+			     end with
+			   | Not_found -> 
+			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel)
+		    ) var_r_ch symb_proc_1
 	    ) !left_internal;
   
   List.iter (fun symb_proc_1 ->
 	     Process.apply_output
-	       !option_por (fun symb_proc_2 -> 
-			    let simplified_symb_proc = Process.simplify symb_proc_2 in
-			    if not (Process.is_bottom simplified_symb_proc)
-			    then right_output_set := simplified_symb_proc::!right_output_set
-			   ) var_r_ch symb_proc_1
+	       true (fun (symb_proc_2,ch) -> 
+		     (* For any resulting symbolic process from executing an output on channel ch: *)
+		     let simplified_symb_proc = Process.simplify symb_proc_2 in
+		     if not (Process.is_bottom simplified_symb_proc)
+		     then (try begin
+			       let l_ch = List.assoc ch !left_output_set_channel in
+			       l_ch := simplified_symb_proc :: !l_ch;
+			     end with
+			   | Not_found -> 
+			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel)
+		    ) var_r_ch symb_proc_1
 	    ) !right_internal;
   
   (* We pass those alternatives to the next step which consists in:
@@ -374,10 +388,13 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
      4. apply partitionate_matrix giving many pairs of symbolic processes
      5. recursive calls on each of them
    *)
-  if !left_output_set <> [] || !right_output_set <> []
-  then next_function_output !left_output_set !right_output_set;
-
-  
+  if !left_output_set_channel <> [] || !right_output_set_channel <> []
+  then List.iter (fun (ch,left_output_set) ->
+		  try let right_output_set = List.assoc ch !right_output_set_channel in
+		      next_function_output !left_output_set !right_output_set
+		  with |Not_found -> next_function_output !left_output_set []
+		 ) !left_output_set_channel;
+		 
   (* ** Third step : apply the input transitions *)
   
   let left_input_set = ref []
@@ -390,7 +407,7 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
    apply function_next to the resulting symbolic process. We thus store in
    left/right_input_set all the alternatives of performing an input. *)
   List.iter (fun symb_proc_1 ->
-    Process.apply_input !option_por (fun symb_proc_2 -> 
+    Process.apply_input !option_por (fun (symb_proc_2,ch) -> 
       let simplified_symb_proc = Process.simplify symb_proc_2 in
       if not (Process.is_bottom simplified_symb_proc)
       then left_input_set := simplified_symb_proc::!left_input_set
@@ -398,7 +415,7 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
   ) !left_internal;
   
   List.iter (fun symb_proc_1 ->
-    Process.apply_input !option_por (fun symb_proc_2 -> 
+    Process.apply_input !option_por (fun (symb_proc_2,ch) -> 
       let simplified_symb_proc = Process.simplify symb_proc_2 in
       if not (Process.is_bottom simplified_symb_proc)
       then right_input_set := simplified_symb_proc::!right_input_set

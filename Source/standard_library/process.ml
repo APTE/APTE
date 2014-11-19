@@ -594,7 +594,7 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
           }
         in
         
-        function_next symb_proc';
+        function_next (symb_proc',ch);
         
         go_through (proc::prev_proc) q
      | proc::q -> go_through (proc::prev_proc) q
@@ -631,7 +631,7 @@ let apply_output with_por function_next ch_var_r symb_proc =
           }
         in
         
-        function_next symb_proc';
+        function_next (symb_proc',ch);
         
         go_through (proc::prev_proc) q
     | proc::q -> go_through (proc::prev_proc) q
@@ -806,8 +806,11 @@ let is_same_input_output symb_proc1 symb_proc2 =
   
   same_trace (symb_proc1.trace,symb_proc2.trace) && !switch_label_1 = !switch_label_2
  
-let rec first_output = function
+			    
+let first_output symprocess = 
+  let rec aux_process = function
   | [] -> None
-  | Output(_,_,ch,_,_,_)::q -> Some ch
-  | _ :: q ->  first_output q
+  | Out(ch,_,_,_)::q -> Some ch
+  | _ :: q ->  aux_process q
+  in aux_process symprocess.process
 			    

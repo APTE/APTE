@@ -65,15 +65,15 @@ val instanciate_trace : symbolic_process -> symbolic_process
 (** booleans: with_comm, with_por *)
 val apply_internal_transition : bool -> bool -> (symbolic_process -> unit) -> symbolic_process -> unit
 
-(** boolean: with_por *)
-val apply_input : bool -> (symbolic_process -> unit) -> Recipe.variable -> Recipe.variable -> symbolic_process -> unit
+(** boolean: with_por, next_function takes the pair (continuation,channel of produced action) *)
+val apply_input : bool -> ((symbolic_process*Term.term) -> unit) -> Recipe.variable -> Recipe.variable -> symbolic_process -> unit
 
-(** boolean: with_por *)
-val apply_output : bool -> (symbolic_process -> unit) -> Recipe.variable -> symbolic_process -> unit
+(** boolean: with_por, next_function takes the pair (continuation,channel of produced action) *)
+val apply_output : bool -> ((symbolic_process*Term.term) -> unit) -> Recipe.variable -> symbolic_process -> unit
 
 (** {3 Optimisation} *)
 
 val is_same_input_output : symbolic_process -> symbolic_process -> bool
 
 (** Scan a list of processes and return the channel of its first output (if any) *)
-val first_output : symbolic_process list -> Term.term option
+val first_output : symbolic_process -> Term.term option

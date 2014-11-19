@@ -407,9 +407,9 @@ let sub_start_transition list1 list2 =
     let _ = Sys.command ("mkdir "^new_dir) in
     let main_out_channel = open_out (Printf.sprintf "%s/matrices.log" new_dir) in
   
-    Printf.fprintf main_out_channel "Left set of symbolic process:\n\n";
+    Printf.fprintf main_out_channel "Left set of symbolic process (number: %d):\n\n" (List.length list1);
     List.iter (fun symb_proc -> Printf.fprintf main_out_channel "%s" (Process.display_trace_no_unif symb_proc)) list1;
-    Printf.fprintf main_out_channel "\n\n----------------------\nRight set of symbolic process:\n\n";
+    Printf.fprintf main_out_channel "\n\n----------------------\nRight set of symbolic process (number: %d):\n\n" (List.length list1);
     List.iter (fun symb_proc -> Printf.fprintf main_out_channel "%s" (Process.display_trace_no_unif symb_proc)) list2;
     Printf.fprintf main_out_channel "\n\n\n-----------------------------\n The Matrices on leaves\n-----------------------------\n";
     
