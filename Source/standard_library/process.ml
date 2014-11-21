@@ -326,10 +326,13 @@ let create_symbolic axiom_name_assoc proc csys =
 
 let ps = Printf.sprintf
 
+(* Warning: I use list.rev here to pretty print par_labs. par_labs should be small
+   but it still can slow down the program. *)
 let display_parallel_label pl = 
+  let pl_rev = List.rev pl in
   (List.fold_left
      (fun str_acc i -> (str_acc^(string_of_int i)^" "))
-     "[" pl)^"]"
+     "[" pl_rev)^"]"
 	       
 let display_trace_label r_subst m_subst recipe_term_assoc = function 
   | Output(label,r_ch,m_ch,ax,t,pl) -> 

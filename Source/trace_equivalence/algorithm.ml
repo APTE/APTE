@@ -388,6 +388,7 @@ let apply_strategy_one_transition_por (* given .... *)
    pour CET output/canal. A CHECK: label, channel en mode Term.term suffisant?
    ETC... *)
     
+    (* TODO CHECK: On reseimplifie ici: A CHECK *)
     Process.apply_output
       true
       (fun (symb_proc_2,_) -> 
@@ -423,7 +424,9 @@ let apply_strategy_one_transition_por (* given .... *)
 		 false
 		 true
 		 (fun symb_proc_2 -> 
-		  left_out_internal := symb_proc_2::!left_out_internal
+		  let simplified_symb_proc = Process.simplify symb_proc_2 in
+		  if not (Process.is_bottom simplified_symb_proc)
+		  then left_out_internal := simplified_symb_proc :: !left_out_internal
 		 ) symb_proc_1
 	      ) !left_output_set;
     
@@ -431,7 +434,9 @@ let apply_strategy_one_transition_por (* given .... *)
 	       Process.apply_internal_transition
 		 false
 		 true (fun symb_proc_2 -> 
-		       right_out_internal := symb_proc_2::!right_out_internal
+		       let simplified_symb_proc = Process.simplify symb_proc_2 in
+		       if not (Process.is_bottom simplified_symb_proc)
+		       then right_out_internal := simplified_symb_proc::!right_out_internal
 		      ) symb_proc_1
 	      ) !right_output_set;
     
@@ -456,45 +461,6 @@ let apply_strategy_one_transition_por (* given .... *)
     we thus choose one process (we branch here) and perform its first input then
    do the same on the right. Resulting process ahs a focus. **)
 
-
-    (*   (\* two following lists: associations lists: one channel -> list of corresponding alternatives *)
-    (* (from executing output on this channel) *\) *)
-    (*   let left_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref [] *)
-    (*   and right_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref [] in *)
-    (*     let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in *)
-    (*   List.iter (fun symb_proc_1 -> *)
-    (* 	     Process.apply_output *)
-    (* 	       true (fun (symb_proc_2,ch) ->  *)
-    (* 		     (\* For any resulting symbolic process from executing an output on channel ch: *\) *)
-    (* 		     let simplified_symb_proc = Process.simplify symb_proc_2 in *)
-    (* 		     if not (Process.is_bottom simplified_symb_proc) *)
-    (* 		     then (try begin *)
-    (* 			       let l_ch = List.assoc ch !left_output_set_channel in *)
-    (* 			       l_ch := simplified_symb_proc :: !l_ch; *)
-    (* 			     end with *)
-    (* 			   | Not_found ->  *)
-    (* 			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel) *)
-    (* 		    ) var_r_ch symb_proc_1 *)
-    (* 	    ) !left_internal; *)
-    (*   List.iter (fun symb_proc_1 -> *)
-    (* 	     Process.apply_output *)
-    (* 	       true (fun (symb_proc_2,ch) ->  *)
-    (* 		     (\* For any resulting symbolic process from executing an output on channel ch: *\) *)
-    (* 		     let simplified_symb_proc = Process.simplify symb_proc_2 in *)
-    (* 		     if not (Process.is_bottom simplified_symb_proc) *)
-    (* 		     then (try begin *)
-    (* 			       let l_ch = List.assoc ch !left_output_set_channel in *)
-    (* 			       l_ch := simplified_symb_proc :: !l_ch; *)
-    (* 			     end with *)
-    (* 			   | Not_found ->  *)
-    (* 			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel) *)
-    (* 		    ) var_r_ch symb_proc_1 *)
-    (* 	    ) !right_internal; *)
-
-    
-    (* ** Third step/IN : apply the input transitions *)
-    
-    
     let left_input_set = ref []
     and right_input_set = ref []
     and var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
@@ -540,7 +506,9 @@ let apply_strategy_one_transition_por (* given .... *)
 		 false
 		 true
 		 (fun symb_proc_2 -> 
-		  left_in_internal := symb_proc_2::!left_in_internal
+		  let simplified_symb_proc = Process.simplify symb_proc_2 in
+		  if not (Process.is_bottom simplified_symb_proc)
+		  then left_in_internal := simplified_symb_proc :: !left_in_internal
 		 ) symb_proc_1
 	      ) !left_input_set;
     
@@ -549,7 +517,9 @@ let apply_strategy_one_transition_por (* given .... *)
 		 false
 		 true
 		 (fun symb_proc_2 -> 
-		  right_in_internal := symb_proc_2::!right_in_internal
+		  let simplified_symb_proc = Process.simplify symb_proc_2 in
+		  if not (Process.is_bottom simplified_symb_proc)
+		  then right_in_internal := simplified_symb_proc :: !right_in_internal
 		 ) symb_proc_1
 	      ) !right_input_set;
     
@@ -598,23 +568,31 @@ let rec apply_alternating left_symb_proc_list right_symb_proc_list =
     Statistic.start_transition left_list right_list;
     
     apply_strategy_for_matrices (fun index_right_process matrix -> 
-        partionate_matrix apply_alternating left_list right_list index_right_process matrix
-      ) f_strat_m left_list right_list;
-      
+				 partionate_matrix apply_alternating left_list right_list index_right_process matrix
+				) f_strat_m left_list right_list;
+    
     (***[Statistic]***)
     Statistic.end_transition ()
-  
-  and strategy_one_transition = if !option_por
-				then apply_strategy_one_transition_por
-				else apply_strategy_one_transition
-  in
-  strategy_one_transition 
-    (next_function Strategy.apply_strategy_output) 
-    (next_function Strategy.apply_strategy_input)
-    left_symb_proc_list
-    right_symb_proc_list
+			     
+  in let strategy_one_transition = if !option_por
+				   then apply_strategy_one_transition_por
+				   else apply_strategy_one_transition
+     and next_out = next_function
+		      (if false (* !option_por*)
+		       then Strategy.apply_full_strategy 
+		       else Strategy.apply_strategy_output)
+     and next_in = next_function
+		     (if false (* !option_por *)
+		      then Strategy.apply_full_strategy 
+		      else Strategy.apply_strategy_input)
+     in
+     strategy_one_transition 
+       next_out
+       next_in
+       left_symb_proc_list
+       right_symb_proc_list
 
-    
+       
 (*****************************************
 ***      Decide trace equivalence      ***
 ******************************************)  
@@ -670,3 +648,46 @@ let decide_trace_equivalence process1 process2 =
   
   
   
+
+(* ************************************************** 
+	      OLD STUFF 
+ ************************************************** *)
+
+    (*   (\* two following lists: associations lists: one channel -> list of corresponding alternatives *)
+    (* (from executing output on this channel) *\) *)
+    (*   let left_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref [] *)
+    (*   and right_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref [] in *)
+    (*     let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in *)
+    (*   List.iter (fun symb_proc_1 -> *)
+    (* 	     Process.apply_output *)
+    (* 	       true (fun (symb_proc_2,ch) ->  *)
+    (* 		     (\* For any resulting symbolic process from executing an output on channel ch: *\) *)
+    (* 		     let simplified_symb_proc = Process.simplify symb_proc_2 in *)
+    (* 		     if not (Process.is_bottom simplified_symb_proc) *)
+    (* 		     then (try begin *)
+    (* 			       let l_ch = List.assoc ch !left_output_set_channel in *)
+    (* 			       l_ch := simplified_symb_proc :: !l_ch; *)
+    (* 			     end with *)
+    (* 			   | Not_found ->  *)
+    (* 			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel) *)
+    (* 		    ) var_r_ch symb_proc_1 *)
+    (* 	    ) !left_internal; *)
+    (*   List.iter (fun symb_proc_1 -> *)
+    (* 	     Process.apply_output *)
+    (* 	       true (fun (symb_proc_2,ch) ->  *)
+    (* 		     (\* For any resulting symbolic process from executing an output on channel ch: *\) *)
+    (* 		     let simplified_symb_proc = Process.simplify symb_proc_2 in *)
+    (* 		     if not (Process.is_bottom simplified_symb_proc) *)
+    (* 		     then (try begin *)
+    (* 			       let l_ch = List.assoc ch !left_output_set_channel in *)
+    (* 			       l_ch := simplified_symb_proc :: !l_ch; *)
+    (* 			     end with *)
+    (* 			   | Not_found ->  *)
+    (* 			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel) *)
+    (* 		    ) var_r_ch symb_proc_1 *)
+    (* 	    ) !right_internal; *)
+
+    
+    (* ** Third step/IN : apply the input transitions *)
+    
+    
