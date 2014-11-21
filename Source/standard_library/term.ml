@@ -48,6 +48,10 @@ and term =
   | Var of variable
   | Name of name
   
+(* TODO: check if number_n is injective! *)
+let compare_name n1 n2 =
+  n2.number_n - n1.number_n
+
 (*********************************
 ***    Variable generation     ***
 **********************************)

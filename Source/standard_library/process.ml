@@ -836,14 +836,100 @@ let is_same_input_output symb_proc1 symb_proc2 =
       Annotated Semantics
 **************************************)
 
-type skeleton =
-  | InS of Term.term
-  | OutS of Term.term
+(* Helping function for SSkeleton *)
+let compare_term t1 t2 =
+  try
+    let n1,n2 = Term.name_of_term t1, Term.name_of_term t2 in
+    Term.compare_name n1 n2
+  with
+  | Debug.Internal_error _ -> Debug.internal_error "[Process.ml >> SetOfSkeletons] I failed to compate to skeletons because, one channel is not a name."
+	
+type skeleton = InS of Term.term | OutS of Term.term					      
+module Skeleton =
+  struct
+    type t = skeleton
 
-type lab = int list
+    let compare sk1 sk2 =
+      match (sk1,sk2) with
+      | (InS t1, InS t2) -> compare_term t1 t2
+      | (InS t1, OutS t2) -> 1
+      | (OutS t1, InS t2) -> compare_term t1 t2
+      | (OutS t1, OutS t2) -> -1
+  end
 
-let sk = Obj.magic 0
-		   
-let labelize = Obj.magic 0
+module MapS =
+struct
+  include Map.Make(Skeleton)
+end
 
-let labelize_consistently = Obj.magic 0
+let sk = function
+  | In (ch,vx,p,l) -> Some (InS ch)
+  | Out (ch, u, p, l) -> Some (OutS ch)
+  | _ -> None
+
+let need_labelise = function
+  | (_,(_,(ToLabel))) -> true
+  | _ -> false
+
+let labelise symb_proc =
+  let mapS = ref MapS.empty in
+  (* go trough the list of processes and accumulate association sk -> l in mapS *)
+  let rec labelise_procs n = function
+    | pl :: q when not(need_labelise pl) -> pl :: (labelise_procs n q)
+    | (p, l) :: q ->
+       (match l with
+       | (oldL, ToLabel) ->
+	  let newL = n :: oldL in
+	  let newLp = (newL, OkLabel) in
+	  (match sk p with
+	  | None ->  Debug.internal_error "[Process.ml >> labelise] I cannot labelise non-reduced processes."
+	  | Some sk ->
+	     begin
+	       mapS := MapS.add sk newL !mapS;
+	       (p, newLp) :: labelise_procs (n+1) q;
+	     end)
+       | _ ->   Debug.internal_error "[Process.ml >> labelise] I cannot labelise processes labelled with 'Dummy'.")
+    | [] -> [] in
+  
+  let new_list_procs = labelise_procs 1 symb_proc.process in
+  ({symb_proc with
+     process = new_list_procs;
+     has_focus = false;
+   },
+   !mapS)
+
+exception Not_eq_left of string
+exception Not_eq_right of string
+
+let labelise_consistently mapS symb_proc =
+  (*  go trough the list of processes and labeliszs using mapS *)
+  let rec labelise_procs = function
+    | ((p,l) as pl) :: q when not(need_labelise pl) ->
+       (match sk p with
+	| None ->  Debug.internal_error "[Process.ml >> labelise] I cannot labelise non-reduced processes."
+	| Some skp ->
+	   if MapS.mem skp mapS
+	   then raise (Not_eq_right "Process on the right has a parallel composition with more processes that the one on the left.")
+	   else pl :: (labelise_procs q))
+    | (p, l) :: q ->
+       (match l with
+	| (oldL, ToLabel) ->
+	   (try
+	       (match sk p with
+		| None ->  Debug.internal_error "[Process.ml >> labelise] I cannot labelise non-reduced processes."
+		| Some skp ->
+		   let newL = MapS.find skp mapS in
+		   if not(List.tl newL == oldL)
+		   then raise (Not_eq_right "Process on the right cannot answer with the same label.")
+		   else (p, (newL, OkLabel)) :: (labelise_procs q))
+		with
+		| Not_found -> raise (Not_eq_right "Process on the left has a parallel composition with more processes that the one on the right."))
+ 	| _ ->   Debug.internal_error "[Process.ml >> labelise] I cannot labelise processes labelled with 'Dummy'.")
+    | [] -> [] in
+
+  let new_list_procs = labelise_procs symb_proc.process in
+  {symb_proc with
+    process = new_list_procs;
+    has_focus = false;
+  }
+    

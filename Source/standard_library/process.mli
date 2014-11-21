@@ -87,13 +87,19 @@ type skeleton =
   | OutS of Term.term
 
 (** Labels denoting sequential dependencies *)
-type lab
+type par_label
 
-(** Return sk(P) *)
-val sk : process -> skeleton
+(** Map from skeletons to 'a *)
+module MapS : (Map.S with type key = skeleton)
 
-(** Labelizes non-labelled processes in a symbolic process and outputs a list of association sk->lab *)
-val labelize : symbolic_process -> (symbolic_process * (skeleton*lab) list)
+(** Return Some sk(P) or None if non-reduced *)
+val sk : process -> skeleton option
 
-(** Labelizes non-labelled processes in a symbolic process accordingly to a list of association sk->lab *)
-val labelize_consistently : (skeleton*lab) list -> symbolic_process -> symbolic_process
+(** Labelises non-labelled processes in a symbolic process and outputs a list of association sk->lab *)
+val labelise : symbolic_process -> (symbolic_process * par_label MapS.t)
+
+(** Labelises non-labelled processes in a symbolic process accordingly to a list of association sk->lab *)
+val labelise_consistently : par_label MapS.t -> symbolic_process -> symbolic_process
+
+exception Not_eq_left of string
+exception Not_eq_right of string

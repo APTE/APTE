@@ -140,6 +140,9 @@ type name
 (** The type [term] corresponds to the set {% $\T(\F,\N \cup \Xun)$ in~\thesis. %} *)
 type term
 
+(** Comparison function over names *)
+val compare_name : name -> name -> int
+
 (** {3 Variable generation} *)
 
 (** The variables created by the functions below are structuraly and physically different *)
