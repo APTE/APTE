@@ -77,3 +77,23 @@ val is_same_input_output : symbolic_process -> symbolic_process -> bool
 
 (** Scan a list of processes and return the channel of its first output (if any) *)
 val first_output : symbolic_process -> Term.term option
+
+
+(** {Annotated semantics} *)
+
+(** Skeletons of actions *)
+type skeleton =
+  | InS of Term.term
+  | OutS of Term.term
+
+(** Labels denoting sequential dependencies *)
+type lab
+
+(** Return sk(P) *)
+val sk : process -> skeleton
+
+(** Labelizes non-labelled processes in a symbolic process and outputs a list of association sk->lab *)
+val labelize : symbolic_process -> (symbolic_process * (skeleton*lab) list)
+
+(** Labelizes non-labelled processes in a symbolic process accordingly to a list of association sk->lab *)
+val labelize_consistently : (skeleton*lab) list -> symbolic_process -> symbolic_process

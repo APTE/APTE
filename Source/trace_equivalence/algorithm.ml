@@ -301,7 +301,8 @@ let apply_strategy_one_transition next_function_output next_function_input left_
 
 (** Strategy for the complete unfolding with POR *)
 let apply_strategy_one_transition_por next_function_output next_function_input left_symb_proc_list right_symb_proc_list = 
-  (* ** We assume that either (i) trace is empty (first call) or 
+  (* ** We assume that the sets are singletons and either (i) trace is empty (first call) 
+   but no process can have a conditional at top level or below a Par or 
    (ii) all processes start either with an input or an output (they are in normal
    form for the internal reduction \leadsto in the paper) and the two lists contain
    only one symbolic process. *)
@@ -310,40 +311,49 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
 		(List.length left_symb_proc_list)
 		(List.length right_symb_proc_list)
 		(Process.size_trace (List.hd left_symb_proc_list));
+  
+  (* We check that sets of processes are singletons *)
+  if (List.length left_symb_proc_list, List.length right_symb_proc_list) != (1,1)
+  then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] The sets of pocesses are not singletons. It may be the case that inputted processes are not action-deterministic.";
+  
+  (* If this is the first call of apply_strategy... then we must split parallel compositions that may be at top level.
+     We assume here that there is no conditional above firsts observable actions. *)
+  let proc_left, proc_right =  
+    if (Process.size_trace (List.hd left_symb_proc_list)) != 0
+    then (List.hd left_symb_proc_list, List.hd right_symb_proc_list) (* Case (ii) *)
+    else  begin			(* CASE (i) *)
+	(* If trace is empty (first call) then we apply internal_transition before really starting *)
+	let ps = ref [] in
+	Process.apply_internal_transition
+	  false
+	  true
+	  (fun symb_proc_2 -> ps := symb_proc_2 :: !ps)
+	  (List.hd left_symb_proc_list);
+	let qs = ref [] in
+	Process.apply_internal_transition
+	  false
+	  true
+	  (fun symb_proc_2 -> qs := symb_proc_2 :: !qs)
+	  (List.hd right_symb_proc_list);
+	if (List.length !ps, List.length !qs) != (1,1)
+	then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] The sets of pocesses after reducing conditionals are not singletons. It may be the case that inputted processes start with conditionals at top level."
+	else (List.hd !ps, List.hd !qs)
+      end;
+  in
 
-  let left_internal = ref []
-  and right_internal = ref [] in
-  if (Process.size_trace (List.hd left_symb_proc_list)) = 0
-  then begin			(* CASE (i) *)
-      (* If trace is empty (first call) then we apply internal_transition before really starting *)
-      List.iter (fun symb_proc_1 ->
-		 Process.apply_internal_transition
-		   false
-		   true
-		   (fun symb_proc_2 -> 
-		    left_internal := symb_proc_2::!left_internal
-		   ) symb_proc_1
-		) left_symb_proc_list;
-      
-      List.iter (fun symb_proc_1 ->
-		 Process.apply_internal_transition
-		   false
-		   true (fun symb_proc_2 -> 
-			 right_internal := symb_proc_2::!right_internal
-			) symb_proc_1
-		) right_symb_proc_list;
-    end
-  else begin 			(* CASE (ii) *)
-      left_internal := left_symb_proc_list;
-      right_internal := right_symb_proc_list;
-    end;
+  (* ** FIRST step: labelizes processes: at this point, some new processes coming from breaking a parallel
+        composition are in the multiset. All those new processes come from a unique parallel composition,
+        so we label them in an arbitrary order but consistently with right_symb_proc_list. *)
+  let proc_left_label, how_to_label = Process.labelize proc_left in
+  let proc_right_label = Process.labelize_consistently how_to_label proc_right in
 
-  (* ** First step: Check whether there is an output at top level of the left process. In that case
+
+  (* ** SECOND step: Check whether there is an output at top level of the left process. In that case
    we perform this output and try to do the same on the right one. *)
-  let support = 
-    if !left_internal = []
-    then Constraint_system.get_maximal_support (Process.get_constraint_system (List.hd !right_internal))
-    else Constraint_system.get_maximal_support (Process.get_constraint_system (List.hd !left_internal))
+  let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label)
+  (* Before, one list of processes might be empty (because we may have perform some conditionals
+   at this point. It is no longer the case -> OK.*)
+
   and left_output_set = ref []
   and right_output_set = ref [] in
   
@@ -364,7 +374,7 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
 		if not (Process.is_bottom simplified_symb_proc)
 		then left_output_set := simplified_symb_proc::!left_output_set
 	       ) var_r_ch symb_proc_1
-	    ) !left_internal;
+	    ) [proc_left_label];
   
   List.iter (fun symb_proc_1 ->
 	     Process.apply_output
@@ -374,13 +384,13 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
 		if not (Process.is_bottom simplified_symb_proc)
 		then right_output_set := simplified_symb_proc::!right_output_set
 	       ) var_r_ch symb_proc_1
-	    ) !right_internal;
+	    ) [proc_right_label];
   
   Printf.printf "Après les OUT. Taille des listes: %d,%d.\n"
 		(List.length !left_output_set)
 		(List.length !right_output_set);
 
-  (* ** NOW : apply the internal transitions (including conditionals) *)  
+  (* ** Third Step : apply the internal transitions (including conditionals) *)  
   let left_out_internal = ref []
   and right_out_internal = ref [] in
 
@@ -422,7 +432,7 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
   then next_function_output !left_out_internal !right_out_internal;
 
   
-  (* ** Second step: Otherwise, there is no negative process (\ie starting with an output),
+  (* ** Third Step/IN step: Otherwise, there is no negative process (\ie starting with an output),
     we thus choose one process (we branch here) and perform its first input then
    do the same on the right. Resulting process ahs a focus. **)
 
@@ -462,7 +472,7 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
   (* 	    ) !right_internal; *)
 
   
-  (* ** Third step : apply the input transitions *)
+  (* ** Third step/IN : apply the input transitions *)
   
   
   let left_input_set = ref []
@@ -481,7 +491,7 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
 		if not (Process.is_bottom simplified_symb_proc)
 		then left_input_set := simplified_symb_proc::!left_input_set
 	       ) var_r_ch var_r_t symb_proc_1
-	    ) !left_internal;
+	    ) [proc_left_label];
   
   List.iter (fun symb_proc_1 ->
 	     Process.apply_input
@@ -491,13 +501,13 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
 		if not (Process.is_bottom simplified_symb_proc)
 		then right_input_set := simplified_symb_proc::!right_input_set
 	       ) var_r_ch var_r_t symb_proc_1
-	    ) !right_internal;
+	    ) [proc_right_label];
   
   Printf.printf "Après les IN. Taille des listes: %d,%d.\n"
 		(List.length !left_input_set)
 		(List.length !right_input_set);
 
-  (* ** NOW : apply the internal transitions (including conditionals) *)  
+  (* ** Fourth Step/IN : apply the internal transitions (including conditionals) *)  
   let left_in_internal = ref []
   and right_in_internal = ref [] in
 

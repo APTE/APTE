@@ -814,3 +814,19 @@ let first_output symprocess =
   | _ :: q ->  aux_process q
   in aux_process symprocess.process
 			    
+
+(*************************************
+      Annotated Semantics
+**************************************)
+
+type skeleton =
+  | InS of Term.term
+  | OutS of Term.term
+
+type lab = int list
+
+let sk = Obj.magic 0
+		   
+let labelize = Obj.magic 0
+
+let labelize_consistently = Obj.magic 0
