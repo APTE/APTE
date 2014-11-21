@@ -334,7 +334,7 @@ let apply_strategy_one_transition_por (* given .... *)
 		(Process.size_trace (List.hd left_symb_proc_list));
   
   (* We check that sets of processes are singletons *)
-  if (List.length left_symb_proc_list, List.length right_symb_proc_list) != (1,1)
+  if List.length left_symb_proc_list != 1 || List.length right_symb_proc_list != 1
   then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] The sets of pocesses are not singletons. It may be the case that inputted processes are not action-deterministic.";
   
   (* If this is the first call of apply_strategy... then we must split parallel compositions that may be at top level.
@@ -356,7 +356,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	  true
 	  (fun symb_proc_2 -> qs := symb_proc_2 :: !qs)
 	  (List.hd right_symb_proc_list);
-	if (List.length !ps, List.length !qs) != (1,1)
+	if (List.length !ps != 1)|| (List.length !qs != 1)
 	then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] The sets of pocesses after reducing conditionals are not singletons. It may be the case that inputted processes start with conditionals at top level."
 	else (List.hd !ps, List.hd !qs)
       end;
