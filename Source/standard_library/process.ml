@@ -290,16 +290,14 @@ type proc_label = (par_label * flag_label)
 let dummy_l = ([], Dummy)
 let start_l = ([0], OkLabel)
 
-(* TOREMOVE ? labelled process: what are in the multiset of a symbolic process *)
-		    
-let set_to_label = function
+let set_to_be_labelled = function
   | (parLab,_) -> (parLab, ToLabel)
 
 (* TODO: par_label are not used yet -> to remove if not needed *)
 type trace_label =
   | Output of label * Recipe.recipe * Term.term * Recipe.axiom * Term.term * par_label
   | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term * par_label
-  | Comm of internal_communication  (* won't be produced *)
+  | Comm of internal_communication  (* won't be produced if with_por = true*)
   
 
 type symbolic_process = 
@@ -444,7 +442,7 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
   let rec go_through prev_proc csys = function
     (* when we have gone trough all processes (no more conditionals at top level) *)
     | [] -> function_next { symb_proc with process = prev_proc; constraint_system = csys }
-    | (Nil, _)::q -> go_through prev_proc csys q 
+    | (Nil,_)::q -> go_through prev_proc csys q 
     | (Choice(p1,p2), l)::q -> 
        if with_por
        then Debug.internal_error "[process.ml >> apply_internal_transition_without_comm] Inputted processes are not action-deterministic (they use a Choice)."
@@ -452,8 +450,12 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
            go_through prev_proc csys ((p1,dummy_l)::q);
            go_through prev_proc csys ((p2,dummy_l)::q);
 	 end
-    | (Par(p1,p2), l)::q -> let l' = set_to_label l in
-			   go_through prev_proc csys ((p1,l')::(p2,l')::q)
+    | (Par(p1,p2), l)::q ->
+       let l' = if with_por
+		then set_to_be_labelled l (* we add a flag meaning that produced sub_processes must be relablled
+					     since we broke a parallel composition *)
+		else dummy_l in
+       go_through prev_proc csys ((p1,l')::(p2,l')::q)
     | (New(_,p,_), l)::q -> go_through prev_proc csys ((p,l)::q)
     | (Let(pat,t,proc,_), l)::q ->
         let eq_to_unify = formula_from_pattern t pat in
@@ -493,8 +495,9 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
   
   go_through [] symb_proc.constraint_system symb_proc.process
   
-(* We assume in this function that the internal transition except the communication have been applied. *)  
-let rec apply_one_internal_transition_with_comm with_por function_next symb_proc = 
+(* We assume in this function that the internal transition except the communication have been applied.
+ It is not executed if with_comm = true *)  
+let rec apply_one_internal_transition_with_comm function_next symb_proc = 
 
   let rec go_through prev_proc_1 forbid_comm_1 = function
     | [] -> function_next { symb_proc with forbidden_comm = forbid_comm_1 }
@@ -522,8 +525,8 @@ let rec apply_one_internal_transition_with_comm with_por function_next symb_proc
                     }
                   in
                   
-                  apply_internal_transition_without_comm with_por
-                    (apply_one_internal_transition_with_comm with_por function_next) symb_proc_1;
+                  apply_internal_transition_without_comm false (* with_por must be false since with_comm = true *)
+                    (apply_one_internal_transition_with_comm function_next) symb_proc_1;
                     
                   (* Case where the internal communication did not happen *)
                     
@@ -559,8 +562,8 @@ let rec apply_one_internal_transition_with_comm with_por function_next symb_proc
                     }
                   in
                   
-                  apply_internal_transition_without_comm with_por
-                    (apply_one_internal_transition_with_comm with_por function_next) symb_proc_1;
+                  apply_internal_transition_without_comm false (* with_por must be false since with_comm = true *)
+                    (apply_one_internal_transition_with_comm function_next) symb_proc_1;
                     
                   (* Case where the internal communication did not happen *)
                     
@@ -579,9 +582,12 @@ let rec apply_one_internal_transition_with_comm with_por function_next symb_proc
 let apply_internal_transition with_comm with_por function_next symb_proc = 
   if with_comm
   then 
-    apply_internal_transition_without_comm with_por (
-      apply_one_internal_transition_with_comm with_por function_next
-      ) symb_proc
+    if with_por
+    then Debug.internal_error "[process.ml >> appply_one_internal_transition] The flags with_comm and with_por cannot be both true."
+    else  apply_internal_transition_without_comm
+	    with_por
+	    (apply_one_internal_transition_with_comm function_next)
+	    symb_proc
   else apply_internal_transition_without_comm with_por function_next symb_proc
   
 (*************************************
@@ -609,7 +615,7 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
             process = ((sub_proc,l)::q)@prev_proc;
             constraint_system = new_csys_3;
             forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
-            trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v, []))::symb_proc.trace (* TODO: [] -> pl *)
+            trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v, fst l))::symb_proc.trace
           }
         in
         
@@ -646,7 +652,7 @@ let apply_output with_por function_next ch_var_r symb_proc =
             forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
             trace = (Output (label,ch_r,Term.term_of_variable y,
 			     Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),
-			     Term.term_of_variable x, []))::symb_proc.trace (* TODO [] -> pl *)
+			     Term.term_of_variable x, fst l))::symb_proc.trace
           }
         in
         
