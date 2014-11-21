@@ -280,8 +280,22 @@ let refresh_label proc =
 	   Symbolic process
 **************************************)
 
+(* par_label denotes the position of a sub-process in the 'tree if parallel compositions' *)
 type par_label = int list
-		 
+(* flag_label describes the state of the labelling process (to be labelled or have been labelled (OK)) *)
+type flag_label = ToLabel | OkLabel | Dummy
+(* a proc_label will be associated to any process in the multiset *)
+type proc_label = (par_label * flag_label)
+
+let dummy_l = ([], Dummy)
+let start_l = ([0], OkLabel)
+
+(* TOREMOVE ? labelled process: what are in the multiset of a symbolic process *)
+		    
+let set_to_label = function
+  | (parLab,_) -> (parLab, ToLabel)
+
+(* TODO: par_label are not used yet -> to remove if not needed *)
 type trace_label =
   | Output of label * Recipe.recipe * Term.term * Recipe.axiom * Term.term * par_label
   | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term * par_label
@@ -291,7 +305,7 @@ type trace_label =
 type symbolic_process = 
   {
     axiom_name_assoc : (Recipe.recipe * Term.term) list;
-    process : process list; (* Represent a multiset of processes *)
+    process : (process*proc_label) list; (* Represent a multiset of labelled processes *)
     has_focus : bool;	    (* if true: process[0] is under focus, otherwise: no focus *)
     constraint_system : Constraint_system.constraint_system;
     forbidden_comm : internal_communication list;
@@ -302,7 +316,7 @@ type symbolic_process =
 let create_symbolic axiom_name_assoc proc csys = 
   {
     axiom_name_assoc = axiom_name_assoc;
-    process = [proc];
+    process = [(proc, start_l)];
     has_focus = false;
     constraint_system = csys;
     forbidden_comm = [];
@@ -430,17 +444,22 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
   let rec go_through prev_proc csys = function
     (* when we have gone trough all processes (no more conditionals at top level) *)
     | [] -> function_next { symb_proc with process = prev_proc; constraint_system = csys }
-    | Nil::q -> go_through prev_proc csys q 
-    | Choice(p1,p2)::q -> 
-        go_through prev_proc csys (p1::q);
-        go_through prev_proc csys (p2::q)
-    | Par(p1,p2)::q -> go_through prev_proc csys (p1::p2::q)
-    | New(_,p,_)::q -> go_through prev_proc csys (p::q)
-    | Let(pat,t,proc,_)::q ->
+    | (Nil, _)::q -> go_through prev_proc csys q 
+    | (Choice(p1,p2), l)::q -> 
+       if with_por
+       then Debug.internal_error "[process.ml >> apply_internal_transition_without_comm] Inputted processes are not action-deterministic (they use a Choice)."
+       else begin
+           go_through prev_proc csys ((p1,dummy_l)::q);
+           go_through prev_proc csys ((p2,dummy_l)::q);
+	 end
+    | (Par(p1,p2), l)::q -> let l' = set_to_label l in
+			   go_through prev_proc csys ((p1,l')::(p2,l')::q)
+    | (New(_,p,_), l)::q -> go_through prev_proc csys ((p,l)::q)
+    | (Let(pat,t,proc,_), l)::q ->
         let eq_to_unify = formula_from_pattern t pat in
         let proc' = Term.unify_and_apply eq_to_unify proc iter_term_process in
-        go_through prev_proc csys (proc'::q)      
-    | IfThenElse(formula,proc_then,proc_else,_)::q ->
+        go_through prev_proc csys ((proc',l)::q)      
+    | (IfThenElse(formula,proc_then,proc_else,_), l)::q ->
         let disj_conj_then = conjunction_from_formula formula
         and disj_conj_else = conjunction_from_formula (negation formula) in
 	(* for any way to satisfy formula or not(formula), branch and (recursive) call go_through *)
@@ -453,7 +472,7 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
                   Constraint_system.add_message_formula csys_acc formula' 
             ) csys conj_then
           in
-          go_through prev_proc new_csys (proc_then::q)            
+          go_through prev_proc new_csys ((proc_then,l)::q)            
         ) disj_conj_then;
         
         List.iter (fun conj_else ->
@@ -465,7 +484,7 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
                   Constraint_system.add_message_formula csys_acc formula 
             ) csys conj_else
           in
-          go_through prev_proc new_csys (proc_else::q)            
+          go_through prev_proc new_csys ((proc_else,l)::q)            
         ) disj_conj_else
     (* otherwise, proc starts with an input our output -> add it to prev_proc and keep scanning
      the rest of processes *)
@@ -479,10 +498,10 @@ let rec apply_one_internal_transition_with_comm with_por function_next symb_proc
 
   let rec go_through prev_proc_1 forbid_comm_1 = function
     | [] -> function_next { symb_proc with forbidden_comm = forbid_comm_1 }
-    | (In(ch_in,v,sub_proc_in,label_in) as proc_in)::q_1 -> 
+    | ((In(ch_in,v,sub_proc_in,label_in),_) as proc_in)::q_1 -> 
         let rec search_for_a_out prev_proc_2 forbid_comm_2 = function
           | [] -> go_through (proc_in::prev_proc_1) forbid_comm_2 q_1
-          | (Out(ch_out,t_out, sub_proc_out, label_out) as proc_out)::q_2 ->
+          | ((Out(ch_out,t_out, sub_proc_out, label_out),_) as proc_out)::q_2 ->
               if is_comm_forbidden label_in label_out forbid_comm_2
               then search_for_a_out (proc_out::prev_proc_2) forbid_comm_2 q_2
               else 
@@ -496,7 +515,7 @@ let rec apply_one_internal_transition_with_comm with_por function_next symb_proc
                   
                   let symb_proc_1 = 
                     { symb_proc with
-                      process = prev_proc_1@(sub_proc_in::sub_proc_out::prev_proc_2)@q_2;
+                      process = prev_proc_1@((sub_proc_in,dummy_l)::(sub_proc_out,dummy_l)::prev_proc_2)@q_2;
                       constraint_system = new_csys_comm_2; 
                       forbidden_comm = new_forbid_comm_2;
                       trace = (Comm { in_label = label_in; out_label = label_out })::symb_proc.trace;
@@ -516,10 +535,10 @@ let rec apply_one_internal_transition_with_comm with_por function_next symb_proc
         in
         search_for_a_out [] forbid_comm_1 q_1
         
-    | (Out(ch_out,t_out,sub_proc_out,label_out) as proc_out)::q_1 -> 
+    | ((Out(ch_out,t_out,sub_proc_out,label_out),_) as proc_out)::q_1 -> 
         let rec search_for_a_in prev_proc_2 forbid_comm_2 = function
           | [] -> go_through (proc_out::prev_proc_1) forbid_comm_2 q_1
-          | (In(ch_in,v, sub_proc_in, label_in) as proc_in)::q_2 ->
+          | ((In(ch_in,v, sub_proc_in, label_in),_) as proc_in)::q_2 ->
               if is_comm_forbidden label_in label_out forbid_comm_2
               then search_for_a_in (proc_in::prev_proc_2) forbid_comm_2 q_2
               else 
@@ -533,7 +552,7 @@ let rec apply_one_internal_transition_with_comm with_por function_next symb_proc
                   
                   let symb_proc_1 = 
                     { symb_proc with
-                      process = prev_proc_1@(sub_proc_in::sub_proc_out::prev_proc_2)@q_2;
+                      process = prev_proc_1@((sub_proc_in,dummy_l)::(sub_proc_out,dummy_l)::prev_proc_2)@q_2;
                       constraint_system = new_csys_comm_2; 
                       forbidden_comm = new_forbid_comm_2;
                       trace = (Comm { in_label = label_in; out_label = label_out })::symb_proc.trace
@@ -574,7 +593,7 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
   
   let rec go_through prev_proc = function
     | [] -> ()
-    | (In(ch,v,sub_proc,label) as proc)::q ->
+    | ((In(ch,v,sub_proc,label),l) as proc)::q ->
         let y = Term.fresh_variable_from_id Term.Free "y" in
         let t_y = Term.term_of_variable y in
         
@@ -587,7 +606,7 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
         
         let symb_proc' = 
           { symb_proc with
-            process = (sub_proc::q)@prev_proc;
+            process = ((sub_proc,l)::q)@prev_proc;
             constraint_system = new_csys_3;
             forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
             trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v, []))::symb_proc.trace (* TODO: [] -> pl *)
@@ -606,7 +625,7 @@ let apply_output with_por function_next ch_var_r symb_proc =
   
   let rec go_through prev_proc = function
     | [] -> ()
-    | (Out(ch,t,sub_proc,label) as proc)::q ->
+    | ((Out(ch,t,sub_proc,label),l) as proc)::q ->
         let y = Term.fresh_variable_from_id Term.Free "y"
         and x = Term.fresh_variable_from_id Term.Free "x" in
         
@@ -622,7 +641,7 @@ let apply_output with_por function_next ch_var_r symb_proc =
         
         let symb_proc' = 
           { symb_proc with
-            process = (sub_proc::q)@prev_proc;
+            process = ((sub_proc,l)::q)@prev_proc;
             constraint_system = new_csys_4;
             forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
             trace = (Output (label,ch_r,Term.term_of_variable y,
@@ -806,14 +825,6 @@ let is_same_input_output symb_proc1 symb_proc2 =
   
   same_trace (symb_proc1.trace,symb_proc2.trace) && !switch_label_1 = !switch_label_2
  
-			    
-let first_output symprocess = 
-  let rec aux_process = function
-  | [] -> None
-  | Out(ch,_,_,_)::q -> Some ch
-  | _ :: q ->  aux_process q
-  in aux_process symprocess.process
-			    
 
 (*************************************
       Annotated Semantics
