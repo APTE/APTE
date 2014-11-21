@@ -366,25 +366,23 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
    pour CET output/canal. A CHECK: label, channel en mode Term.term suffisant?
    ETC... *)
   
-  List.iter (fun symb_proc_1 ->
-	     Process.apply_output
-	       true
-	       (fun (symb_proc_2,_) -> 
-		let simplified_symb_proc = Process.simplify symb_proc_2 in
-		if not (Process.is_bottom simplified_symb_proc)
-		then left_output_set := simplified_symb_proc::!left_output_set
-	       ) var_r_ch symb_proc_1
-	    ) [proc_left_label];
-  
-  List.iter (fun symb_proc_1 ->
-	     Process.apply_output
-	       true
-	       (fun (symb_proc_2,_) -> 
-		let simplified_symb_proc = Process.simplify symb_proc_2 in
-		if not (Process.is_bottom simplified_symb_proc)
-		then right_output_set := simplified_symb_proc::!right_output_set
-	       ) var_r_ch symb_proc_1
-	    ) [proc_right_label];
+  Process.apply_output
+    true
+    (fun (symb_proc_2,_) -> 
+     let simplified_symb_proc = Process.simplify symb_proc_2 in
+     if not (Process.is_bottom simplified_symb_proc)
+     then left_output_set := simplified_symb_proc::!left_output_set)
+    var_r_ch
+    proc_left_label;
+
+  Process.apply_output
+    true
+    (fun (symb_proc_2,_) -> 
+     let simplified_symb_proc = Process.simplify symb_proc_2 in
+     if not (Process.is_bottom simplified_symb_proc)
+     then right_output_set := simplified_symb_proc::!right_output_set)
+    var_r_ch
+    proc_right_label;
   
   Printf.printf "Après les OUT. Taille des listes: %d,%d.\n"
 		(List.length !left_output_set)
@@ -483,25 +481,25 @@ let apply_strategy_one_transition_por next_function_output next_function_input l
   (* Scan all symbolic processes and look for one starting with an input and
    apply function_next to the resulting symbolic process. We thus store in
    left/right_input_set all the alternatives of performing an input. *)
-  List.iter (fun symb_proc_1 ->
-	     Process.apply_input
-	       true
-	       (fun (symb_proc_2,ch) -> 
-		let simplified_symb_proc = Process.simplify symb_proc_2 in
-		if not (Process.is_bottom simplified_symb_proc)
-		then left_input_set := simplified_symb_proc::!left_input_set
-	       ) var_r_ch var_r_t symb_proc_1
-	    ) [proc_left_label];
+  Process.apply_input
+    true
+    (fun (symb_proc_2,ch) -> 
+     let simplified_symb_proc = Process.simplify symb_proc_2 in
+     if not (Process.is_bottom simplified_symb_proc)
+     then left_input_set := simplified_symb_proc::!left_input_set)
+    var_r_ch
+    var_r_t
+    proc_left_label;
   
-  List.iter (fun symb_proc_1 ->
-	     Process.apply_input
-	       true
-	       (fun (symb_proc_2,ch) -> 
-		let simplified_symb_proc = Process.simplify symb_proc_2 in
-		if not (Process.is_bottom simplified_symb_proc)
-		then right_input_set := simplified_symb_proc::!right_input_set
-	       ) var_r_ch var_r_t symb_proc_1
-	    ) [proc_right_label];
+  Process.apply_input
+    true
+    (fun (symb_proc_2,ch) -> 
+     let simplified_symb_proc = Process.simplify symb_proc_2 in
+     if not (Process.is_bottom simplified_symb_proc)
+     then right_input_set := simplified_symb_proc::!right_input_set)
+    var_r_ch
+    var_r_t
+    proc_right_label;
   
   Printf.printf "Après les IN. Taille des listes: %d,%d.\n"
 		(List.length !left_input_set)
