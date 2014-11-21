@@ -388,28 +388,27 @@ let apply_strategy_one_transition_por (* given .... *)
    pour CET output/canal. A CHECK: label, channel en mode Term.term suffisant?
    ETC... *)
     
-    (* TODO CHECK: On reseimplifie ici: A CHECK *)
     Process.apply_output
       true
       (fun (symb_proc_2,_) -> 
-       let simplified_symb_proc = Process.simplify symb_proc_2 in
-       if not (Process.is_bottom simplified_symb_proc)
-       then left_output_set := simplified_symb_proc::!left_output_set)
+       (* We do not simplify symbolic processes because it will be done
+	  in the next step when performing conditionals/splittings. *)
+       left_output_set := symb_proc_2::!left_output_set)
       var_r_ch
       proc_left_label;
 
     Process.apply_output
       true
       (fun (symb_proc_2,_) -> 
-       let simplified_symb_proc = Process.simplify symb_proc_2 in
-       if not (Process.is_bottom simplified_symb_proc)
-       then right_output_set := simplified_symb_proc::!right_output_set)
+       (* same as above *)
+       right_output_set := symb_proc_2::!right_output_set)
       var_r_ch
       proc_right_label;
     
     Printf.printf "Après les OUT. Taille des listes: %d,%d.\n"
 		  (List.length !left_output_set)
 		  (List.length !right_output_set);
+
 
     (* ** Third Step : apply the internal transitions (including conditionals) *)  
     let left_out_internal = ref []
@@ -472,9 +471,9 @@ let apply_strategy_one_transition_por (* given .... *)
     Process.apply_input
       true
       (fun (symb_proc_2,ch) -> 
-       let simplified_symb_proc = Process.simplify symb_proc_2 in
-       if not (Process.is_bottom simplified_symb_proc)
-       then left_input_set := simplified_symb_proc::!left_input_set)
+       (* We do not simplify symbolic processes because it will be done
+	  in the next step when performing conditionals/splittings. *)
+       left_input_set := symb_proc_2::!left_input_set)
       var_r_ch
       var_r_t
       proc_left_label;
@@ -482,9 +481,8 @@ let apply_strategy_one_transition_por (* given .... *)
     Process.apply_input
       true
       (fun (symb_proc_2,ch) -> 
-       let simplified_symb_proc = Process.simplify symb_proc_2 in
-       if not (Process.is_bottom simplified_symb_proc)
-       then right_input_set := simplified_symb_proc::!right_input_set)
+       (* same as above *)
+       right_input_set := symb_proc_2::!right_input_set)
       var_r_ch
       var_r_t
       proc_right_label;
@@ -527,6 +525,7 @@ let apply_strategy_one_transition_por (* given .... *)
 		  (List.length !left_in_internal)
 		  (List.length !right_in_internal);
 
+    (* Same explanations as above (for OUT) *)
     if (!left_in_internal <> []) || ( !right_in_internal <> [])
     then next_function_input !left_in_internal !right_in_internal
 			     
