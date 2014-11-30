@@ -990,7 +990,7 @@ let labelise_consistently mapS symb_proc =
   then raise (Not_eq_right "Process on the left has a parallel composition with more processes that the one on the right. (4)")
   else {symb_proc with
 	 process = new_list_procs;
-	 has_focus = symb_proc.has_focus && was_empty;
+	 has_focus = symb_proc.has_focus && was_empty; (* remain with focus only if it had a focus and no skeletons to labelise *)
        }
     
 
