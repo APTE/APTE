@@ -662,13 +662,49 @@ let apply_output with_por function_next ch_var_r symb_proc =
         in
         
         function_next (symb_proc',ch);
-        
-        go_through (proc::prev_proc) q
+        if not(with_por)
+	then go_through (proc::prev_proc) q
     | proc::q -> go_through (proc::prev_proc) q
   in
   
   go_through [] symb_proc.process
+
+let apply_output_filter ch_f function_next ch_var_r symb_proc = 
   
+  let rec go_through prev_proc = function
+    | [] -> ()
+    | ((Out(ch,t,sub_proc,label),l) as proc)::q when Term.is_equal_term ch_f ch ->
+       let y = Term.fresh_variable_from_id Term.Free "y"
+       and x = Term.fresh_variable_from_id Term.Free "x" in
+       
+       let t_y = Term.term_of_variable y
+       and t_x = Term.term_of_variable x in
+       
+       let new_csys_1 = Constraint_system.add_new_deducibility_constraint symb_proc.constraint_system ch_var_r t_y  in
+       let new_csys_2 = Constraint_system.add_message_equation new_csys_1 ch  (Term.term_of_variable y) in
+       let new_csys_3 = Constraint_system.add_new_axiom new_csys_2 t_x in
+       let new_csys_4 = Constraint_system.add_message_equation new_csys_3 t_x t in
+       
+       let ch_r = Recipe.recipe_of_variable ch_var_r in
+       
+       let symb_proc' = 
+         { symb_proc with
+           process = ((sub_proc,l)::q)@prev_proc;
+           constraint_system = new_csys_4;
+           forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
+           trace = (Output (label,ch_r,Term.term_of_variable y,
+			    Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),
+			    Term.term_of_variable x, fst l))::symb_proc.trace
+         }
+       in
+       function_next symb_proc'
+    | ((Out(ch,t,sub_proc,label),l) as proc)::q -> go_through (proc::prev_proc) q
+    | proc::q -> go_through (proc::prev_proc) q
+  in
+  
+  go_through [] symb_proc.process
+
+
 (*************************************
 	   Display function
 **************************************)  

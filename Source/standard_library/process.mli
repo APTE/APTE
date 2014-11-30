@@ -114,5 +114,8 @@ val has_focus : symbolic_process -> bool
 (** Modify the 'has_focus' flag *)
 val set_focus : bool -> symbolic_process -> symbolic_process
 
+(** the first term is the channel used for filtering outputs actions, next_function takes the pair (continuation,channel of produced action) *)
+val apply_output_filter : Term.term -> (symbolic_process -> unit) -> Recipe.variable -> symbolic_process -> unit
+
 exception Not_eq_left of string
 exception Not_eq_right of string
