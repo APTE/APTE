@@ -17,11 +17,12 @@ exception Not_equivalent_right of Process.symbolic_process
 (** Parameters *)
 
 (* TODO: for the release, set booleans to false, true, true, true *)
-let option_por = ref true
+(* TODO: for POR, set booleans to true, false, false, false *)
+let option_por = ref false
 
-let option_internal_communication = ref false
+let option_internal_communication = ref true
 
-let option_erase_double = ref false
+let option_erase_double = ref true
 
 let option_alternating_strategy = ref true
   
@@ -370,6 +371,26 @@ let apply_strategy_one_transition_por (* given .... *)
     let proc_right_label = try_P proc_left proc_right (Process.labelise_consistently how_to_label proc_right) in
 
 
+    (* SECOND step: check if P,Q has a focus or not *)
+    match (Process.has_focus proc_left, Process.has_focus proc_right_label) with
+    | true, false -> begin
+		     Printf.printf "Witness' type: Release focus on the left, not on the right.";
+		     raise (Not_equivalent_right proc_right_label);
+		   end
+
+    | false, true -> begin
+		     Printf.printf "Witness' type: Release focus on the right, not on the left.";
+		     raise (Not_equivalent_left proc_left_label);
+		   end
+    | true, true ->
+       begin
+	 ();
+       end
+    | false, false ->
+       begin
+	 ();
+       end;
+	 
     (* ** SECOND step: Check whether there is an output at top level of the left process. In that case
    we perform this output and try to do the same on the right one. *)
     let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label)
@@ -644,49 +665,3 @@ let decide_trace_equivalence process1 process2 =
         Printf.printf "Witness of non-equivalence on Process 2:\n%s"
           (Process.display_trace (Process.instanciate_trace sym_proc));
         false
-  
-  
-  
-
-(* ************************************************** 
-	      OLD STUFF 
- ************************************************** *)
-
-    (*   (\* two following lists: associations lists: one channel -> list of corresponding alternatives *)
-    (* (from executing output on this channel) *\) *)
-    (*   let left_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref [] *)
-    (*   and right_output_set_channel : (((Term.term * Process.symbolic_process list ref) list) ref) = ref [] in *)
-    (*     let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in *)
-    (*   List.iter (fun symb_proc_1 -> *)
-    (* 	     Process.apply_output *)
-    (* 	       true (fun (symb_proc_2,ch) ->  *)
-    (* 		     (\* For any resulting symbolic process from executing an output on channel ch: *\) *)
-    (* 		     let simplified_symb_proc = Process.simplify symb_proc_2 in *)
-    (* 		     if not (Process.is_bottom simplified_symb_proc) *)
-    (* 		     then (try begin *)
-    (* 			       let l_ch = List.assoc ch !left_output_set_channel in *)
-    (* 			       l_ch := simplified_symb_proc :: !l_ch; *)
-    (* 			     end with *)
-    (* 			   | Not_found ->  *)
-    (* 			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel) *)
-    (* 		    ) var_r_ch symb_proc_1 *)
-    (* 	    ) !left_internal; *)
-    (*   List.iter (fun symb_proc_1 -> *)
-    (* 	     Process.apply_output *)
-    (* 	       true (fun (symb_proc_2,ch) ->  *)
-    (* 		     (\* For any resulting symbolic process from executing an output on channel ch: *\) *)
-    (* 		     let simplified_symb_proc = Process.simplify symb_proc_2 in *)
-    (* 		     if not (Process.is_bottom simplified_symb_proc) *)
-    (* 		     then (try begin *)
-    (* 			       let l_ch = List.assoc ch !left_output_set_channel in *)
-    (* 			       l_ch := simplified_symb_proc :: !l_ch; *)
-    (* 			     end with *)
-    (* 			   | Not_found ->  *)
-    (* 			      left_output_set_channel := (ch, ref [simplified_symb_proc])::!left_output_set_channel) *)
-    (* 		    ) var_r_ch symb_proc_1 *)
-    (* 	    ) !right_internal; *)
-
-    
-    (* ** Third step/IN : apply the input transitions *)
-    
-    

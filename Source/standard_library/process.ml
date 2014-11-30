@@ -280,7 +280,7 @@ let refresh_label proc =
 	   Symbolic process
 **************************************)
 
-(* par_label denotes the position of a sub-process in the 'tree if parallel compositions' *)
+(* par_label denotes the position of a sub-process in the 'tree of parallel compositions' *)
 type par_label = int list
 (* flag_label describes the state of the labelling process (to be labelled or have been labelled (OK)) *)
 type flag_label = ToLabel | OkLabel | Dummy
