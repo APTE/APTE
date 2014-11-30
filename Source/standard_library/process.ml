@@ -624,9 +624,10 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
         in
         
         function_next (symb_proc',ch);
-        
-        go_through (proc::prev_proc) q
-     | proc::q -> go_through (proc::prev_proc) q
+        if not(with_por)	(* if with_por=true we only consider performing the process under focus *)
+	then go_through (proc::prev_proc) q
+    | proc::q -> if not(with_por)	(* if with_por=true we only consider performing the process under focus *)
+		 then go_through (proc::prev_proc) q
   in
   
   go_through [] symb_proc.process
@@ -846,9 +847,10 @@ let compare_term t1 t2 =
     let n1,n2 = Term.name_of_term t1, Term.name_of_term t2 in
     Term.compare_name n1 n2
   with
-  | Debug.Internal_error _ -> Debug.internal_error "[Process.ml >> SetOfSkeletons] I failed to compate to skeletons because, one channel is not a name."
+  | _ -> Debug.internal_error ("[Process.ml >> SetOfSkeletons] I failed to compare to skeletons because, one channel is not a name")
 	
 type skeleton = InS of Term.term | OutS of Term.term					      
+
 module Skeleton =
   struct
     type t = skeleton
@@ -870,6 +872,14 @@ let sk = function
   | In (ch,vx,p,l) -> Some (InS ch)
   | Out (ch, u, p, l) -> Some (OutS ch)
   | _ -> None
+
+let sk_of_symp symp = 
+  try
+    match (sk (fst(List.hd (symp.process)))) with
+    | Some sk -> sk
+    | None -> failwith "Will be handled."
+  with
+  | _ -> Debug.internal_error "[process.ml >> sk_of_symp] A bad call to sk_og_symbp occurs. Should not be applied to non-reduced processes or empty process."
 
 let need_labelise = function
   | (_,(_,(ToLabel))) -> true
@@ -898,7 +908,8 @@ let labelise symb_proc =
   let new_list_procs = labelise_procs 1 symb_proc.process in
   ({symb_proc with
      process = new_list_procs;
-     has_focus = false;
+     (* the 'new' process has a focus only if it had a focus and mapS is empty (no new parallel compositions) *)
+     has_focus = symb_proc.has_focus && MapS.is_empty !mapS;
    },
    !mapS)
 
@@ -934,7 +945,7 @@ let labelise_consistently mapS symb_proc =
   let new_list_procs = labelise_procs symb_proc.process in
   {symb_proc with
     process = new_list_procs;
-    has_focus = false;
+    has_focus = symb_proc.has_focus && MapS.is_empty mapS;
   }
     
 

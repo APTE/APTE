@@ -65,7 +65,8 @@ val instanciate_trace : symbolic_process -> symbolic_process
 (** booleans: with_comm, with_por *)
 val apply_internal_transition : bool -> bool -> (symbolic_process -> unit) -> symbolic_process -> unit
 
-(** boolean: with_por, next_function takes the pair (continuation,channel of produced action) *)
+(** boolean: with_por (if true we only consider the process under focus, ie, the first one in the list)),
+    next_function takes the pair (continuation,channel of produced action) *)
 val apply_input : bool -> ((symbolic_process*Term.term) -> unit) -> Recipe.variable -> Recipe.variable -> symbolic_process -> unit
 
 (** boolean: with_por, next_function takes the pair (continuation,channel of produced action) *)
@@ -97,6 +98,9 @@ module MapS : (Map.S with type key = skeleton)
 
 (** Return Some sk(P) or None if non-reduced *)
 val sk : process -> skeleton option
+
+(** Return sk(P) where P is the focused process of the given symbolic process *)
+val sk_of_symp : symbolic_process -> skeleton
 
 (** Labelises non-labelled processes in a symbolic process and outputs a list of association sk->lab *)
 val labelise : symbolic_process -> (symbolic_process * par_label MapS.t)

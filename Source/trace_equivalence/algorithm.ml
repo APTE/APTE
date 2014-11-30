@@ -218,8 +218,7 @@ let apply_strategy_one_transition next_function_output next_function_input left_
   ) right_erase_set;
   
 
-  (* ** Second step : apply the output transitions *)
-  
+  (* ** Second step : apply the output transitions *)  
   let support = 
     if !left_internal = []
     then Constraint_system.get_maximal_support (Process.get_constraint_system (List.hd !right_internal))
@@ -300,7 +299,8 @@ let apply_strategy_one_transition next_function_output next_function_input left_
 
 (*  BBBBBB************************************************** *)
 (*  ************************************************** *)
-
+(** Handles the exceptions that Process.* may raise and raises
+ the corresponding Algorithm exception *)
 let try_P symproc_left symproc_right expr = 
   try expr with
   | Process.Not_eq_left s ->
