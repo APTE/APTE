@@ -89,6 +89,9 @@ type skeleton =
 (** Labels denoting sequential dependencies *)
 type par_label
 
+(** The label we use to labelise initial process *)
+val init_par_label : par_label
+
 (** Map from skeletons to 'a *)
 module MapS : (Map.S with type key = skeleton)
 
@@ -100,6 +103,12 @@ val labelise : symbolic_process -> (symbolic_process * par_label MapS.t)
 
 (** Labelises non-labelled processes in a symbolic process accordingly to a list of association sk->lab *)
 val labelise_consistently : par_label MapS.t -> symbolic_process -> symbolic_process
+
+(** Returns tha 'has_focus' flag *)
+val has_focus : symbolic_process -> bool
+
+(** Modify the 'has_focus' flag *)
+val set_focus : bool -> symbolic_process -> symbolic_process
 
 exception Not_eq_left of string
 exception Not_eq_right of string

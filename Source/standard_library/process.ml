@@ -288,7 +288,8 @@ type flag_label = ToLabel | OkLabel | Dummy
 type proc_label = (par_label * flag_label)
 
 let dummy_l = ([], Dummy)
-let start_l = ([0], OkLabel)
+let init_par_label = [0]
+let init_proc_label =(init_par_label, OkLabel) 
 
 let set_to_be_labelled = function
   | (parLab,_) -> (parLab, ToLabel)
@@ -314,7 +315,7 @@ type symbolic_process =
 let create_symbolic axiom_name_assoc proc csys = 
   {
     axiom_name_assoc = axiom_name_assoc;
-    process = [(proc, start_l)];
+    process = [(proc, init_proc_label)];
     has_focus = false;
     constraint_system = csys;
     forbidden_comm = [];
@@ -936,3 +937,11 @@ let labelise_consistently mapS symb_proc =
     has_focus = false;
   }
     
+
+let has_focus symb_proc = symb_proc.has_focus
+
+let set_focus new_flag symb_proc =
+  { symb_proc with
+    has_focus = new_flag;
+    
+  }
