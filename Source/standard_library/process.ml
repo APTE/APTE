@@ -953,14 +953,16 @@ exception Not_eq_left of string
 exception Not_eq_right of string
 
 let labelise_consistently mapS symb_proc =
+  let mapSr = ref mapS in
+
   (*  go trough the list of processes and labeliszs using mapS *)
   let rec labelise_procs = function
     | ((p,l) as pl) :: q when not(need_labelise pl) ->
        (match sk p with
 	| None ->  Debug.internal_error "[Process.ml >> labelise] I cannot labelise non-reduced processes."
 	| Some skp ->
-	   if MapS.mem skp mapS
-	   then raise (Not_eq_right "Process on the right has a parallel composition with more processes that the one on the left.")
+	   if MapS.mem skp !mapSr
+	   then raise (Not_eq_right "Process on the right has a parallel composition with more processes that the one on the left. (1)")
 	   else pl :: (labelise_procs q))
     | (p, l) :: q ->
        (match l with
@@ -969,20 +971,27 @@ let labelise_consistently mapS symb_proc =
 	       (match sk p with
 		| None ->  Debug.internal_error "[Process.ml >> labelise] I cannot labelise non-reduced processes."
 		| Some skp ->
-		   let newL = MapS.find skp mapS in
+		   let newL = MapS.find skp !mapSr in
 		   if not(List.tl newL == oldL)
-		   then raise (Not_eq_right "Process on the right cannot answer with the same label.")
-		   else (p, (newL, OkLabel)) :: (labelise_procs q))
+		   then raise (Not_eq_right "Process on the right cannot answer with the same label. (2)")
+		   else begin
+		       mapSr := MapS.remove skp !mapSr;
+		       (p, (newL, OkLabel)) :: (labelise_procs q);
+		     end)
 		with
-		| Not_found -> raise (Not_eq_right "Process on the left has a parallel composition with more processes that the one on the right."))
+		| Not_found -> raise (Not_eq_right "Process on the left has a parallel composition with more processes that the one on the right. (3)"))
  	| _ ->   Debug.internal_error "[Process.ml >> labelise] I cannot labelise processes labelled with 'Dummy'.")
     | [] -> [] in
 
+  let was_empty = MapS.is_empty mapS in
   let new_list_procs = labelise_procs symb_proc.process in
-  {symb_proc with
-    process = new_list_procs;
-    has_focus = symb_proc.has_focus && MapS.is_empty mapS;
-  }
+
+  if not(MapS.is_empty !mapSr)
+  then raise (Not_eq_right "Process on the left has a parallel composition with more processes that the one on the right. (4)")
+  else {symb_proc with
+	 process = new_list_procs;
+	 has_focus = symb_proc.has_focus && was_empty;
+       }
     
 
 let has_focus symb_proc = symb_proc.has_focus
