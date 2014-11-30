@@ -26,6 +26,8 @@ let option_erase_double = ref true
 
 let option_alternating_strategy = ref true
   
+let print_debug_por = ref false
+
 (************************************
 ***    Partition of the matrix    ***
 *************************************)
@@ -329,10 +331,11 @@ let apply_strategy_one_transition_por (* given .... *)
    form for the internal reduction \leadsto in the paper) and the two lists contain
    only one symbolic process. *)
 
-  Printf.printf "Before starting apply_strategy_one. Size of lists: %d,%d. Trace's size: %d\n"
-		(List.length left_symb_proc_list)
-		(List.length right_symb_proc_list)
-		(Process.size_trace (List.hd left_symb_proc_list));
+  if !print_debug_por then
+    Printf.printf "Before starting apply_strategy_one. Size of lists: %d,%d. Trace's size: %d\n"
+		  (List.length left_symb_proc_list)
+		  (List.length right_symb_proc_list)
+		  (Process.size_trace (List.hd left_symb_proc_list));
   
   (* We check that sets of processes are singletons *)
   if List.length left_symb_proc_list != 1 || List.length right_symb_proc_list != 1
@@ -370,26 +373,6 @@ let apply_strategy_one_transition_por (* given .... *)
     let proc_left_label, how_to_label = try_P proc_left proc_right (Process.labelise proc_left) in
     let proc_right_label = try_P proc_left proc_right (Process.labelise_consistently how_to_label proc_right) in
 
-
-    (* SECOND step: check if P,Q has a focus or not *)
-    match (Process.has_focus proc_left, Process.has_focus proc_right_label) with
-    | true, false -> begin
-		     Printf.printf "Witness' type: Release focus on the left, not on the right.";
-		     raise (Not_equivalent_right proc_right_label);
-		   end
-
-    | false, true -> begin
-		     Printf.printf "Witness' type: Release focus on the right, not on the left.";
-		     raise (Not_equivalent_left proc_left_label);
-		   end
-    | true, true ->
-       begin
-	 ();
-       end
-    | false, false ->
-       begin
-	 ();
-       end;
 	 
     (* ** SECOND step: Check whether there is an output at top level of the left process. In that case
    we perform this output and try to do the same on the right one. *)
@@ -426,9 +409,10 @@ let apply_strategy_one_transition_por (* given .... *)
       var_r_ch
       proc_right_label;
     
-    Printf.printf "Après les OUT. Taille des listes: %d,%d.\n"
-		  (List.length !left_output_set)
-		  (List.length !right_output_set);
+  if !print_debug_por then
+    Printf.printf "After OUT. Lists' sizes: %d,%d.\n"
+    		  (List.length !left_output_set)
+    		  (List.length !right_output_set);
 
 
     (* ** Third Step : apply the internal transitions (including conditionals) *)  
@@ -469,7 +453,9 @@ let apply_strategy_one_transition_por (* given .... *)
      4. apply partitionate_matrix giving many pairs of symbolic processes
      5. recursive calls on each of them
      *)
-    Printf.printf "Après les OUT+TEST. Taille des listes: %d,%d.\n"
+
+  if !print_debug_por then
+    Printf.printf "After OUT+TEST. Lists' sizes: %d,%d.\n"
 		  (List.length !left_out_internal)
 		  (List.length !right_out_internal);
 
@@ -508,7 +494,8 @@ let apply_strategy_one_transition_por (* given .... *)
       var_r_t
       proc_right_label;
     
-    Printf.printf "Après les IN. Taille des listes: %d,%d.\n"
+  if !print_debug_por then
+    Printf.printf "After IN. Lists' sizes: %d,%d.\n"
 		  (List.length !left_input_set)
 		  (List.length !right_input_set);
 
@@ -542,7 +529,8 @@ let apply_strategy_one_transition_por (* given .... *)
 		 ) symb_proc_1
 	      ) !right_input_set;
     
-    Printf.printf "Après les IN+TEST. Taille des listes: %d,%d.\n"
+  if !print_debug_por then
+    Printf.printf "After IN+TEST. Lists' sizes: %d,%d.\n"
 		  (List.length !left_in_internal)
 		  (List.length !right_in_internal);
 
