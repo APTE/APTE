@@ -16,8 +16,8 @@ exception Not_equivalent_right of Process.symbolic_process
 
 (** Parameters *)
 
-(* TODO: for the release, set booleans to false, true, true, true *)
-(* TODO: for POR, set booleans to true, false, false, false *)
+(* for the release, set booleans to false, true, true, true *)
+(* for POR, set booleans to true, false, false, false *)
 let option_por = ref false
 
 let option_internal_communication = ref true
@@ -26,7 +26,7 @@ let option_erase_double = ref true
 
 let option_alternating_strategy = ref true
   
-let print_debug_por = ref false
+let print_debug_por = ref true
 
 (************************************
 ***    Partition of the matrix    ***
@@ -354,7 +354,11 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
 		      (List.length !left_input_set)
 		      (List.length !right_input_set);
 
-      (* ** Fourth Step/IN : apply the internal transitions (including conditionals) *)  
+      (* We check that sets of processes are singletons *)
+      if List.length !left_input_set != 1 || List.length !right_input_set != 1
+      then Debug.internal_error "[algorithm.ml >> apply_input_on_focused] The sets of pocesses are not singletons. Should not happen since we have already check that skeletons match.";
+
+      (* ** Apply the internal transitions (including conditionals) *)  
       let left_in_internal = ref []
       and right_in_internal = ref [] in
 
@@ -364,8 +368,8 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
    all those alternatives together in left/right_internal lists. *)
       List.iter (fun symb_proc_1 ->
 		 Process.apply_internal_transition
-		   false
-		   true
+		   false	(* with comm *)
+		   true		(* with por *)
 		   (fun symb_proc_2 -> 
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
@@ -375,8 +379,8 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
       
       List.iter (fun symb_proc_1 ->
 		 Process.apply_internal_transition
-		   false
-		   true
+		   false	(* with comm *)
+		   true		(* with por *)
 		   (fun symb_proc_2 -> 
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
@@ -389,7 +393,15 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
 		      (List.length !left_in_internal)
 		      (List.length !right_in_internal);
 
-      (* Same explanations as above (for OUT) *)
+      (* We pass those alternatives to the next step which consists in:
+     1. put all csys in a row matrix
+     2. apply Strategy.apply_strategy_input/output resulting in a branching
+        process ending with many matrices (for leaves: in solved form)
+     3. apply final_test_on_matrix on all those leaves, if OK:
+     4. apply partitionate_matrix giving many pairs of symbolic processes
+     5. recursive calls on each of them
+       *)
+
       if (!left_in_internal <> []) || ( !right_in_internal <> [])
       then next_function_input !left_in_internal !right_in_internal;
     end
@@ -433,16 +445,17 @@ let apply_strategy_one_transition_por (* given .... *)
     then (List.hd left_symb_proc_list, List.hd right_symb_proc_list) (* Case (ii) *)
     else  begin			                                     (* Case (i) *)
 	(* If trace is empty (first call) then we apply internal_transition before really starting *)
+	if !print_debug_por then Printf.printf "Trace is empty, we should apply internal_transition before starting.";
 	let ps = ref [] in
 	Process.apply_internal_transition
-	  false
-	  true
+	  false			(* with_comm *)
+	  true			(* with_por *)
 	  (fun symb_proc_2 -> ps := symb_proc_2 :: !ps)
 	  (List.hd left_symb_proc_list);
 	let qs = ref [] in
 	Process.apply_internal_transition
-	  false
-	  true
+	  false			(* with_comm *)
+	  true			(* with_por *)
 	  (fun symb_proc_2 -> qs := symb_proc_2 :: !qs)
 	  (List.hd right_symb_proc_list);
 	if (List.length !ps != 1)|| (List.length !qs != 1)
@@ -457,14 +470,14 @@ let apply_strategy_one_transition_por (* given .... *)
 
     let proc_left_label, how_to_label = try_P proc_left proc_right (Process.labelise proc_left) in
     let proc_right_label = try_P proc_left proc_right (Process.labelise_consistently how_to_label proc_right) in
-    (* Updating 'has_focus' on the left *)
+    (* Updating 'has_focus' on the left : set to false if focused process is negative *)
     let proc_left_label =
       if Process.has_focus proc_left_label 
       then (match Process.sk_of_symp proc_left_label with
 	    | Process.OutS t -> Process.set_focus false proc_left_label
 	    | _ -> proc_left_label)
       else proc_left_label
-    (* Updating 'has_focus' on the right *)
+    (* Updating 'has_focus' on the right : set to false if focused process is negative *)
     and proc_rght_label =
       if Process.has_focus proc_right_label 
       then (match Process.sk_of_symp proc_right_label with
@@ -487,7 +500,7 @@ let apply_strategy_one_transition_por (* given .... *)
 		   end
     | true, true ->
        (****************** WITH FOCUS ****************************  *)
-	 (* In that case, the first process of proc_left/right_label is under focus. We perform
+       (* In that case, the first process of proc_left/right_label is under focus. We perform
           their first input in case thay have the same skeleton and raise an exception otherwise.
 	  We assume here that focus have been removed as soon as a negative pop out.*)
        apply_input_on_focused next_function_input proc_left_label proc_right_label
@@ -498,10 +511,10 @@ let apply_strategy_one_transition_por (* given .... *)
 	 let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label) in
 	 let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
 	 
-	 (* We look for the first negative process in proc_left_left. Case (i): there is such process.
+	 (* We look for the first negative process in proc_left_left. Case (i): there is a such process.
               In that case we perform its first action, store the corresponding channel and look for a
               corresponding process on the right.
-	     Note that, since we check that sk(P)=sk(Q) or new processes when labelling
+	     Note that, since we check that sk(P)=sk(Q) on new processes when labelling
 	     them, it is not necesseray to check this now.
              Case (ii): P is positive. We iter over the whole list of proc_left_label.process:
 	     put the selected process under focus, set has_focus to true, try to do the same on the right
