@@ -97,10 +97,18 @@ val sk : process -> skeleton option
 (** Return sk(P) where P is the focused process of the given symbolic process *)
 val sk_of_symp : symbolic_process -> skeleton
 
+(** are two skeletons equal *)
+val equal_skeleton : skeleton -> skeleton -> bool
+
+(** Display a skeleton *)
+val display_sk : skeleton -> string
 
 (*** Labels ***)
 (** Labels denoting sequential dependencies *)
 type par_label
+
+(** Display a par_label *)
+val display_parlab : par_label -> string
 
 (** The label we use to labelise initial process *)
 val init_par_label : par_label

@@ -304,10 +304,10 @@ let apply_strategy_one_transition next_function_output next_function_input left_
 let try_P symproc_left symproc_right expr = 
   try expr with
   | Process.Not_eq_left s ->
-     Printf.printf "Witness' type: %s\n" s;
+     Printf.printf "\nWitness' type: %s\n" s;
      raise (Not_equivalent_left symproc_left)
   | Process.Not_eq_right s ->
-     Printf.printf "Witness' type: %s\n" s;
+     Printf.printf "\nWitness' type: %s\n" s;
      raise (Not_equivalent_right symproc_right);;
 
 
@@ -317,9 +317,10 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
 	  We assume here that focus have been removed as soon as a negative pop out.*)
 
   let sk_left, sk_right = (Process.sk_of_symp proc_left_label, Process.sk_of_symp proc_right_label) in
-  if sk_left != sk_right
+  if not(Process.equal_skeleton sk_left sk_right)
   then begin
       Printf.printf "Witness' type: process under focus on the right does not match the one on the left.";
+      Printf.printf "%s" ("Skeleton on the left: "^(Process.display_sk sk_left)^" and skeleton on the right: "^(Process.display_sk sk_right)^".\n");
       raise (Not_equivalent_right proc_right_label);
     end else
     begin
@@ -444,7 +445,7 @@ let apply_strategy_one_transition_por (* given .... *)
     then (List.hd left_symb_proc_list, List.hd right_symb_proc_list) (* Case (ii) *)
     else  begin			                                     (* Case (i) *)
 	(* If trace is empty (first call) then we apply internal_transition before really starting *)
-	if !print_debug_por then Printf.printf "Trace is empty, we should apply internal_transition before starting.";
+	if !print_debug_por then Printf.printf "Trace is empty, we thus apply internal_transition before starting.\n";
 	let ps = ref [] in
 	Process.apply_internal_transition
 	  false			(* with_comm *)
@@ -477,7 +478,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	    | _ -> proc_left_label)
       else proc_left_label
     (* Updating 'has_focus' on the right : set to false if focused process is negative *)
-    and proc_rght_label =
+    and proc_right_label =
       if Process.has_focus proc_right_label 
       then (match Process.sk_of_symp proc_right_label with
 	    | Process.OutS t -> Process.set_focus false proc_right_label
@@ -489,12 +490,12 @@ let apply_strategy_one_transition_por (* given .... *)
          (if they do not have the same status we raise an error. *)
     match (Process.has_focus proc_left_label, Process.has_focus proc_right_label) with
     | true, false -> begin
-		     Printf.printf "Witness' type: Release focus on the left, not on the right.";
+		     Printf.printf "Witness' type: Release focus on the left, not on the right.\n";
 		     raise (Not_equivalent_right proc_right_label);
 		   end
 
     | false, true -> begin
-		     Printf.printf "Witness' type: Release focus on the right, not on the left.";
+		     Printf.printf "Witness' type: Release focus on the right, not on the left.\n";
 		     raise (Not_equivalent_left proc_left_label);
 		   end
     | true, true ->
@@ -535,7 +536,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	     (* we must choose any process, put it at the begining of the list, set has_focus
                    to true, find a process with same skeleton on the right, do the same
                    and perform this input *)
-	     if !print_debug_por then Printf.printf "[REL] We are going to start a new positive phase and thus choose a focus.";
+	     if !print_debug_por then Printf.printf "[REL] We are going to start a new positive phase and thus choose a focus.\n";
 
 	     (* we build a list (P_i,ski) list of alternatives of choices of focused process with the corresponding
 	      focused process' skeleton ski*)

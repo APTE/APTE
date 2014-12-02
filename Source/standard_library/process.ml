@@ -329,7 +329,7 @@ let ps = Printf.sprintf
 
 (* Warning: I use list.rev here to pretty print par_labs. par_labs should be small
    but it still can slow down the program. *)
-let display_parallel_label pl = 
+let display_parlab pl = 
   let pl_rev = List.rev pl in
   (List.fold_left
      (fun str_acc i -> (str_acc^(string_of_int i)^" "))
@@ -343,7 +343,7 @@ let display_trace_label r_subst m_subst recipe_term_assoc = function
         
       Printf.sprintf "Output {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
         label 
-	(display_parallel_label pl)
+	(display_parlab pl)
         (Term.display_term m_ch')
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch')
         (Term.display_term t')
@@ -356,7 +356,7 @@ let display_trace_label r_subst m_subst recipe_term_assoc = function
         
       Printf.sprintf "Input {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
         label 
-	(display_parallel_label pl)
+	(display_parlab pl)
         (Term.display_term m_ch')
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch')
         (Term.display_term m_t')
@@ -810,7 +810,7 @@ let display_trace_label_no_unif m_subst recipe_term_assoc = function
   | Output(label,r_ch,m_ch,ax,t,pl) -> 
       Printf.sprintf "Output {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
         label 
-	(display_parallel_label pl)
+	(display_parlab pl)
         (Term.display_term (Term.apply_substitution m_subst m_ch (fun t f -> f t)))
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch)
         (Term.display_term (Term.apply_substitution m_subst t (fun t f -> f t)))
@@ -818,7 +818,7 @@ let display_trace_label_no_unif m_subst recipe_term_assoc = function
   | Input(label,r_ch,m_ch,r_t,m_t,pl) ->
       Printf.sprintf "Input {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
         label 
-	(display_parallel_label pl)
+	(display_parlab pl)
         (Term.display_term (Term.apply_substitution m_subst m_ch (fun t f -> f t)))
         (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch)
         (Term.display_term (Term.apply_substitution m_subst m_t (fun t f -> f t)))
@@ -897,6 +897,8 @@ module Skeleton =
       | (InS t1, OutS t2) -> 1
       | (OutS t1, InS t2) -> compare_term t1 t2
       | (OutS t1, OutS t2) -> -1
+
+    let equal sk1 sk2 = (compare sk1 sk2) = 0
   end
 
 module MapS =
@@ -908,6 +910,12 @@ let sk = function
   | In (ch,vx,p,l) -> Some (InS ch)
   | Out (ch, u, p, l) -> Some (OutS ch)
   | _ -> None
+
+let equal_skeleton = Skeleton.equal
+
+let display_sk = function
+  | InS t -> "In_"^(Term.display_term t)
+  | OutS t -> "Out "^(Term.display_term t)
 
 let sk_of_symp symp = 
   try
@@ -973,7 +981,7 @@ let labelise_consistently mapS symb_proc =
 		| Some skp ->
 		   let newL = MapS.find skp !mapSr in
 		   if not(List.tl newL == oldL)
-		   then raise (Not_eq_right "Process on the right cannot answer with the same label. (2)")
+		   then raise (Not_eq_right ("Process on the right cannot answer with the same label (2). Here is the label: "^(display_parlab newL)^".\n"))
 		   else begin
 		       mapSr := MapS.remove skp !mapSr;
 		       (p, (newL, OkLabel)) :: (labelise_procs q);
@@ -1015,7 +1023,7 @@ let assemble_choices_focus listChoices symP =
     let rec search pre = function
       | ((proc,pl) as p) :: tl when ((sk proc) = (Some ske)) -> p :: (pre @ tl)
       | p :: tl -> search (p::pre) tl
-      | [] -> raise (Not_eq_right "Process on the right cannot answer to the left one by choosing a focused process with the same skeleton.")
+      | [] -> raise (Not_eq_right ("Process on the right cannot answer to the left one by choosing a focused process with the same skeleton. Here is the skeleton: "^(display_sk ske)^".\n"))
     in
     let new_list_proc = search [] symP.process in
     { symP with
