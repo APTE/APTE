@@ -323,7 +323,6 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
       raise (Not_equivalent_right proc_right_label);
     end else
     begin
-      
       let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label) in
       let left_input_set = ref []
       and right_input_set = ref []
@@ -536,9 +535,17 @@ let apply_strategy_one_transition_por (* given .... *)
 	     (* we must choose any process, put it at the begining of the list, set has_focus
                    to true, find a process with same skeleton on the right, do the same
                    and perform this input *)
-	     ();
+	     if !print_debug_por then Printf.printf "[REL] We are going to start a new positive phase and thus choose a focus.";
 
-	   (* TODO TODO TODO TODO TODO *)
+	     (* we build a list (P_i,ski) list of alternatives of choices of focused process with the corresponding
+	      focused process' skeleton ski*)
+	     let left_choose_focus = Process.list_of_choices_focus proc_left_label in
+	     (* using the latter we build a list (P_i,Q_i) list where Q_i is a choice of focus such that sk(P_i)=sk(Q_i) *)
+	     let listPairProc = Process.assemble_choices_focus left_choose_focus proc_right_label in
+	     (* in listPairProc : (symbolic_process^2) list, we apply input_focus on each pair with a List.iter *)
+	     List.iter (fun (p_left,p_right) ->
+			apply_input_on_focused next_function_input p_left p_right)
+		       listPairProc;
 	   end
 	 else if List.length !left_output_set != 1
 	 then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen."
