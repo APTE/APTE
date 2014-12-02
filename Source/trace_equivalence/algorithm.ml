@@ -26,7 +26,7 @@ let option_erase_double = ref true
 
 let option_alternating_strategy = ref true
   
-let print_debug_por = ref true
+let print_debug_por = ref false
 
 (************************************
 ***    Partition of the matrix    ***
@@ -483,8 +483,10 @@ let apply_strategy_one_transition_por (* given .... *)
       then (match Process.sk_of_symp proc_right_label with
 	    | Process.OutS t -> Process.set_focus false proc_right_label
 	    | _ -> proc_right_label)
-      else proc_right_label in
-    
+      else proc_right_label in 
+
+    if !print_debug_por then Printf.printf "end of labelling process...\n";
+
 							
     (* ** SECOND step: Distinguish two cases whether pro_left/right_label have focus or not.
          (if they do not have the same status we raise an error. *)

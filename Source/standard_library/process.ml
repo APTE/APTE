@@ -442,11 +442,15 @@ let instanciate_trace symb_proc =
 (******* Transition application ********)  
   
 let apply_internal_transition_without_comm with_por function_next symb_proc = 
-
+  let has_broken_focus = ref false in
   let rec go_through prev_proc csys = function
     (* when we have gone trough all processes (no more conditionals at top level) *)
-    | [] -> function_next { symb_proc with process = prev_proc; constraint_system = csys }
-    | (Nil,_)::q -> go_through prev_proc csys q 
+    | [] -> function_next { symb_proc with process = prev_proc;
+					   constraint_system = csys;
+					   has_focus = symb_proc.has_focus && not(!has_broken_focus);
+			  }
+    | (Nil,_)::q -> has_broken_focus := true;
+		    go_through prev_proc csys q 
     | (Choice(p1,p2), l)::q -> 
        if with_por
        then Debug.internal_error "[process.ml >> apply_internal_transition_without_comm] Inputted processes are not action-deterministic (they use a Choice)."
@@ -924,7 +928,7 @@ let sk_of_symp symp =
     | None -> failwith "Will be handled."
   with
   | _ -> 
-     Printf.printf "%s" (display_trace symp);
+     Printf.printf "%s" (display_process (fst(List.hd symp.process)));
      Debug.internal_error "[process.ml >> sk_of_symp] A bad call to sk_of_symbp occurs. Should not be applied to non-reduced processes or empty process."
 
 let need_labelise = function
