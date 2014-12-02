@@ -923,7 +923,9 @@ let sk_of_symp symp =
     | Some sk -> sk
     | None -> failwith "Will be handled."
   with
-  | _ -> Debug.internal_error "[process.ml >> sk_of_symp] A bad call to sk_og_symbp occurs. Should not be applied to non-reduced processes or empty process."
+  | _ -> 
+     Printf.printf "%s" (display_trace symp);
+     Debug.internal_error "[process.ml >> sk_of_symp] A bad call to sk_of_symbp occurs. Should not be applied to non-reduced processes or empty process."
 
 let need_labelise = function
   | (_,(_,(ToLabel))) -> true

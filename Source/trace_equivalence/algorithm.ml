@@ -471,14 +471,14 @@ let apply_strategy_one_transition_por (* given .... *)
     let proc_left_label, how_to_label = try_P proc_left proc_right (Process.labelise proc_left) in
     let proc_right_label = try_P proc_left proc_right (Process.labelise_consistently how_to_label proc_right) in
     (* Updating 'has_focus' on the left : set to false if focused process is negative *)
-    let proc_left_label =
+    let proc_left_label_up =
       if Process.has_focus proc_left_label 
       then (match Process.sk_of_symp proc_left_label with
 	    | Process.OutS t -> Process.set_focus false proc_left_label
 	    | _ -> proc_left_label)
       else proc_left_label
     (* Updating 'has_focus' on the right : set to false if focused process is negative *)
-    and proc_right_label =
+    and proc_right_label_up =
       if Process.has_focus proc_right_label 
       then (match Process.sk_of_symp proc_right_label with
 	    | Process.OutS t -> Process.set_focus false proc_right_label
@@ -488,27 +488,27 @@ let apply_strategy_one_transition_por (* given .... *)
 							
     (* ** SECOND step: Distinguish two cases whether pro_left/right_label have focus or not.
          (if they do not have the same status we raise an error. *)
-    match (Process.has_focus proc_left_label, Process.has_focus proc_right_label) with
+    match (Process.has_focus proc_left_label_up, Process.has_focus proc_right_label_up) with
     | true, false -> begin
 		     Printf.printf "Witness' type: Release focus on the left, not on the right.\n";
-		     raise (Not_equivalent_right proc_right_label);
+		     raise (Not_equivalent_right proc_right_label_up);
 		   end
 
     | false, true -> begin
 		     Printf.printf "Witness' type: Release focus on the right, not on the left.\n";
-		     raise (Not_equivalent_left proc_left_label);
+		     raise (Not_equivalent_left proc_left_label_up);
 		   end
     | true, true ->
        (****************** WITH FOCUS ****************************  *)
-       (* In that case, the first process of proc_left/right_label is under focus. We perform
+       (* In that case, the first process of proc_left/right_label_up is under focus. We perform
           their first input in case thay have the same skeleton and raise an exception otherwise.
 	  We assume here that focus have been removed as soon as a negative pop out.*)
-       apply_input_on_focused next_function_input proc_left_label proc_right_label
+       apply_input_on_focused next_function_input proc_left_label_up proc_right_label_up
     | false, false ->
        (***************** WITHOUT FOCUS ****************************  *)
        begin
 	 
-	 let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label) in
+	 let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label_up) in
 	 let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
 	 
 	 (* We look for the first negative process in proc_left_left. Case (i): there is a such process.
@@ -516,7 +516,7 @@ let apply_strategy_one_transition_por (* given .... *)
               corresponding process on the right.
 	     Note that, since we check that sk(P)=sk(Q) on new processes when labelling
 	     them, it is not necesseray to check this now.
-             Case (ii): P is positive. We iter over the whole list of proc_left_label.process:
+             Case (ii): P is positive. We iter over the whole list of proc_left_label_up.process:
 	     put the selected process under focus, set has_focus to true, try to do the same on the right
              and apply apply_input_on_focused.*)
 	 
@@ -528,7 +528,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	  in the next step when performing conditionals/splittings. *)
 	    left_output_set := (symb_proc_2,c)::!left_output_set)
 	   var_r_ch
-	   proc_left_label;
+	   proc_left_label_up;
 	 
 	 if List.length !left_output_set = 0
 	 then begin
@@ -540,9 +540,9 @@ let apply_strategy_one_transition_por (* given .... *)
 
 	     (* we build a list (P_i,ski) list of alternatives of choices of focused process with the corresponding
 	      focused process' skeleton ski*)
-	     let left_choose_focus = Process.list_of_choices_focus proc_left_label in
+	     let left_choose_focus = Process.list_of_choices_focus proc_left_label_up in
 	     (* using the latter we build a list (P_i,Q_i) list where Q_i is a choice of focus such that sk(P_i)=sk(Q_i) *)
-	     let listPairProc = Process.assemble_choices_focus left_choose_focus proc_right_label in
+	     let listPairProc = Process.assemble_choices_focus left_choose_focus proc_right_label_up in
 	     (* in listPairProc : (symbolic_process^2) list, we apply input_focus on each pair with a List.iter *)
 	     List.iter (fun (p_left,p_right) ->
 			apply_input_on_focused next_function_input p_left p_right)
@@ -561,7 +561,7 @@ let apply_strategy_one_transition_por (* given .... *)
 		(* same as above *)
 		right_output_set := symb_proc_2::!right_output_set)
 	       var_r_ch
-	       proc_right_label;
+	       proc_right_label_up;
 	     
 	     if !print_debug_por then
 	       Printf.printf "After OUT. Lists' sizes: %d,%d.\n"
@@ -571,7 +571,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	     if List.length !left_output_set = 0
 	     then begin
 		 Printf.printf "Witness' type: right process cannot execute an output that the left one can perform.";
-		 raise (Not_equivalent_left proc_left_label);
+		 raise (Not_equivalent_left proc_left_label_up);
 	       end
 	     else if List.length !left_output_set != 1
 	     then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen.";
