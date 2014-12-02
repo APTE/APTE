@@ -117,5 +117,12 @@ val set_focus : bool -> symbolic_process -> symbolic_process
 (** the first term is the channel used for filtering outputs actions, next_function takes the pair (continuation,channel of produced action) *)
 val apply_output_filter : Term.term -> (symbolic_process -> unit) -> Recipe.variable -> symbolic_process -> unit
 
+(** return all the choices of focus with the corresponding skeleton of focused process, resulting symbolic process have a focus *)
+val list_of_choices_focus : symbolic_process -> (symbolic_process * skeleton) list
+
+(** Given a list of left symbolic processes with a focus and their corresponding skeleton of focused process and a right process,
+   it assembles the corresponding answers of the right process (or raises a non-equ exception) *)
+val assemble_choices_focus: (symbolic_process * skeleton) list -> symbolic_process -> (symbolic_process * symbolic_process) list
+
 exception Not_eq_left of string
 exception Not_eq_right of string

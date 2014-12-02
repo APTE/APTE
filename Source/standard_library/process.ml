@@ -993,6 +993,40 @@ let labelise_consistently mapS symb_proc =
 	 has_focus = symb_proc.has_focus && was_empty; (* remain with focus only if it had a focus and no skeletons to labelise *)
        }
     
+let list_of_choices_focus symP =
+  let listChoices = ref [] in
+  let rec buildList pre = function
+    | [] -> ()
+    | (proc, flagP) :: q ->
+       (match sk proc with
+	| None -> Debug.internal_error "[process.ml >> list_of_choices_focus] A bad call to sk occurs. Should not be applied to non-reduced processes or empty process."
+	| Some sk -> let choice = {symP with
+				    process = (proc,flagP) :: (pre @ q);
+				    has_focus = true;
+				  } in
+		     listChoices := (choice, sk) :: !listChoices;
+		     buildList ((proc,flagP) :: pre) q) in
+  buildList [] (symP.process);
+  !listChoices
+
+let assemble_choices_focus listChoices symP = 
+  (* returns a symbolic process equals to symP except that we moved a process of skeleton sk to the focus position *)
+  let find_focus ske symP = 
+    let rec search pre = function
+      | ((proc,pl) as p) :: tl when ((sk proc) = (Some ske)) -> p :: (pre @ tl)
+      | p :: tl -> search (p::pre) tl
+      | [] -> raise (Not_eq_right "Process on the right cannot answer to the left one by choosing a focused process with the same skeleton.")
+    in
+    let new_list_proc = search [] symP.process in
+    { symP with
+      process = new_list_proc;
+      has_focus = true;
+    }
+  in
+  List.map (fun (symP_left,ske) ->
+	    let symP_right = find_focus ske symP in
+	    (symP_left, symP_right))
+	   listChoices
 
 let has_focus symb_proc = symb_proc.has_focus
 
