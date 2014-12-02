@@ -82,16 +82,11 @@ val is_same_input_output : symbolic_process -> symbolic_process -> bool
 
 (** {Annotated semantics} *)
 
+(*** Skeletons ***)
 (** Skeletons of actions *)
 type skeleton =
   | InS of Term.term
   | OutS of Term.term
-
-(** Labels denoting sequential dependencies *)
-type par_label
-
-(** The label we use to labelise initial process *)
-val init_par_label : par_label
 
 (** Map from skeletons to 'a *)
 module MapS : (Map.S with type key = skeleton)
@@ -102,18 +97,28 @@ val sk : process -> skeleton option
 (** Return sk(P) where P is the focused process of the given symbolic process *)
 val sk_of_symp : symbolic_process -> skeleton
 
+
+(*** Labels ***)
+(** Labels denoting sequential dependencies *)
+type par_label
+
+(** The label we use to labelise initial process *)
+val init_par_label : par_label
+
 (** Labelises non-labelled processes in a symbolic process and outputs a list of association sk->lab *)
 val labelise : symbolic_process -> (symbolic_process * par_label MapS.t)
 
 (** Labelises non-labelled processes in a symbolic process accordingly to a list of association sk->lab *)
 val labelise_consistently : par_label MapS.t -> symbolic_process -> symbolic_process
 
+(*** has_focus handlers ***)
 (** Returns tha 'has_focus' flag *)
 val has_focus : symbolic_process -> bool
 
 (** Modify the 'has_focus' flag *)
 val set_focus : bool -> symbolic_process -> symbolic_process
 
+(*** 'Filtered' semantics ***)
 (** the first term is the channel used for filtering outputs actions, next_function takes the pair (continuation,channel of produced action) *)
 val apply_output_filter : Term.term -> (symbolic_process -> unit) -> Recipe.variable -> symbolic_process -> unit
 
