@@ -305,9 +305,11 @@ let try_P symproc_left symproc_right expr =
   try expr with
   | Process.Not_eq_left s ->
      Printf.printf "\nWitness' type: %s\n" s;
+     Printf.printf "%s\n" (Process.display_trace_no_unif symproc_left);
      raise (Not_equivalent_left symproc_left)
   | Process.Not_eq_right s ->
      Printf.printf "\nWitness' type: %s\n" s;
+     Printf.printf "%s\n" (Process.display_trace_no_unif symproc_right);
      raise (Not_equivalent_right symproc_right);;
 
 
@@ -570,12 +572,14 @@ let apply_strategy_one_transition_por (* given .... *)
     			     (List.length !left_output_set)
     			     (List.length !right_output_set);
 
-	     if List.length !left_output_set = 0
+	     if List.length !right_output_set = 0
 	     then begin
 		 Printf.printf "Witness' type: right process cannot execute an output that the left one can perform.";
+		 Printf.printf "%s" (" Here is the channel of this output: "^(Term.display_term ch)^".\n");
+		 Printf.printf "%s\n" (Process.display_trace_no_unif proc_left_out);
 		 raise (Not_equivalent_left proc_left_label_up);
 	       end
-	     else if List.length !left_output_set != 1
+	     else if List.length !right_output_set != 1
 	     then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen.";
 	     
 	     (* ** Third Step : apply the internal transitions (including conditionals) *)  

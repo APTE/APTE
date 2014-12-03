@@ -702,7 +702,6 @@ let apply_output_filter ch_f function_next ch_var_r symb_proc =
          }
        in
        function_next symb_proc'
-    | ((Out(ch,t,sub_proc,label),l) as proc)::q -> go_through (proc::prev_proc) q
     | proc::q -> go_through (proc::prev_proc) q
   in
   
@@ -927,8 +926,7 @@ let sk_of_symp symp =
     | Some sk -> sk
     | None -> failwith "Will be handled."
   with
-  | _ -> 
-     Printf.printf "%s" (display_process (fst(List.hd symp.process)));
+  | _ ->  (* Printf.printf "%s" (display_process (fst(List.hd symp.process))); *)
      Debug.internal_error "[process.ml >> sk_of_symp] A bad call to sk_of_symbp occurs. Should not be applied to non-reduced processes or empty process."
 
 let need_labelise = function
