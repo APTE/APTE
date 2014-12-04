@@ -443,12 +443,15 @@ let instanciate_trace symb_proc =
   
 let apply_internal_transition_without_comm with_por function_next symb_proc = 
   let has_broken_focus = ref false in
+  let was_with_focus = symb_proc.has_focus in
+
   let rec go_through prev_proc csys = function
     (* when we have gone trough all processes (no more conditionals at top level) *)
     | [] -> function_next { symb_proc with process = prev_proc;
 					   constraint_system = csys;
 					   has_focus = symb_proc.has_focus && not(!has_broken_focus);
 			  }
+			  
     | (Nil,_)::q -> has_broken_focus := true;
 		    go_through prev_proc csys q 
     | (Choice(p1,p2), l)::q -> 
@@ -463,6 +466,7 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
 		then set_to_be_labelled l (* we add a flag meaning that produced sub_processes must be relablled
 					     since we broke a parallel composition *)
 		else dummy_l in
+       has_broken_focus := true;
        go_through prev_proc csys ((p1,l')::(p2,l')::q)
     | (New(_,p,_), l)::q -> go_through prev_proc csys ((p,l)::q)
     | (Let(pat,t,proc,_), l)::q ->
@@ -486,23 +490,27 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
         ) disj_conj_then;
         
         List.iter (fun conj_else ->
-          let new_csys = 
-            List.fold_left (fun csys_acc -> function
-              | CsysEq(t1,t2) -> Constraint_system.add_message_equation csys_acc t1 t2 
-              | CsysOrNeq (l) -> 
-                  let formula = Term.create_disjunction_inequation l in
-                  Constraint_system.add_message_formula csys_acc formula 
-            ) csys conj_else
-          in
-          go_through prev_proc new_csys ((proc_else,l)::q)            
-        ) disj_conj_else
+		   let new_csys = 
+		     List.fold_left (fun csys_acc -> function
+						  | CsysEq(t1,t2) -> Constraint_system.add_message_equation csys_acc t1 t2 
+						  | CsysOrNeq (l) -> 
+						     let formula = Term.create_disjunction_inequation l in
+						     Constraint_system.add_message_formula csys_acc formula 
+				    ) csys conj_else
+		   in
+		   go_through prev_proc new_csys ((proc_else,l)::q)            
+		  ) disj_conj_else
     (* otherwise, proc starts with an input our output -> add it to prev_proc and keep scanning
      the rest of processes *)
-    | proc::q -> go_through (proc::prev_proc) csys q
-  in
+    | proc::q -> if with_por && was_with_focus && not(!has_broken_focus)
+		 then function_next { symb_proc with process = proc :: q; (* in that case (has_broken_focus = false), we know that prev = [] *)
+						     constraint_system = csys;
+						     has_focus = symb_proc.has_focus && not(!has_broken_focus)
+				    }
+		 else go_through (proc::prev_proc) csys q in
   
   go_through [] symb_proc.constraint_system symb_proc.process
-  
+	     
 (* We assume in this function that the internal transition except the communication have been applied.
  It is not executed if with_comm = true *)  
 let rec apply_one_internal_transition_with_comm function_next symb_proc = 
