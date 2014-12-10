@@ -8,7 +8,7 @@ free c.
 
 let process_Alice k_a k_b =
   new N_a;
-  in(a,a);
+  in(a,aa);
   out(a,aenc((N_a,pk(k_a)),pk(k_b))); 
   in(a,x).
 
