@@ -10,7 +10,7 @@ free c_b2.
 
 let process_Alice k_a k_b c_a =
   new N_a;
-  in(c_a,c_a);
+  in(c_a,xx);
   out(c_a,aenc((N_a,pk(k_a)),pk(k_b))); 
   in(c_a,x).
 
