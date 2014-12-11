@@ -15,7 +15,7 @@ let internal_error msg =
   
 let high_debug_function = ref (fun _ -> ())
 
-let low_debug_function = ref (fun _ -> ())
+let low_debug_function = ref (fun f -> f ())
 
 let initialise_debugging = function
   | High -> 
