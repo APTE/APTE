@@ -299,19 +299,26 @@ let apply_strategy_one_transition next_function_output next_function_input left_
 
 (*  BBBBBB************************************************** *)
 (*  ************************************************** *)
-(** Handles the exceptions that Process.* may raise and raises
- the corresponding Algorithm exception *)
+(** Handles exceptions that Process.* may raise and raises
+ the corresponding algorithm.ml exception *)
 let try_P symproc_left symproc_right expr = 
-  try expr with
+  try 
+    Lazy.force expr
+  with
   | Process.Not_eq_left s ->
-     Printf.printf "\nWitness' type: %s\n" s;
-     Printf.printf "%s\n" (Process.display_trace_no_unif symproc_left);
-     raise (Not_equivalent_left symproc_left)
+     begin
+       Printf.printf "\nWitness' type: %s\n" s;
+       Printf.printf "%s\n" (Process.display_trace_no_unif symproc_left);
+       raise (Not_equivalent_left symproc_left);
+     end
   | Process.Not_eq_right s ->
-     Printf.printf "\nWitness' type: %s\n" s;
-     Printf.printf "%s\n" (Process.display_trace_no_unif symproc_right);
-     raise (Not_equivalent_right symproc_right);;
-
+     begin
+       Printf.printf "\nWitness' type: %s\n" s;
+       Printf.printf "%s\n" (Process.display_trace_no_unif symproc_right);
+       raise (Not_equivalent_right symproc_right);
+     end
+  | _ -> Debug.internal_error "[algorithm.ml >> tryP] We failed to handle an error in process.ml."
+  
 
 let apply_input_on_focused next_function_input proc_left_label proc_right_label = 
   (* The first process of proc_left/right_label is under focus. We perform
@@ -470,8 +477,8 @@ let apply_strategy_one_transition_por (* given .... *)
         breaking a parallel composition are in the multiset. All those new processes come from a unique parallel
         composition, so we label them in an arbitrary order but consistently with right_symb_proc_list. *)
 
-    let proc_left_label, how_to_label = try_P proc_left proc_right (Process.labelise proc_left) in
-    let proc_right_label = try_P proc_left proc_right (Process.labelise_consistently how_to_label proc_right) in
+    let proc_left_label, how_to_label = try_P proc_left proc_right (lazy (Process.labelise proc_left)) in
+    let proc_right_label = try_P proc_left proc_right (lazy (Process.labelise_consistently how_to_label proc_right)) in
     (* Updating 'has_focus' on the left : set to false if focused process is negative *)
     let proc_left_label_up =
       if Process.has_focus proc_left_label 
