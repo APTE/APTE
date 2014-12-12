@@ -18,7 +18,9 @@ exception Not_equivalent_right of Process.symbolic_process
 
 (* for the release, set booleans to false, true, true, true *)
 (* for POR, set booleans to true, false, false, false *)
-let option_por = ref false
+let option_compr = ref false
+
+let option_red = ref false
 
 let option_internal_communication = ref true
 
@@ -206,13 +208,13 @@ let apply_strategy_one_transition next_function_output next_function_input left_
    to satisfy the  conditional's test. Thanks to our "function_next", we then pu
    all those alternatives together in left/right_internal lists. *)
   List.iter (fun symb_proc_1 ->
-    Process.apply_internal_transition !option_internal_communication !option_por (fun symb_proc_2 -> 
+    Process.apply_internal_transition !option_internal_communication !option_compr (fun symb_proc_2 -> 
       left_internal := symb_proc_2::!left_internal
     ) symb_proc_1
   ) left_erase_set;
   
   List.iter (fun symb_proc_1 ->
-    Process.apply_internal_transition !option_internal_communication !option_por (fun symb_proc_2 -> 
+    Process.apply_internal_transition !option_internal_communication !option_compr (fun symb_proc_2 -> 
       right_internal := symb_proc_2::!right_internal
     ) symb_proc_1
   ) right_erase_set;
@@ -235,7 +237,7 @@ let apply_strategy_one_transition next_function_output next_function_input left_
    left/right_output_set all the alternatives of performing an output. *)
   List.iter (fun symb_proc_1 ->
 	     Process.apply_output
-	       !option_por (fun (symb_proc_2,_) -> 
+	       !option_compr (fun (symb_proc_2,_) -> 
 			    let simplified_symb_proc = Process.simplify symb_proc_2 in
 			    if not (Process.is_bottom simplified_symb_proc)
 			    then left_output_set := simplified_symb_proc::!left_output_set
@@ -244,7 +246,7 @@ let apply_strategy_one_transition next_function_output next_function_input left_
   
   List.iter (fun symb_proc_1 ->
 	     Process.apply_output
-	       !option_por (fun (symb_proc_2,_) -> 
+	       !option_compr (fun (symb_proc_2,_) -> 
 			    let simplified_symb_proc = Process.simplify symb_proc_2 in
 			    if not (Process.is_bottom simplified_symb_proc)
 			    then right_output_set := simplified_symb_proc::!right_output_set
@@ -276,7 +278,7 @@ let apply_strategy_one_transition next_function_output next_function_input left_
    left/right_input_set all the alternatives of performing an input. *)
   List.iter (fun symb_proc_1 ->
 	     Process.apply_input
-	       !option_por (fun (symb_proc_2,_) -> 
+	       !option_compr (fun (symb_proc_2,_) -> 
 			    let simplified_symb_proc = Process.simplify symb_proc_2 in
 			    if not (Process.is_bottom simplified_symb_proc)
 			    then left_input_set := simplified_symb_proc::!left_input_set
@@ -285,7 +287,7 @@ let apply_strategy_one_transition next_function_output next_function_input left_
   
   List.iter (fun symb_proc_1 ->
 	     Process.apply_input
-	       !option_por (fun (symb_proc_2,_) -> 
+	       !option_compr (fun (symb_proc_2,_) -> 
 			    let simplified_symb_proc = Process.simplify symb_proc_2 in
 			    if not (Process.is_bottom simplified_symb_proc)
 			    then right_input_set := simplified_symb_proc::!right_input_set
@@ -681,15 +683,15 @@ let rec apply_alternating left_symb_proc_list right_symb_proc_list =
     (***[Statistic]***)
     Statistic.end_transition ()
 			     
-  in let strategy_one_transition = if !option_por
+  in let strategy_one_transition = if !option_compr
 				   then apply_strategy_one_transition_por
 				   else apply_strategy_one_transition
      and next_out = next_function
-		      (if false (* !option_por*)
+		      (if false (* !option_compr*)
 		       then Strategy.apply_full_strategy 
 		       else Strategy.apply_strategy_output)
      and next_in = next_function
-		     (if false (* !option_por *)
+		     (if false (* !option_compr *)
 		      then Strategy.apply_full_strategy 
 		      else Strategy.apply_strategy_input)
      in

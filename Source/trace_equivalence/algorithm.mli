@@ -5,8 +5,11 @@ exception Not_equivalent_right of Process.symbolic_process
 
 (** Option for the algorithm *)
 
-(** true if POR techniques will be used (only for action-determinate proc.) *)
-val option_por : bool ref
+(** true if POR technique with compression will be used (only for action-determinate proc.) *)
+val option_compr : bool ref
+
+(** true if POR technique with compression plus reduction will be used (only for action-determinate proc.) *)
+val option_red : bool ref
 
 val option_internal_communication : bool ref
 

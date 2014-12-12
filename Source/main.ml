@@ -23,7 +23,10 @@ let print_help () =
   Printf.printf "          traces.\n\n";
   Printf.printf "      -log <int> : Log all the symbolic processes and the matrices obtained on the\n";
   Printf.printf "          leaves for all traces of size smaller than or equal to <int>.\n\n";
-  Printf.printf "      -with_por : Uses Partial Order Reductions techniques to significantly improve performance.\n";
+  Printf.printf "      -with_por [compr|red] : Uses Partial Order Reductions techniques to significantly\n";
+  Printf.printf "          improve performance. It is possible to choose a specific POR technique (compressed\n";
+  Printf.printf "          or reduced semantics). Without extra argument, -with_por option will enable the best\n";
+  Printf.printf "          POR tehnique (i.e., reduced semantics).\n";
   Printf.printf "          Note : This option automatically activates the option '-no_comm'.\n";
   Printf.printf "          WARNING : This option should only be used for action-determinate processes.\n\n";
   Printf.printf "      -no_comm : Does not consider the internal communication in the trace equivalence.\n";
@@ -140,13 +143,21 @@ let _ =
   while !i < Array.length Sys.argv && not !arret do
     match (Sys.argv).(!i) with
       | "-with_por" -> 
-          Trace_equivalence.Algorithm.option_por := true;
-          i := !i + 1
+          if (Sys.argv).(!i+1) = "compr"
+	  then begin
+	      Trace_equivalence.Algorithm.option_compr := true;
+	      i := !i + 2;
+	    end else
+	    begin
+	      Trace_equivalence.Algorithm.option_compr := true;
+	      Trace_equivalence.Algorithm.option_red := true;
+	      i := !i + 1;
+	    end
       | "-no_comm" -> Trace_equivalence.Algorithm.option_internal_communication := false;
-          i := !i + 1
+		      i := !i + 1
       | "-unfold" -> 
-          Trace_equivalence.Algorithm.option_erase_double := false;
-          Trace_equivalence.Algorithm.option_alternating_strategy := false;
+         Trace_equivalence.Algorithm.option_erase_double := false;
+         Trace_equivalence.Algorithm.option_alternating_strategy := false;
           i := !i + 1
       | "-no_erase" -> Trace_equivalence.Algorithm.option_erase_double := false;
           i := !i + 1
