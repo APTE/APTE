@@ -987,19 +987,19 @@ let labelise_consistently mapS symb_proc =
     | (p, l) :: q ->
        (match l with
 	| (oldL, ToLabel) ->
-	   (try
-	       (match sk p with
-		| None ->  Debug.internal_error "[Process.ml >> labelise] I cannot labelise non-reduced processes."
-		| Some skp ->
+	   (match sk p with
+	    | None ->  Debug.internal_error "[Process.ml >> labelise] I cannot labelise non-reduced processes."
+	    | Some skp ->
+	       (try
 		   let newL = MapS.find skp !mapSr in
 		   if not(List.tl newL == oldL)
 		   then raise (Not_eq_right ("Process on the right cannot answer with the same label (2). Here is the label: "^(display_parlab newL)^".\n"))
 		   else begin
 		       mapSr := MapS.remove skp !mapSr;
 		       (p, (newL, OkLabel)) :: (labelise_procs q);
-		     end)
-		with
-		| Not_found -> raise (Not_eq_right "Process on the left has a parallel composition with more processes that the one on the right. (3)"))
+		     end
+		 with
+		 | Not_found -> raise (Not_eq_right "Process on the left has a parallel composition with more processes that the one on the right. (3)")))
  	| _ ->   Debug.internal_error "[Process.ml >> labelise] I cannot labelise processes labelled with 'Dummy'.")
     | [] -> [] in
 
