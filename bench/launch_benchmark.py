@@ -26,9 +26,9 @@ def main():
 
     # PARSING ARGSSS
     parser = argparse.ArgumentParser(description='Launch some benchmarks on different versions of APTE')
-    parser.add_argument('--difficulty',
+    parser.add_argument('-d', '--difficulty',
                         help='you can choose the type of examples you want to check by difficulty:  [easy,middle,hard]')
-    parser.add_argument('--version', nargs='*',
+    parser.add_argument('-v', '--version', nargs='*',
                         help='you can choose the version beteween [ref,comp,old_comp,comp_no_impro,red]')
     args = parser.parse_args()
     list_tests_tout = glob.glob('../Simple_Example/Simple_*.txt')
@@ -80,17 +80,19 @@ def main():
                 lists_tests += tests_m
             if "hard" in args.difficulty:
                 lists_tests += list_tests_tout
-        pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
-
-        pprint_all("Date: " + str(datetime.now()) + "\n")
-        pprint_all("You choose those version: " + str(list_binaries) + "\n" +
-              "On all those examples: " + str(list_tests) + "\n")
-        pprint_all("Am I right?")
-        raw_input("Press Enter to continue...")
     else:
+        parser.print_help()
         list_tests = list_tests_tout
         list_binaries = list_binaries_tout
 
+    pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
+    pprint_all("Date: " + str(datetime.now()) + "\n")
+    if not(args.version or args.difficulty):
+        print("You use no options, are you sure? Look at the helping message above.")
+    pprint_all("You choose those version: " + str(list_binaries) + "\n" +
+               "On all those examples: " + str(list_tests) + "\n")
+    pprint_all("Am I right?")
+    raw_input("Press Enter to continue...")
 
    # BENCHMARKS
     HEAD = " " + "#"*10 + " "
