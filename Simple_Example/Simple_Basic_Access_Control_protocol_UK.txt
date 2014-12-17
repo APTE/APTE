@@ -1,0 +1,66 @@
+# Unlinkability
+#
+fun mac/2.
+
+free r1.
+free p1.
+free r2.
+free p2.
+free c.
+
+free Error_6300.
+free Error_6A80.
+free get_challenge.
+
+# Description of the reader role
+
+let reader k_e k_m r =
+  in(r,zz);
+  out(r,get_challenge);
+  in(r,n_t);
+  new n_r; new k_r;
+  let m = senc((n_r,n_t,k_r),k_e) in
+  out(r,(m,mac(m,k_m)));
+  in(r,y);
+  out(r,zz).
+
+# Description of the passport role 
+
+let passport k_e k_m error_mac p =
+  in(p,x);
+  if x = get_challenge
+  then
+    new n_t;
+    out(p,n_t);
+    in(p,y);
+    let (m_e,m_m) = y in
+
+    (if m_m = mac(m_e,k_m)
+    then
+      let (n_r,n_t_2,k_r) = sdec(m_e,k_e) in
+      if n_t_2 = n_t
+      then
+        new k_t;
+        let m = senc((n_t,n_r,k_t),k_e) in
+          out(p,(m,mac(m,k_m)))
+      else out(p,Error_6300)
+    else out(p,error_mac)).
+
+# Unlinkability
+
+let system1 error_mac =
+  new k_e; new k_m;
+  new k_e2; new k_m2;
+  (((passport  k_e k_m error_mac p1) | (reader k_e k_m r1))
+  |
+  ((passport  k_e2 k_m2 error_mac p2) | (reader k_e2 k_m2 r2))).
+
+let system2 error_mac =
+  new k_e; new k_m;
+  (((passport k_e k_m error_mac p1) | (reader k_e k_m r1))
+  |
+  ((passport k_e k_m error_mac p2) | (reader k_e k_m r2))).
+
+# equivalence system1 Error_6300 and system2 Error_6300.
+
+equivalence system1 Error_6A80 and system2 Error_6A80.
