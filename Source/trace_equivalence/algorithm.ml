@@ -28,6 +28,8 @@ let option_alternating_strategy = ref true
   
 let print_debug_por = ref false
 
+let display_traces = ref false
+
 (** Statistics info *)
 let final_test_count = ref 0
 
@@ -443,9 +445,6 @@ let apply_strategy_one_transition_por (* given .... *)
    form for the internal reduction \leadsto in the paper) and the two lists contain
    only one symbolic process. *)
 
-  (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
-  incr(final_test_count);
-
   if !print_debug_por then
     Printf.printf "Before starting apply_strategy_one. Size of lists: %d,%d. Trace's size: %d\n"
 		  (List.length left_symb_proc_list)
@@ -481,6 +480,11 @@ let apply_strategy_one_transition_por (* given .... *)
 	else (List.hd !ps, List.hd !qs)
       end;
   in
+  (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
+  incr(final_test_count);
+  
+  if !display_traces
+  then Printf.printf "%s\n" (Process.display_trace_simple proc_left);
 
   (* ** FIRST step: labelises processes and update 'has_focus': at this point, some new processes coming from 
         breaking a parallel composition are in the multiset. All those new processes come from a unique parallel

@@ -42,6 +42,8 @@ val create_symbolic : (Recipe.recipe * Term.term) list -> process -> Constraint_
 
 val display_trace : symbolic_process -> string
 
+val display_trace_simple : symbolic_process -> string
+
 val display_trace_no_unif : symbolic_process -> string
 
 (** {4 Testing} *)
