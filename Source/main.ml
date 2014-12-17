@@ -95,6 +95,7 @@ let decide_trace_equivalence process1 process2 =
   let end_time = Sys.time () in
   let time_spent = end_time -. begin_time in
   display_channel_and_stdout channel (Printf.sprintf "Result : The trace equivalence is %b\n" result);
+  display_channel_and_stdout channel (Printf.sprintf "Number of explorations: %d.\n" (!Trace_equivalence.Algorithm.final_test_count));
   display_channel_and_stdout channel (Printf.sprintf "Result obtained in %f seconds\n" time_spent);
   Trace_equivalence.Statistic.display_statistic ();
   flush_all ();

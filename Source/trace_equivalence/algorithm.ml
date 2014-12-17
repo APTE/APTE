@@ -761,7 +761,6 @@ let decide_trace_equivalence process1 process2 =
     if !option_alternating_strategy
     then apply_alternating [symb_proc1] [symb_proc2]
     else apply_complete_unfolding [symb_proc1] [symb_proc2];
-    Printf.printf "Number of final tests: %d.\n" (!final_test_count);
     true
   with
   | Not_equivalent_left sym_proc ->
