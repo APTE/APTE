@@ -191,6 +191,12 @@ let apply_strategy_one_transition next_function_output next_function_input left_
   (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
   incr(final_test_count);
 
+  if !display_traces
+  then let one_proc = if left_symb_proc_list <> []
+		      then List.hd left_symb_proc_list
+		      else List.hd right_symb_proc_list in
+       Printf.printf "%s\n" (Process.display_trace_simple one_proc);
+
   (* ** Option Erase Double *)
   
   let left_erase_set = 
