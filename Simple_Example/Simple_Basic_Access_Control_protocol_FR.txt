@@ -61,6 +61,6 @@ let system2 error_mac =
   |
   ((passport k_e k_m error_mac p2) | (reader k_e k_m r2))).
 
-equivalence system1 Error_6300 and system2 Error_6300.
+# equivalence system1 Error_6300 and system2 Error_6300.
 
 equivalence system1 Error_6A80 and system2 Error_6A80.
