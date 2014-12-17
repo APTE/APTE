@@ -96,18 +96,20 @@ def main():
 
    # BENCHMARKS
     HEAD = " " + "#"*10 + " "
-    HEADA = " " + "#"*3 + " "
+    HEADA = " " + "-"*3 + " "
     IND = " " * 50
 
     list_binaries.sort()
     list_tests.sort()
     for binary in list_binaries:
         b_name = binary.split('../')[1]
-        pprint_all("\n" + HEAD + "Starting to benchmark version: " + b_name + HEAD + "\n")
+        pprint_all("\n" + HEAD + "Starting a benchmark version: " + b_name + HEAD)
+        log_all.write("\n")
         pprint_all(IND + str(datetime.now()) + "\n")
         for file in list_tests:
             t_name = file.split("/Simple_Example/")[1].split(".txt")[0]
-            pprint_all(HEADA + "Benchmark of Protocol: " + t_name + HEADA + "\n")
+            pprint_all(HEADA + "Benchmark of Protocol: " + t_name + HEADA)
+            log_all.write("\n")
             pprint_all(IND + str(datetime.now()) + "\n") # timestamp
             log_t_b = open("log/" + t_name + "_" + b_name + ".log", "w+")
             log_t_b.write(IND + str(datetime.now()))
@@ -117,12 +119,17 @@ def main():
                                     stdout=subprocess.PIPE)
             for line in iter(proc.stdout.readline,''):
                 line_t = line.rstrip()
-                if line_t[0:3] == "Res":
+                if line_t[0:3] == "Res" or "Number of " in line_t:
                     print_all(line_t + "\n")
-                else:
                     print(line_t)
+                else:
+                    # print(line_t)
+                    pass
                 log_t_b.write(line_t + "\n")
                 log_t_b.flush()
+            log_t_b.write("\n")
+            pprint_all("\n")
+        log_t_b.write("\n")
         pprint_all("\n")
 
 main()
