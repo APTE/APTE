@@ -125,6 +125,9 @@ val labelise_consistently : par_label MapS.t -> symbolic_process -> symbolic_pro
 (** Returns tha 'has_focus' flag *)
 val has_focus : symbolic_process -> bool
 
+(** Returns tha 'is_improper' flag *)
+val is_improper : symbolic_process -> bool
+
 (** Modify the 'has_focus' flag *)
 val set_focus : bool -> symbolic_process -> symbolic_process
 

@@ -306,6 +306,7 @@ type symbolic_process =
     axiom_name_assoc : (Recipe.recipe * Term.term) list;
     process : (process*proc_label) list; (* Represent a multiset of labelled processes *)
     has_focus : bool;	    (* if true: process[0] is under focus, otherwise: no focus *)
+    is_improper : bool;	    (* if true, last block is improper -> cannot be executed any more *)
     constraint_system : Constraint_system.constraint_system;
     forbidden_comm : internal_communication list;
     trace : trace_label list;
@@ -317,6 +318,7 @@ let create_symbolic axiom_name_assoc proc csys =
     axiom_name_assoc = axiom_name_assoc;
     process = [(proc, init_proc_label)];
     has_focus = false;
+    is_improper = false;
     constraint_system = csys;
     forbidden_comm = [];
     trace = [];
@@ -453,16 +455,22 @@ let instanciate_trace symb_proc =
   
 let apply_internal_transition_without_comm with_por function_next symb_proc = 
   let has_broken_focus = ref false in
+  let has_broken_focus_0_case = ref false in
   let was_with_focus = symb_proc.has_focus in
 
   let rec go_through prev_proc csys = function
     (* when we have gone trough all processes (no more conditionals at top level) *)
-    | [] -> function_next { symb_proc with process = prev_proc;
+    | [] -> 
+       let is_improper = symb_proc.is_improper ||
+			   (symb_proc.has_focus && (!has_broken_focus_0_case)) in
+       function_next { symb_proc with process = prev_proc;
 					   constraint_system = csys;
+					   is_improper = is_improper;
 					   has_focus = symb_proc.has_focus && not(!has_broken_focus);
 			  }
-			  
+    (* Nil case: it enables to release the focus BUT produces an improper block -> set the two flags to true *)
     | (Nil,_)::q -> has_broken_focus := true;
+		    has_broken_focus_0_case := true;
 		    go_through prev_proc csys q 
     | (Choice(p1,p2), l)::q -> 
        if with_por
@@ -635,7 +643,7 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
         
         let ch_r = Recipe.recipe_of_variable ch_var_r
         and t_r = Recipe.recipe_of_variable t_var_r in
-        
+
         let symb_proc' = 
           { symb_proc with
             process = ((sub_proc,l)::q)@prev_proc;
@@ -1059,6 +1067,8 @@ let assemble_choices_focus listChoices symP =
 	   listChoices
 
 let has_focus symb_proc = symb_proc.has_focus
+
+let is_improper symb_proc = symb_proc.is_improper
 
 let set_focus new_flag symb_proc =
   { symb_proc with
