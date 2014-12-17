@@ -885,6 +885,11 @@ let display_trace_no_unif symb_proc =
   
   Printf.sprintf "%s\n%s\n" trace (Constraint_system.display symb_proc.constraint_system)
 
+let add_dependency_constraint sys variables axioms =
+  let old = sys.constraint_system in
+  let new_cst_system = Constraint_system.add_new_dependency_constraint old variables axioms in
+  { sys with  constraint_system = new_cst_system }
+
 (*************************************
 	     Optimisation
 **************************************)  
@@ -1099,10 +1104,12 @@ let set_focus new_flag symb_proc =
 
 let display_symb_process symP =
   Printf.printf "##################### Symbolic Process ###########################\n";
-  List.iter (fun (p,i) -> Printf.printf "## Process (index %d): %s\n" i (display_process p))
+  List.iter (fun (p,i) -> Printf.printf "## Process (index %d): %s\n" 0 (* i *) (display_process p))
     symP.process
 
-let is_improper symP = symP.last_action.improper_flag
+
+let is_improper symP = 	false
+(* symP.last_action.improper_flag *)
 
 let debug_f = ref false                 (* Do we print debugging information ?  *)
 
@@ -1138,7 +1145,7 @@ let test_dependency_constraints symP =
   let frame = Constraint_system.get_frame csys in
 
   (* BEGIN DEBUG *)
-  if !Debug.red then begin
+  if true (* Debug.red *) then begin
     let csts = (Constraint_system.get_dependency_constraints csys) in
     if List.length csts <> 0 then begin
       Printf.printf "We will check those dependency constraints: %s\n"
@@ -1171,18 +1178,20 @@ let rec search_pattern first_perf acc last_flag last_perf = function
     then begin                            (* end of block *)
       if first_perf < last_perf
       then acc                            (* enf of block and last_block > first_block -> pattern *)
-      else if (perf != -1) && ((last_perf == -1) || (perf < first_perf)
+      else 
+ if true (* (perf != -1) && ((last_perf == -1) || (perf < first_perf)
           || (perf > first_perf))         (* either begining, inside or end of pattern *)
+*)
       then search_pattern first_perf (ax :: acc) FOut perf l
       else raise No_pattern;
     end else                                (* inside a block *)
-      if (perf == -1)
+      if true (* (perf == -1) *)
       then raise No_pattern
       else if last_perf != perf then begin (* not a possible (compressed) trace*)
         Debug.internal_error "[process.ml >> search_pattern] Not a simple process (out: it has not been detected yet!!!).";
       end else search_pattern first_perf (ax :: acc) FOut perf l
   | Input (_,perf,_,_,_,_) :: l ->
-    if perf == -1
+    if true (* perf == -1 *)
     then raise No_pattern
     else if last_perf != perf then begin (* not a possible (compressed) trace -> pattern*)
       Debug.internal_error "[process.ml >> search_pattern] Not a simple process (in: it has not been detected yet!!!)."
@@ -1193,16 +1202,35 @@ let rec search_pattern first_perf acc last_flag last_perf = function
 
 let count = ref 0                       (* DEBUGGING purpose *)
 
+(* CF. algorithm.ml|L.236 for a discussion about a trade off. We choose to add
+a dependency constraint only after the last input of any IO block.
+So we require that the trace ends with ....IN.OUT.
+*)
+let generate_dependency_constraints symP =
+  (* We extract the recipes of the last inputs and output it with
+     the remainder of the list and the index of those inputs.
+     last_perf : index that has performed last action (init=-1) *)
+  let rec extract_list_variables acc last_perf = function
+    | ((Output (_,perf,_,_,_,_) :: l) as rl) ->
+      if true
+    (* last_perf != -1 && perf != last_perf     (* TODO: two blocks on same channel? *) *)
+      then (acc, rl, last_perf)                   (* end of the first block *)
+      else extract_list_variables acc perf l      (* inside first block *)
+    | Input (_, perf, _, _, r, _) :: l ->
+      extract_list_variables (r::acc) perf l      (* perf instead of last_perf for improper blocks *)
+    | Comm _ :: l -> extract_list_variables acc last_perf l
+    | [] -> (acc, [], last_perf) in
+
   (* Given the recipes of the first inputs, the remaining  trace and
   the index of those inputs, it outputs the updated symbolic process *)
   let construct_constraint list_recipes remaining_trace first_index symP =
     (* looking for a well-formed pattern *)
     try
-      let list_axioms = search_pattern first_index [] FIn (-1) remaining_trace in
+      let list_axioms = (Obj.magic 0) (* search_pattern first_index [] FIn (-1) remaining_trace*) in
       (* add the correspondant dependency constraint *)
       let new_sys  = add_dependency_constraint symP list_recipes list_axioms in
       (* BEGIN DEBUG *)
-      if !Debug.red then begin
+      if true (* Debug.red *) then begin
         let dep_cst = Constraint_system.display_dependency_constraints
           (get_constraint_system new_sys) in
         Printf.printf "---------------------- A Dependency constraint HAS BEEN ADDED----------------------\n### Dependency constraints: %s\n" dep_cst;
@@ -1218,10 +1246,10 @@ let count = ref 0                       (* DEBUGGING purpose *)
       if perf == perf' then begin
         match extract_list_variables [r] perf l with
            (* | ([],_,_) -> symP    (\* meaning that the last actions is actually an output *\) *)
-           | (list_recipes, trace, perf) -> construct_constraint list_recipes trace perf symP;
+           | (list_recipes, trace, perf) -> construct_constraint (Obj.magic 0) (* list_recipes trace perf symP *) ;
       end
-      else symP
-    | _ -> symP
+      else Obj.magic symP
+    | _ -> Obj.magic symP
 (** End Lucca Hirschi **)
 
 (* END FORKKK *)

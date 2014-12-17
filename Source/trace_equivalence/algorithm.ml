@@ -4,13 +4,6 @@ exception Not_equivalent_left of Process.symbolic_process
 exception Not_equivalent_right of Process.symbolic_process
 
 
-(* OLD B *)
-            (* let dep_cst = Constraint_system.display_dependency_constraints (Process.get_constraint_system p) in begin *)
-            (*   Printf.printf "### Dependency constraints: %s\n" dep_cst; *)
-            (*   Printf.printf "### Trace: %s\n" (Process.display_trace_no_unif p); *)
-
-(* OLD E *)
-
 (*********************************
   In this file contains the different strategy on the
   symbolic processes that we consider in the tool. In
@@ -101,56 +94,6 @@ let rec erase_double = function
   | [] -> []
   | symb_csys::q when List.exists (Process.is_same_input_output symb_csys) q -> erase_double q
   | symb_csys::q -> symb_csys::(erase_double q)
-    
-(* Since we work with simple processes, we do not have to consider inetrnal communication *)
-let internal_communication = ref false
-
-type wanted_trace = 
-  | Input
-  | Output
-
-(** We assume that the constraint systems in the symbolic processes are in solved form *)
-let rec apply_strategy want_trace support left_symb_proc_l right_symb_proc_l = 
-    (* First step : apply the internal transitition *)
-    (* We assume for the moment that the internal communication are applied *)  
-  
-  let left_symb_proc_l' = List.map Process.instanciate_trace left_symb_proc_l
-  and right_symb_proc_l' = List.map Process.instanciate_trace right_symb_proc_l in
-  
-    (*Printf.printf "************ ENTRY apply_strategty ***************\n";
-      Printf.printf "Left set = \n";
-      List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) left_symb_proc_l';
-      Printf.printf "Right set = \n";
-      List.iter (fun sym_proc -> Printf.printf "%s\n\n" (Process.display_trace_no_unif sym_proc)) right_symb_proc_l';
-      flush_all ();*)
-  
-  (*  Lucca Hirschi: Erase processes that have already performed an improper block *)
-  let size_before = List.length left_symb_proc_l' in
-  let filter_proper_blocks symp_proc = not(Process.is_improper symp_proc) in
-  let left_symb_proc_l_prop = List.filter filter_proper_blocks left_symb_proc_l'
-  and right_symb_proc_l_prop = List.filter filter_proper_blocks right_symb_proc_l' in
-  let size_after = List.length left_symb_proc_l_prop in
-  improper_killed := !improper_killed + (size_after-size_before);
-  if !Debug.compr && size_after - size_before < -10 then
-    Printf.printf "BOUM Improper traces killed %d processes in one step.\n" (size_before - size_after);
-
-  (*  Lucca Hirschi: Erase processes that do not satisfy their dep. csts *)
-  (* Is it the best place???? *)
-  let size_before = List.length left_symb_proc_l_prop in
-  (* Normally, dependency_constraints have already been simplified using recipe_eq
-     (see Constraint_system.apply_recipe_subsitution)  *)
-  let filter_proper_blocks symp_proc = Process.test_dependency_constraints symp_proc in
-  let left_symb_proc_l_reduced = List.filter filter_proper_blocks left_symb_proc_l_prop
-  and right_symb_proc_l_reduced = List.filter filter_proper_blocks right_symb_proc_l_prop in
-  let size_after = List.length left_symb_proc_l_reduced in
-  non_reduced_killed := !non_reduced_killed + (size_after-size_before);
-  if !Debug.red && size_after - size_before < -10 then
-    Printf.printf "BOUM Non_Reduced traces killed %d processes in one step.\n" (size_before - size_after);
-
-  (* Erase double *)
-  
-  let left_symb_proc_list = erase_double left_symb_proc_l_reduced
-  and right_symb_proc_list = erase_double right_symb_proc_l_reduced in
 
 (*************************************
 ***    Functions for the strategy  ***
@@ -326,19 +269,6 @@ let apply_strategy_one_transition next_function_output next_function_input left_
   
   let left_input_set = ref []
   and right_input_set = ref [] in
-
-  (* CHECK EXEMPLE *)
-  (*   Process.apply_output (fun symb_proc_2 ->  *)
-  (*       (\* At this point the constraint system in the symbolic_process are not simplified *\) *)
-  (*     let simplified_symb_proc = Process.simplify symb_proc_2 in *)
-  (*     if not (Process.is_bottom simplified_symb_proc) *)
-  (*     then *)
-  (*       let symbP_with_dep_csts = Process.generate_dependency_constraints *)
-  (*         simplified_symb_proc in *)
-  (*       left_set := symbP_with_dep_csts::!left_set *)
-  (*   ) var_r_ch symb_proc_1 *)
-  (* ) !left_internal_split; *)
-
   
   let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
   and var_r_t = Recipe.fresh_free_variable_from_id "Y" support in
@@ -817,20 +747,6 @@ let decide_trace_equivalence process1 process2 =
     true
   with
     | Not_equivalent_left sym_proc ->
-    try
-      apply_strategy [
-      (* The first reader *)
-        Output;Input;Output;
-      (* Normal sessions *)
-        Output;Input;
-        Output;Input;
-        Output;Input;Output ] nb_free_names [symb_proc1] [symb_proc2];
-      Printf.printf "Number of pruned roots thanks to reduction: %d.\n" (- !non_reduced_killed);
-      Printf.printf "Number of pruned roots corresponding to improper traces (executions killed): %d.\n" (- !improper_killed);
-      Printf.printf "Number of final tests: %d.\n" (!final_test_count);
-      true
-    with
-      | Not_equivalent_left sym_proc ->
         Printf.printf "Witness of non-equivalence on Process 1:\n%s"
           (Process.display_trace (Process.instanciate_trace sym_proc));
         false
