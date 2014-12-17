@@ -306,6 +306,7 @@ type symbolic_process =
     axiom_name_assoc : (Recipe.recipe * Term.term) list;
     process : (process*proc_label) list; (* Represent a multiset of labelled processes *)
     has_focus : bool;	    (* if true: process[0] is under focus, otherwise: no focus *)
+    is_improper : bool;	    (* if true, last block is improper -> cannot be executed any more *)
     constraint_system : Constraint_system.constraint_system;
     forbidden_comm : internal_communication list;
     trace : trace_label list;
@@ -317,6 +318,7 @@ let create_symbolic axiom_name_assoc proc csys =
     axiom_name_assoc = axiom_name_assoc;
     process = [(proc, init_proc_label)];
     has_focus = false;
+    is_improper = false;
     constraint_system = csys;
     forbidden_comm = [];
     trace = [];
@@ -625,12 +627,20 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
         
         let ch_r = Recipe.recipe_of_variable ch_var_r
         and t_r = Recipe.recipe_of_variable t_var_r in
-        
+
+        let is_improper = 	(* the continuation is 'improper' if there is a '0' behind the performed input -> improper block *)
+	  if not(with_por)
+	  then false
+	  else match sub_proc with
+	       | Nil -> true
+	       | _ -> false
+	in
         let symb_proc' = 
           { symb_proc with
             process = ((sub_proc,l)::q)@prev_proc;
             constraint_system = new_csys_3;
             forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
+	    is_improper = is_improper;
             trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v, fst l))::symb_proc.trace
           }
         in
@@ -1049,6 +1059,8 @@ let assemble_choices_focus listChoices symP =
 	   listChoices
 
 let has_focus symb_proc = symb_proc.has_focus
+
+let is_improper symb_proc = symb_proc.is_improper
 
 let set_focus new_flag symb_proc =
   { symb_proc with
