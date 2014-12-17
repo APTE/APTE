@@ -42,6 +42,8 @@ val create_symbolic : (Recipe.recipe * Term.term) list -> process -> Constraint_
 
 val display_trace : symbolic_process -> string
 
+val display_trace_simple : symbolic_process -> string
+
 val display_trace_no_unif : symbolic_process -> string
 
 (** {4 Testing} *)
@@ -122,6 +124,9 @@ val labelise_consistently : par_label MapS.t -> symbolic_process -> symbolic_pro
 (*** has_focus handlers ***)
 (** Returns tha 'has_focus' flag *)
 val has_focus : symbolic_process -> bool
+
+(** Returns tha 'is_improper' flag *)
+val is_improper : symbolic_process -> bool
 
 (** Modify the 'has_focus' flag *)
 val set_focus : bool -> symbolic_process -> symbolic_process

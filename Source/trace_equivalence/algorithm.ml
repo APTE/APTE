@@ -28,6 +28,11 @@ let option_alternating_strategy = ref true
   
 let print_debug_por = ref false
 
+let display_traces = ref false
+
+(** Statistics info *)
+let final_test_count = ref 0
+
 (************************************
 ***    Partition of the matrix    ***
 *************************************)
@@ -182,6 +187,15 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
 (** Strategy for the complete unfolding without POR *)
 
 let apply_strategy_one_transition next_function_output next_function_input left_symb_proc_list right_symb_proc_list = 
+
+  (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
+  incr(final_test_count);
+
+  if !display_traces
+  then let one_proc = if left_symb_proc_list <> []
+		      then List.hd left_symb_proc_list
+		      else List.hd right_symb_proc_list in
+       Printf.printf "%s\n" (Process.display_trace_simple one_proc);
 
   (* ** Option Erase Double *)
   
@@ -472,57 +486,81 @@ let apply_strategy_one_transition_por (* given .... *)
 	else (List.hd !ps, List.hd !qs)
       end;
   in
+  (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
+  incr(final_test_count);
+  
+  if !display_traces
+  then Printf.printf "%s\n" (Process.display_trace_simple proc_left);
 
-  (* ** FIRST step: labelises processes and update 'has_focus': at this point, some new processes coming from 
+  (* We check whether processes are improper or not and continue only if they are not *)
+  (* Note that, the flag is_improper might be set to true when applying 'apply_internal[...]_without_comm *)
+  let is_improper_left, is_improper_right = Process.is_improper proc_left, Process.is_improper proc_right in
+  if (is_improper_left || is_improper_right)
+  then if (is_improper_left && is_improper_right)
+       (* two proc are improper -> we stop the exploration at this point *)
+       then ()
+       (* otherwise, there is a mismatch: we must raise the corresponding exception *)
+       else if is_improper_left
+       then begin Printf.printf "Witness' type: Improper on the left, not on the right.\n";
+		  raise (Not_equivalent_right proc_right);
+	    end else begin
+		    Printf.printf "Witness' type: Improper focus on the right, not on the left.\n";
+		    raise (Not_equivalent_left proc_left);
+		  end
+  else
+    (* we keep exploring the semantics *)
+    begin
+
+      (* ** FIRST step: labelises processes and update 'has_focus': at this point, some new processes coming from 
         breaking a parallel composition are in the multiset. All those new processes come from a unique parallel
         composition, so we label them in an arbitrary order but consistently with right_symb_proc_list. *)
 
-    let proc_left_label, how_to_label = try_P proc_left proc_right (lazy (Process.labelise proc_left)) in
-    let proc_right_label = try_P proc_left proc_right (lazy (Process.labelise_consistently how_to_label proc_right)) in
-    (* Updating 'has_focus' on the left : set to false if focused process is negative *)
-    let proc_left_label_up =
-      if Process.has_focus proc_left_label 
-      then (match Process.sk_of_symp proc_left_label with
-	    | Process.OutS t -> Process.set_focus false proc_left_label
-	    | _ -> proc_left_label)
-      else proc_left_label
-    (* Updating 'has_focus' on the right : set to false if focused process is negative *)
-    and proc_right_label_up =
-      if Process.has_focus proc_right_label 
-      then (match Process.sk_of_symp proc_right_label with
-	    | Process.OutS t -> Process.set_focus false proc_right_label
-	    | _ -> proc_right_label)
-      else proc_right_label in 
+      let proc_left_label, how_to_label = try_P proc_left proc_right (lazy (Process.labelise proc_left)) in
+      let proc_right_label = try_P proc_left proc_right (lazy (Process.labelise_consistently how_to_label proc_right)) in
+      (* Updating 'has_focus' on the left : set to false if focused process is negative *)
+      let proc_left_label_up =
+	if Process.has_focus proc_left_label 
+	then (match Process.sk_of_symp proc_left_label with
+	      | Process.OutS t -> Process.set_focus false proc_left_label
+	      | _ -> proc_left_label)
+	else proc_left_label
+      (* Updating 'has_focus' on the right : set to false if focused process is negative *)
+      and proc_right_label_up =
+	if Process.has_focus proc_right_label 
+	then (match Process.sk_of_symp proc_right_label with
+	      | Process.OutS t -> Process.set_focus false proc_right_label
+	      | _ -> proc_right_label)
+	else proc_right_label in 
 
-    if !print_debug_por then Printf.printf "end of labelling process...\n";
+      if !print_debug_por then Printf.printf "end of labelling process...\n";
 
-							
-    (* ** SECOND step: Distinguish two cases whether pro_left/right_label have focus or not.
+      
+      (* ** SECOND step: Distinguish two cases whether pro_left/right_label have focus or not.
          (if they do not have the same status we raise an error. *)
-    match (Process.has_focus proc_left_label_up, Process.has_focus proc_right_label_up) with
-    | true, false -> begin
-		     Printf.printf "Witness' type: Release focus on the left, not on the right.\n";
-		     raise (Not_equivalent_right proc_right_label_up);
-		   end
+      match (Process.has_focus proc_left_label_up, Process.has_focus proc_right_label_up) with
+      | true, false -> begin
+		       Printf.printf "Witness' type: Release focus on the left, not on the right.\n";
+		       raise (Not_equivalent_right proc_right_label_up);
+		     end
 
-    | false, true -> begin
-		     Printf.printf "Witness' type: Release focus on the right, not on the left.\n";
-		     raise (Not_equivalent_left proc_left_label_up);
-		   end
-    | true, true ->
-       (****************** WITH FOCUS ****************************  *)
-       (* In that case, the first process of proc_left/right_label_up is under focus. We perform
+      | false, true -> begin
+		       Printf.printf "Witness' type: Release focus on the right, not on the left.\n";
+		       raise (Not_equivalent_left proc_left_label_up);
+		     end
+      | true, true ->
+	 (****************** WITH FOCUS ****************************  *)
+	 (* In that case, the first process of proc_left/right_label_up is under focus. We perform
           their first input in case thay have the same skeleton and raise an exception otherwise.
 	  We assume here that focus have been removed as soon as a negative pop out.*)
-       apply_input_on_focused next_function_input proc_left_label_up proc_right_label_up
-    | false, false ->
-       (***************** WITHOUT FOCUS ****************************  *)
-       begin
-	 
-	 let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label_up) in
-	 let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
-	 
-	 (* We look for the first negative process in proc_left_left. Case (i): there is a such process.
+	 apply_input_on_focused next_function_input proc_left_label_up proc_right_label_up
+      | false, false ->
+	 (***************** WITHOUT FOCUS ****************************  *)
+	 begin
+	   
+	   let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label_up) in
+	   let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
+	   
+	   (* We look for the first negative process in proc_left_left. Case (i): there is a such process.
               In that case we perform its first action, store the corresponding channel and look for a
               corresponding process on the right.
 	     Note that, since we check that sk(P)=sk(Q) on new processes when labelling
@@ -530,111 +568,112 @@ let apply_strategy_one_transition_por (* given .... *)
              Case (ii): P is positive. We iter over the whole list of proc_left_label_up.process:
 	     put the selected process under focus, set has_focus to true, try to do the same on the right
              and apply apply_input_on_focused.*)
-	 
-	 let left_output_set = ref [] in
-	 Process.apply_output
-	   true
-	   (fun (symb_proc_2,c) -> 
-	    (* We do not simplify symbolic processes because it will be done
+	   
+	   let left_output_set = ref [] in
+	   Process.apply_output
+	     true
+	     (fun (symb_proc_2,c) -> 
+	      (* We do not simplify symbolic processes because it will be done
 	  in the next step when performing conditionals/splittings. *)
-	    left_output_set := (symb_proc_2,c)::!left_output_set)
-	   var_r_ch
-	   proc_left_label_up;
-	 
-	 if List.length !left_output_set = 0
-	 then begin
-	     (****** START A POSITIVE PHASE*****)
-	     (* we must choose any process, put it at the begining of the list, set has_focus
+	      left_output_set := (symb_proc_2,c)::!left_output_set)
+	     var_r_ch
+	     proc_left_label_up;
+	   
+	   if List.length !left_output_set = 0
+	   then begin
+	       (****** START A POSITIVE PHASE*****)
+	       (* we must choose any process, put it at the begining of the list, set has_focus
                    to true, find a process with same skeleton on the right, do the same
                    and perform this input *)
-	     if !print_debug_por then Printf.printf "[REL] We are going to start a new positive phase and thus choose a focus.\n";
+	       if !print_debug_por then Printf.printf "[REL] We are going to start a new positive phase and thus choose a focus.\n";
 
-	     (* we build a list (P_i,ski) list of alternatives of choices of focused process with the corresponding
+	       (* we build a list (P_i,ski) list of alternatives of choices of focused process with the corresponding
 	      focused process' skeleton ski*)
-	     let left_choose_focus = Process.list_of_choices_focus proc_left_label_up in
-	     (* using the latter we build a list (P_i,Q_i) list where Q_i is a choice of focus such that sk(P_i)=sk(Q_i) *)
-	     let listPairProc = Process.assemble_choices_focus left_choose_focus proc_right_label_up in
-	     (* in listPairProc : (symbolic_process^2) list, we apply input_focus on each pair with a List.iter *)
-	     List.iter (fun (p_left,p_right) ->
-			apply_input_on_focused next_function_input p_left p_right)
-		       listPairProc;
-	   end
-	 else if List.length !left_output_set != 1
-	 then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen."
-	 else begin
-	     (****** NEGATIVE PHASE ***********)
-	     (* Contuining the negative phase, perform the same output on the right *)
-	     let (proc_left_out, ch) = List.hd !left_output_set
-	     and right_output_set = ref [] in
-	     Process.apply_output_filter (* this will filter applying output to (first) output on channel ch *)
-	       ch
-	       (fun symb_proc_2 -> 
-		(* same as above *)
-		right_output_set := symb_proc_2::!right_output_set)
-	       var_r_ch
-	       proc_right_label_up;
-	     
-	     if !print_debug_por then
-	       Printf.printf "After OUT. Lists' sizes: %d,%d.\n"
-    			     (List.length !left_output_set)
-    			     (List.length !right_output_set);
+	       let left_choose_focus = Process.list_of_choices_focus proc_left_label_up in
+	       (* using the latter we build a list (P_i,Q_i) list where Q_i is a choice of focus such that sk(P_i)=sk(Q_i) *)
+	       let listPairProc = Process.assemble_choices_focus left_choose_focus proc_right_label_up in
+	       (* in listPairProc : (symbolic_process^2) list, we apply input_focus on each pair with a List.iter *)
+	       List.iter (fun (p_left,p_right) ->
+			  apply_input_on_focused next_function_input p_left p_right)
+			 listPairProc;
+	     end
+	   else if List.length !left_output_set != 1
+	   then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen."
+	   else begin
+	       (****** NEGATIVE PHASE ***********)
+	       (* Contuining the negative phase, perform the same output on the right *)
+	       let (proc_left_out, ch) = List.hd !left_output_set
+	       and right_output_set = ref [] in
+	       Process.apply_output_filter (* this will filter applying output to (first) output on channel ch *)
+		 ch
+		 (fun symb_proc_2 -> 
+		  (* same as above *)
+		  right_output_set := symb_proc_2::!right_output_set)
+		 var_r_ch
+		 proc_right_label_up;
+	       
+	       if !print_debug_por then
+		 Printf.printf "After OUT. Lists' sizes: %d,%d.\n"
+    			       (List.length !left_output_set)
+    			       (List.length !right_output_set);
 
-	     if List.length !right_output_set = 0
-	     then begin
-		 Printf.printf "Witness' type: right process cannot execute an output that the left one can perform.";
-		 Printf.printf "%s" (" Here is the channel of this output: "^(Term.display_term ch)^".\n");
-		 Printf.printf "%s\n" (Process.display_trace_no_unif proc_left_out);
-		 raise (Not_equivalent_left proc_left_label_up);
-	       end
-	     else if List.length !right_output_set != 1
-	     then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen.";
-	     
-	     (* ** Third Step : apply the internal transitions (including conditionals) *)  
-	     let proc_right_out = List.hd !right_output_set
-	     and left_out_internal = ref []
-	     and right_out_internal = ref [] in
+	       if List.length !right_output_set = 0
+	       then begin
+		   Printf.printf "Witness' type: right process cannot execute an output that the left one can perform.";
+		   Printf.printf "%s" (" Here is the channel of this output: "^(Term.display_term ch)^".\n");
+		   Printf.printf "%s\n" (Process.display_trace_no_unif proc_left_out);
+		   raise (Not_equivalent_left proc_left_label_up);
+		 end
+	       else if List.length !right_output_set != 1
+	       then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen.";
+	       
+	       (* ** Third Step : apply the internal transitions (including conditionals) *)  
+	       let proc_right_out = List.hd !right_output_set
+	       and left_out_internal = ref []
+	       and right_out_internal = ref [] in
 
-	     (* Scan all symbolic processes, flatten all parallels/choices and perform all available
+	       (* Scan all symbolic processes, flatten all parallels/choices and perform all available
    conditionals and branch  for then/else and for the different ways (disjunction)
    to satisfy the  conditional's test. Thanks to our "function_next", we then pu
    all those alternatives together in left/right_internal lists. *)
-	     Process.apply_internal_transition
-	       false
-	       true
-	       (fun symb_proc_2 -> 
-		let simplified_symb_proc = Process.simplify symb_proc_2 in
-		if not (Process.is_bottom simplified_symb_proc)
-		then left_out_internal := simplified_symb_proc :: !left_out_internal
-	       ) proc_left_out;
-	     
-	     Process.apply_internal_transition
-	       false
-	       true 
-	       (fun symb_proc_2 -> 
-		let simplified_symb_proc = Process.simplify symb_proc_2 in
-		if not (Process.is_bottom simplified_symb_proc)
-		then right_out_internal := simplified_symb_proc::!right_out_internal
-	       ) proc_right_out;
-	     
+	       Process.apply_internal_transition
+		 false
+		 true
+		 (fun symb_proc_2 -> 
+		  let simplified_symb_proc = Process.simplify symb_proc_2 in
+		  if not (Process.is_bottom simplified_symb_proc)
+		  then left_out_internal := simplified_symb_proc :: !left_out_internal
+		 ) proc_left_out;
+	       
+	       Process.apply_internal_transition
+		 false
+		 true 
+		 (fun symb_proc_2 -> 
+		  let simplified_symb_proc = Process.simplify symb_proc_2 in
+		  if not (Process.is_bottom simplified_symb_proc)
+		  then right_out_internal := simplified_symb_proc::!right_out_internal
+		 ) proc_right_out;
+	       
 
-	     (* We pass those alternatives to the next step which consists in:
+	       (* We pass those alternatives to the next step which consists in:
      1. put all csys in a row matrix
      2. apply Strategy.apply_strategy_input/output resulting in a branching
         process ending with many matrices (for leaves: in solved form)
      3. apply final_test_on_matrix on all those leaves, if OK:
      4. apply partitionate_matrix giving many pairs of symbolic processes
      5. recursive calls on each of them
-	      *)
+		*)
 
-	     if !print_debug_por then
-	       Printf.printf "After OUT+TEST. Lists' sizes: %d,%d.\n"
-			     (List.length !left_out_internal)
-			     (List.length !right_out_internal);
+	       if !print_debug_por then
+		 Printf.printf "After OUT+TEST. Lists' sizes: %d,%d.\n"
+			       (List.length !left_out_internal)
+			       (List.length !right_out_internal);
 
-	     if !left_out_internal <> [] || !right_out_internal <> []
-	     then next_function_output !left_out_internal !right_out_internal;
-	   end; 
-       end
+	       if !left_out_internal <> [] || !right_out_internal <> []
+	       then next_function_output !left_out_internal !right_out_internal;
+	     end; 
+	 end;
+    end
 
 
 
@@ -742,13 +781,16 @@ let decide_trace_equivalence process1 process2 =
     if !option_alternating_strategy
     then apply_alternating [symb_proc1] [symb_proc2]
     else apply_complete_unfolding [symb_proc1] [symb_proc2];
+    Printf.printf "Number of final tests: %d.\n" (!final_test_count);
     true
   with
-    | Not_equivalent_left sym_proc ->
-        Printf.printf "Witness of non-equivalence on Process 1:\n%s"
-          (Process.display_trace (Process.instanciate_trace sym_proc));
-        false
-    | Not_equivalent_right sym_proc ->
-        Printf.printf "Witness of non-equivalence on Process 2:\n%s"
-          (Process.display_trace (Process.instanciate_trace sym_proc));
-        false
+  | Not_equivalent_left sym_proc ->
+     Printf.printf "Witness of non-equivalence on Process 1:\n%s"
+		   (Process.display_trace (Process.instanciate_trace sym_proc));
+     Printf.printf "Number of final tests: %d.\n" (!final_test_count);
+     false
+  | Not_equivalent_right sym_proc ->
+     Printf.printf "Witness of non-equivalence on Process 2:\n%s"
+		   (Process.display_trace (Process.instanciate_trace sym_proc));
+     Printf.printf "Number of final tests: %d.\n" (!final_test_count);
+     false
