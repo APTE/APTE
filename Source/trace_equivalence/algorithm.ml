@@ -28,6 +28,9 @@ let option_alternating_strategy = ref true
   
 let print_debug_por = ref false
 
+(** Statistics info *)
+let final_test_count = ref 0
+
 (************************************
 ***    Partition of the matrix    ***
 *************************************)
@@ -182,6 +185,9 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
 (** Strategy for the complete unfolding without POR *)
 
 let apply_strategy_one_transition next_function_output next_function_input left_symb_proc_list right_symb_proc_list = 
+
+  (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
+  incr(final_test_count);
 
   (* ** Option Erase Double *)
   
@@ -436,6 +442,9 @@ let apply_strategy_one_transition_por (* given .... *)
    (ii) all processes start either with an input or an output (they are in normal
    form for the internal reduction \leadsto in the paper) and the two lists contain
    only one symbolic process. *)
+
+  (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
+  incr(final_test_count);
 
   if !print_debug_por then
     Printf.printf "Before starting apply_strategy_one. Size of lists: %d,%d. Trace's size: %d\n"
@@ -761,13 +770,16 @@ let decide_trace_equivalence process1 process2 =
     if !option_alternating_strategy
     then apply_alternating [symb_proc1] [symb_proc2]
     else apply_complete_unfolding [symb_proc1] [symb_proc2];
+    Printf.printf "Number of final tests: %d.\n" (!final_test_count);
     true
   with
-    | Not_equivalent_left sym_proc ->
-        Printf.printf "Witness of non-equivalence on Process 1:\n%s"
-          (Process.display_trace (Process.instanciate_trace sym_proc));
-        false
-    | Not_equivalent_right sym_proc ->
-        Printf.printf "Witness of non-equivalence on Process 2:\n%s"
-          (Process.display_trace (Process.instanciate_trace sym_proc));
-        false
+  | Not_equivalent_left sym_proc ->
+     Printf.printf "Witness of non-equivalence on Process 1:\n%s"
+		   (Process.display_trace (Process.instanciate_trace sym_proc));
+     Printf.printf "Number of final tests: %d.\n" (!final_test_count);
+     false
+  | Not_equivalent_right sym_proc ->
+     Printf.printf "Witness of non-equivalence on Process 2:\n%s"
+		   (Process.display_trace (Process.instanciate_trace sym_proc));
+     Printf.printf "Number of final tests: %d.\n" (!final_test_count);
+     false
