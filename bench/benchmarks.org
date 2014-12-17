@@ -42,26 +42,26 @@ We count the time consumed in seconds and the number of final
 tests (FT) (only when the quivalence is true) corresponding
 to the number of symbolic nodes that are explored.
 
-| Protocol                           | Size   | Ref (s/FT)       | Comp POST (s/FT)         | Red(s/FT)        | Comp Fossacs (s) |
-|------------------------------------+--------+------------------+--------------------------+------------------+------------------|
-| Private Auth. 1 Sess.              | 2/9/5  | 0.164 / 790      | 0.012 / 60               | 0.004 / 60       |            0.864 |
-| Private Auth. 2 Sess.              | 4/15/5 | (running) > 237h | 16.72 / 38721            | 11.856 / 29497   |            76.88 |
-| Private Auth. 3 Sess.              | 6/21/5 | (running) > 237h | 379696(?)16767.28/ 114e6 | 91266 / 40311052 |      TODO (long) |
-| Basic Ac. Ctrl. 1 S./1             | 4/52/6 | 13.98            | 0.02                     | 0.008            |             TODO |
-| Basic Ac. Ctrl. 1 S./2             | 4/52/6 | Bug?             | 2.08                     | 5.0960           |             TODO |
-| Wide Mouth Frog 1 S.               | 3/8/4  | 0.28/1141        | Bug [1]                  | 0.004/15         |            0.028 |
-| Andrew S. RPC Strong sec.      (T) |        |                  | 1591.73                  |                  |         20261.98 |
-| Andrew S. RPC Strong auth.     (F) |        |                  | 0.2440                   |                  |            22.73 |
-| Andrew S. RPC BAN Strong sec.  (T) |        |                  | 586.77                   |                  |         34459.72 |
-| Andrew S. RPC BAN Strong auth. (F) |        |                  | 311.46                   |                  |            22.90 |
-|------------------------------------+--------+------------------+--------------------------+------------------+------------------|
-| Simple 3 parallels                 | 3/6/2  | 0.060 / 450      | 0.004 / 30               | 0.0040 / 24      |            0.008 |
-| Simple 5 parallels                 | 5/10/2 | 178.8 / 670050   | 0.124 / 650              | 0.024 / 160      |             1.26 |
-| Simple 7 parallels                 | 7/14/2 | (running) > 163h | 8.512 / 27398            | 0.196 / 896      |           269.66 |
-| Simple 10 parallels                | 7/14/2 | (running) > 163h | 664 / 1972818            | 1.05 / 4608      |      TODO (long) |
-| Complex 4 parallels                | 4/10/4 | 99.87 / 38074    | 0.55 / 130               | 0.136 / 66       |             3.10 |
-| Complex 7 parallels                | 7/16/4 | (running) > 163h | 198077 / 27400           | 363.08 / 898     |      TODO (long) |
-|------------------------------------+--------+------------------+--------------------------+------------------+------------------|
+| Protocol                           | Size   | Ref (s/FT)       | Comp POST (s/FT)         | Red(s/FT)        | Comp Fossacs (s/FT) | -> + improper/FT |
+|------------------------------------+--------+------------------+--------------------------+------------------+---------------------+------------------|
+| Private Auth. 1 Sess.              | 2/9/5  | 0.164 / 790      | 0.012 / 60               | 0.004 / 60       |               0.864 |                  |
+| Private Auth. 2 Sess.              | 4/15/5 | (running) > 237h | 16.72 / 38721            | 11.856 / 29497   |               76.88 |                  |
+| Private Auth. 3 Sess.              | 6/21/5 | (running) > 237h | 379696(?)16767.28/ 114e6 | 91266 / 40311052 |         TODO (long) |                  |
+| Basic Ac. Ctrl. 1 S./1         (F) | 4/52/6 | 0.524            | 0.036                    | 0.008            |              0.0880 |            0.096 |
+| Basic Ac. Ctrl. 1 S./2         (F) | 4/52/6 |                  | 125.77                   | 5.0960           |               46.55 |            45.48 |
+| Wide Mouth Frog 1 S.               | 3/8/4  | 0.28/1141        | Bug [1]                  | 0.004/15         |               0.028 |                  |
+| Andrew S. RPC Strong sec.      (T) |        |                  | 1591.73                  | > 81h            |            20261.98 |                  |
+| Andrew S. RPC Strong auth.     (F) |        |                  | 0.2440                   |                  |               22.73 |            21.88 |
+| Andrew S. RPC BAN Strong sec.  (T) |        |                  | 586.77                   | > 53h            |            34459.72 |                  |
+| Andrew S. RPC BAN Strong auth. (F) |        | 1876.98          | 311.46                   |                  |               22.90 |                  |
+|------------------------------------+--------+------------------+--------------------------+------------------+---------------------+------------------|
+| Simple 3 parallels                 | 3/6/2  | 0.060 / 450      | 0.004 / 30               | 0.0040 / 24      |               0.008 |                  |
+| Simple 5 parallels                 | 5/10/2 | 178.8 / 670050   | 0.124 / 650              | 0.024 / 160      |                1.26 |             0.95 |
+| Simple 7 parallels                 | 7/14/2 | (running) > 163h | 8.512 / 27398            | 0.196 / 896      |              269.66 |           251.93 |
+| Simple 10 parallels                | 7/14/2 | (running) > 163h | 664 / 1972818            | 1.05 / 4608      |         TODO (long) |                  |
+| Complex 4 parallels                | 4/10/4 | 99.87 / 38074    | 0.55 / 130               | 0.136 / 66       |                3.10 |                  |
+| Complex 7 parallels                | 7/16/4 | (running) > 163h | 198077 / 27400           | 363.08 / 898     |         TODO (long) |                  |
+|------------------------------------+--------+------------------+--------------------------+------------------+---------------------+------------------|
 
 [1] [process.ml >> apply_output] Not a simple process (out). This error should not happen. It is raised because
 a channel of one ouput is not instanciate by APTE !

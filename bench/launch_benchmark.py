@@ -26,9 +26,9 @@ def main():
 
     # PARSING ARGSSS
     parser = argparse.ArgumentParser(description='Launch some benchmarks on different versions of APTE')
-    parser.add_argument('--difficulty',
+    parser.add_argument('-d', '--difficulty',
                         help='you can choose the type of examples you want to check by difficulty:  [easy,middle,hard]')
-    parser.add_argument('--version', nargs='*',
+    parser.add_argument('-v', '--version', nargs='*',
                         help='you can choose the version beteween [ref,comp,old_comp,comp_no_impro,red]')
     args = parser.parse_args()
     list_tests_tout = glob.glob('../Simple_Example/Simple_*.txt')
@@ -80,32 +80,36 @@ def main():
                 lists_tests += tests_m
             if "hard" in args.difficulty:
                 lists_tests += list_tests_tout
-        pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
-
-        pprint_all("Date: " + str(datetime.now()) + "\n")
-        pprint_all("You choose those version: " + str(list_binaries) + "\n" +
-              "On all those examples: " + str(list_tests) + "\n")
-        pprint_all("Am I right?")
-        raw_input("Press Enter to continue...")
     else:
+        parser.print_help()
         list_tests = list_tests_tout
         list_binaries = list_binaries_tout
 
+    pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
+    pprint_all("Date: " + str(datetime.now()) + "\n")
+    if not(args.version or args.difficulty):
+        print("You use no options, are you sure? Look at the helping message above.")
+    pprint_all("You choose those version: " + str(list_binaries) + "\n" +
+               "On all those examples: " + str(list_tests) + "\n")
+    pprint_all("Am I right?")
+    raw_input("Press Enter to continue...")
 
    # BENCHMARKS
     HEAD = " " + "#"*10 + " "
-    HEADA = " " + "#"*3 + " "
+    HEADA = " " + "-"*3 + " "
     IND = " " * 50
 
     list_binaries.sort()
     list_tests.sort()
     for binary in list_binaries:
         b_name = binary.split('../')[1]
-        pprint_all("\n" + HEAD + "Starting to benchmark version: " + b_name + HEAD + "\n")
+        pprint_all("\n" + HEAD + "Starting a benchmark version: " + b_name + HEAD)
+        log_all.write("\n")
         pprint_all(IND + str(datetime.now()) + "\n")
         for file in list_tests:
             t_name = file.split("/Simple_Example/")[1].split(".txt")[0]
-            pprint_all(HEADA + "Benchmark of Protocol: " + t_name + HEADA + "\n")
+            pprint_all(HEADA + "Benchmark of Protocol: " + t_name + HEADA)
+            log_all.write("\n")
             pprint_all(IND + str(datetime.now()) + "\n") # timestamp
             log_t_b = open("log/" + t_name + "_" + b_name + ".log", "w+")
             log_t_b.write(IND + str(datetime.now()))
@@ -115,12 +119,17 @@ def main():
                                     stdout=subprocess.PIPE)
             for line in iter(proc.stdout.readline,''):
                 line_t = line.rstrip()
-                if line_t[0:3] == "Res":
+                if line_t[0:3] == "Res" or "Number of " in line_t:
                     print_all(line_t + "\n")
-                else:
                     print(line_t)
+                else:
+                    # print(line_t)
+                    pass
                 log_t_b.write(line_t + "\n")
                 log_t_b.flush()
+            log_t_b.write("\n")
+            pprint_all("\n")
+        log_t_b.write("\n")
         pprint_all("\n")
 
 main()
