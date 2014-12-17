@@ -71,13 +71,27 @@ let display = function
       let conj_mess_eq = Printf.sprintf "Message_equation = %s" 
         (display_conjunction (fun (t1,t2) -> Printf.sprintf "%s = %s" (Term.display_term t1) (Term.display_term t2)) 
         sub_csys.conjunction_message_eq) in
-      
+      (* CHECK *)
+      (* let conj_recipe_eq = Printf.sprintf "Recipe_equation = %s"  *)
+      (*   (display_conjunction (fun (r1,r2) -> Printf.sprintf "%s = %s" (Recipe.display_recipe r1) (Recipe.display_recipe r2))  *)
+      (*   sub_csys.conjunction_recipe_eq) in *)      
+      let dep_cst = Printf.sprintf "Dependency_constraints = [%s" (display_dependency_cst sub_csys.dependency_constraints) in
+      (* CHECK FIN *)
       let formula = Printf.sprintf "Formula = %s" (display_conjunction (fun neq -> (Term.display_formula neq.message_neq)^"("^(display_assoc_table neq.assoc_table)^")") sub_csys.conjunction_message_neq) in
       (* Do More *)
       let endline = ")\n" in
       
+      (* CHECK *)
       Printf.sprintf "%s%s\n%s\n%s\n%s\n%s" line1 frame cons_set formula conj_mess_eq endline
-  
+		     (* ==== *)
+      Printf.sprintf "%s%s\n%s\n%s\n%s\n%s\n%s\n" line1 frame cons_set dep_cst formula conj_mess_eq endline
+
+let display_dependency_constraints = function
+  | Bot -> "Dependency constraints : [] (Bot)."
+  | Csys(sub_csys) -> Printf.sprintf "Dependency constraints = [%s"
+    (display_dependency_cst sub_csys.dependency_constraints)
+(* CHECK FIN *)
+
 (******** Addition functions ********)
 
 let add_message_equation csys t1 t2 = match csys with
@@ -241,7 +255,6 @@ let map_message_inequation f = function
 
 let map_message sub_csys f_apply = 
   let cons_set = Constraint.map Constraint.SAll (fun dc -> Constraint.Deducibility.replace_message dc f_apply) sub_csys.constraints_set in
-  
   let frame = Constraint.map Constraint.SAll (fun fc -> Constraint.Frame.replace_message fc f_apply) sub_csys.frame in
   
   let conj_mess_neq = 
@@ -450,9 +463,15 @@ struct
           (***[END DEBUG]***)
     
           let equations = Recipe.equations_from_substitution subst in
-          
+          let rec apply_to_dep_csts = function
+            | [] -> []
+            | (lr, la) :: tl -> 
+              ((Recipe.apply_substitution subst lr (fun l f -> List.map f l)), la)
+                 :: (apply_to_dep_csts tl)  in
+
           Csys({ sub_csys with
             frame = Recipe.apply_substitution subst sub_csys.frame map_frame;
+            dependency_constraints = apply_to_dep_csts sub_csys.dependency_constraints;
             conjunction_recipe_eq = equations@(sub_csys.conjunction_recipe_eq)
             })
             

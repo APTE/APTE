@@ -74,6 +74,8 @@ val apply_output : bool -> ((symbolic_process*Term.term) -> unit) -> Recipe.vari
 
 (** {3 Optimisation} *)
 
+val display_symb_process : symbolic_process -> unit
+
 val is_same_input_output : symbolic_process -> symbolic_process -> bool
 
 (* (\** Scan a list of processes and return the channel of its first output (if any) *\) *)

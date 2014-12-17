@@ -865,3 +865,22 @@ struct
     (if cons.noCons <> [] then "{"^(display_noAxiom cons.noAxiom)^"}" else "")
     (Term.display_term cons.message)
 end
+
+let is_subset_noUse la frame =
+  let test_one ax1 elt =	(* outputs true only if elt is an axiom = ax1 *)
+    let recipe = Frame.get_recipe elt in
+    try let ax2 = Recipe.axiom_of_recipe recipe in
+	Recipe.is_equal_axiom ax2 ax1
+    with Debug.Internal_error -> false in
+  let rec aux_scan = function
+    | [] -> true
+    | ax :: la' ->
+       begin
+	 try let elt,_ = search SAll (test_one ax) frame (* SAll: tous les éléments *)
+	     in if Frame.is_noUse elt
+		then aux_scan la'
+		else false
+	 with Not_found -> 
+	   Debug.internal_error "[constraint.ml >> is_subset_noUse] Called with a list of axioms whose at least one element in not in the frame."
+       end in
+  aux_scan la

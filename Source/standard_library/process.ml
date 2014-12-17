@@ -300,6 +300,42 @@ type trace_label =
   | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term * par_label
   | Comm of internal_communication  (* won't be produced if with_por = true*)
   
+(* FORK *)
+(* Lucca Hirschi: NOTE - COMPRESSION
+   To implement the first compression step of the optimization, we adopt the
+   following method:
+   1) Each process of the multiset has now a unique index: it is an UID of its channel
+   if the whole process is simple;
+   2) last_action contains all information we need concerning the last action that
+   has been performed;
+   3) ifproper_flag is set to true then the process can not perform any other action.
+   4) we accept a "non-simple prefix" of actions: e.g. New k.in x.out k.(P_s) is acceptable
+   if P_s is a simple process. In order to allow such processes we do the following:
+      - initially, last_action.action is set to APrefix
+      - until we find a par (i.e. |) at top level, we go trough actions at top level
+        without applying compression or reduction (and last_action.action remains
+        APrefix)
+      - as soon as we find a par (i.e. |) at top level, we give a unique UID as index
+        for each sub processes (i.e. basic processes) and start to apply compression
+        and reduction with last-action.action = AInit.
+*)
+
+(* In trace_label the second compenent contains the index of the basic process that
+   has performed the action and (-1) for the "non-simple prefix"  *)
+
+(* type trace_label = *)
+(*   | Output of label * int * Recipe.recipe * Term.term * Recipe.axiom * Term.term *)
+(*   | Input of label * int * Recipe.recipe * Term.term * Recipe.recipe * Term.term *)
+(*   | Comm of internal_communication *)
+
+(* type action = | AInp | AOut | AInit | AStart    (\* init: no last action *\) *)
+(* type last_action = {                            (\* description of the last action *\) *)
+(*   action : action;                              (\* last action *\) *)
+(*   id : int;                                     (\* index of the last process that *)
+(*                                                    has performed an action *\) *)
+(*   improper_flag : bool;                         (\* is the last block improper *\) *)
+(* } *)
+(* END FORK *)
 
 type symbolic_process = 
   {
@@ -876,7 +912,7 @@ let is_same_input_output symb_proc1 symb_proc2 =
         same_trace (q1,q2)
     | Output(l1,_,ch1,_,t1,_)::q1, Output(l2,_,ch2,_,t2,_)::q2 when Term.is_equal_and_closed_term ch1 ch2 && Term.is_equal_and_closed_term t1 t2 ->
         switch_label_1 := add_sorted l1 !switch_label_1;
-        switch_label_2 := add_sorted l2 !switch_label_2;
+      switch_label_2 := add_sorted l2 !switch_label_2;
         same_trace (q1,q2)
     | _,_ -> false
   in
@@ -1002,7 +1038,6 @@ let labelise_consistently mapS symb_proc =
 		 | Not_found -> raise (Not_eq_right "Process on the left has a parallel composition with more processes that the one on the right. (3)")))
  	| _ ->   Debug.internal_error "[Process.ml >> labelise] I cannot labelise processes labelled with 'Dummy'.")
     | [] -> [] in
-
   let was_empty = MapS.is_empty mapS in
   let new_list_procs = labelise_procs symb_proc.process in
 
@@ -1048,6 +1083,7 @@ let assemble_choices_focus listChoices symP =
 	    (symP_left, symP_right))
 	   listChoices
 
+
 let has_focus symb_proc = symb_proc.has_focus
 
 let set_focus new_flag symb_proc =
@@ -1055,3 +1091,137 @@ let set_focus new_flag symb_proc =
     has_focus = new_flag;
     
   }
+
+
+
+  (* FORKKKKKKKKKKKKKKK *)
+      (** BEGIN Lucca Hirschi **)
+
+let display_symb_process symP =
+  Printf.printf "##################### Symbolic Process ###########################\n";
+  List.iter (fun (p,i) -> Printf.printf "## Process (index %d): %s\n" i (display_process p))
+    symP.process
+
+let is_improper symP = symP.last_action.improper_flag
+
+let debug_f = ref false                 (* Do we print debugging information ?  *)
+
+(* ********************************************************************** *)
+(*                 Test whether dependency constraints hold               *)
+(* ********************************************************************** *)
+let test_dependency_constraints symP =
+  (* Test whether one dep. cst hold *)
+  let rec test_cst frame = function
+    | (_, []) -> true
+    | ([], _) -> false
+    | (r::lr , la) ->
+       not (Constraint.is_subset_noUse la frame)      (* = la \notsusbseteq NoUse *)
+       && 
+       if Recipe.get_variables_of_recipe r != []
+      (* It is better to first check that r :: lr do not contain any
+      non-ground recipes ? *)
+      then true                         (* cst is not ground *)
+      else (
+        if List.exists (fun ax -> Recipe.ax_occurs ax r) la
+        then true                     (* cst hold thanks to r *)
+        else test_cst frame (lr, la))
+  in
+  (* Scan the list of dep. csts*)
+  let rec scan_dep_csts frame = function
+    | [] -> true
+    | cst :: l ->
+       if test_cst frame cst
+       then scan_dep_csts frame l
+       else false in
+
+  let csys = get_constraint_system symP in
+  let frame = Constraint_system.get_frame csys in
+
+  (* BEGIN DEBUG *)
+  if !Debug.red then begin
+    let csts = (Constraint_system.get_dependency_constraints csys) in
+    if List.length csts <> 0 then begin
+      Printf.printf "We will check those dependency constraints: %s\n"
+        (Constraint_system.display_dependency_constraints csys);
+      Printf.printf "Do those constraints hold?: %B.\n" (scan_dep_csts frame csts);
+    end;
+  end;
+  (* END DEBUG *)
+
+  scan_dep_csts frame (Constraint_system.get_dependency_constraints csys)
+
+(* ********************************************************************** *)
+(*                 Build dependency constraints given a symbolic process  *)
+(* ********************************************************************** *)
+exception No_pattern                    (* there is no well-formed pattern *)
+exception Channel_not_ground            (* a channel is not fully instantiated
+                                           (not a simple process?) *)
+
+type flagLabel = FIn | FOut           (* flag: last actions is eitehr an input or an output *)
+
+(* Scan a simple trace backward looking for a well-formed pattern assuming that last
+   action of the pattern has been performed by first_perf. Initially, last_perf=-1.
+   If there is such a pattern, it outputs the list of Recipe.axioms of the pattern. *)
+let rec search_pattern first_perf acc last_flag last_perf = function
+  | [] -> if first_perf < last_perf      (* end of a block and last_block > first_block *)
+    then acc
+    else raise No_pattern
+  | Output (_,perf,_,_,ax,_) :: l ->
+    if last_flag == FIn
+    then begin                            (* end of block *)
+      if first_perf < last_perf
+      then acc                            (* enf of block and last_block > first_block -> pattern *)
+      else if (perf != -1) && ((last_perf == -1) || (perf < first_perf)
+          || (perf > first_perf))         (* either begining, inside or end of pattern *)
+      then search_pattern first_perf (ax :: acc) FOut perf l
+      else raise No_pattern;
+    end else                                (* inside a block *)
+      if (perf == -1)
+      then raise No_pattern
+      else if last_perf != perf then begin (* not a possible (compressed) trace*)
+        Debug.internal_error "[process.ml >> search_pattern] Not a simple process (out: it has not been detected yet!!!).";
+      end else search_pattern first_perf (ax :: acc) FOut perf l
+  | Input (_,perf,_,_,_,_) :: l ->
+    if perf == -1
+    then raise No_pattern
+    else if last_perf != perf then begin (* not a possible (compressed) trace -> pattern*)
+      Debug.internal_error "[process.ml >> search_pattern] Not a simple process (in: it has not been detected yet!!!)."
+    end else ();
+    search_pattern first_perf acc FIn perf l
+
+  | Comm _ :: l -> search_pattern first_perf acc last_flag last_perf l
+
+let count = ref 0                       (* DEBUGGING purpose *)
+
+  (* Given the recipes of the first inputs, the remaining  trace and
+  the index of those inputs, it outputs the updated symbolic process *)
+  let construct_constraint list_recipes remaining_trace first_index symP =
+    (* looking for a well-formed pattern *)
+    try
+      let list_axioms = search_pattern first_index [] FIn (-1) remaining_trace in
+      (* add the correspondant dependency constraint *)
+      let new_sys  = add_dependency_constraint symP list_recipes list_axioms in
+      (* BEGIN DEBUG *)
+      if !Debug.red then begin
+        let dep_cst = Constraint_system.display_dependency_constraints
+          (get_constraint_system new_sys) in
+        Printf.printf "---------------------- A Dependency constraint HAS BEEN ADDED----------------------\n### Dependency constraints: %s\n" dep_cst;
+        Printf.printf "### Symbolic Process: %s\n" (display_trace_no_unif new_sys);
+      end;
+      (* END DEBUG *)
+      new_sys
+    with
+      | No_pattern -> symP
+  in
+  match symP.trace with                 (* We force the trace to be ..IN.OUT. *)
+    | (Output (_,perf,_,_,_,_)) :: (Input (_, perf', _, _, r, _)) :: l ->
+      if perf == perf' then begin
+        match extract_list_variables [r] perf l with
+           (* | ([],_,_) -> symP    (\* meaning that the last actions is actually an output *\) *)
+           | (list_recipes, trace, perf) -> construct_constraint list_recipes trace perf symP;
+      end
+      else symP
+    | _ -> symP
+(** End Lucca Hirschi **)
+
+(* END FORKKK *)
