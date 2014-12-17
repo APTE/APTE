@@ -455,16 +455,22 @@ let instanciate_trace symb_proc =
   
 let apply_internal_transition_without_comm with_por function_next symb_proc = 
   let has_broken_focus = ref false in
+  let has_broken_focus_0_case = ref false in
   let was_with_focus = symb_proc.has_focus in
 
   let rec go_through prev_proc csys = function
     (* when we have gone trough all processes (no more conditionals at top level) *)
-    | [] -> function_next { symb_proc with process = prev_proc;
+    | [] -> 
+       let is_improper = symb_proc.is_improper ||
+			   (symb_proc.has_focus && (!has_broken_focus_0_case)) in
+       function_next { symb_proc with process = prev_proc;
 					   constraint_system = csys;
+					   is_improper = is_improper;
 					   has_focus = symb_proc.has_focus && not(!has_broken_focus);
 			  }
-			  
+    (* Nil case: it enables to release the focus BUT produces an improper block -> set the two flags to true *)
     | (Nil,_)::q -> has_broken_focus := true;
+		    has_broken_focus_0_case := true;
 		    go_through prev_proc csys q 
     | (Choice(p1,p2), l)::q -> 
        if with_por
@@ -638,19 +644,11 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
         let ch_r = Recipe.recipe_of_variable ch_var_r
         and t_r = Recipe.recipe_of_variable t_var_r in
 
-        let is_improper = 	(* the continuation is 'improper' if there is a '0' behind the performed input -> improper block *)
-	  if not(with_por)
-	  then false
-	  else match sub_proc with
-	       | Nil -> true
-	       | _ -> false
-	in
         let symb_proc' = 
           { symb_proc with
             process = ((sub_proc,l)::q)@prev_proc;
             constraint_system = new_csys_3;
             forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
-	    is_improper = is_improper;
             trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v, fst l))::symb_proc.trace
           }
         in

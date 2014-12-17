@@ -487,6 +487,7 @@ let apply_strategy_one_transition_por (* given .... *)
   then Printf.printf "%s\n" (Process.display_trace_simple proc_left);
 
   (* We check whether processes are improper or not and continue only if they are not *)
+  (* Note that, the flag is_improper might be set to true when applying 'apply_internal[...]_without_comm *)
   let is_improper_left, is_improper_right = Process.is_improper proc_left, Process.is_improper proc_right in
   if (is_improper_left || is_improper_right)
   then if (is_improper_left && is_improper_right)
