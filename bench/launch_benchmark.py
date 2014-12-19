@@ -45,7 +45,7 @@ def main():
             print(args.version)
             list_binaries = []
             if "ref" in args.version:
-                bina = [i for i in list_binaries_tout if ("_3_" in i)][0]
+                bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
                 list_binaries.append(bina)
             if "comp" in args.version:
                 bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
@@ -117,7 +117,7 @@ def main():
             pprint_all(HEADA + "Benchmark of Protocol: " + t_name + HEADA)
             log_all.write("\n")
             pprint_all(IND + str(datetime.now()) + "\n") # timestamp
-            log_t_b = open("log/" + t_name + "_" + b_name + ".log", "w+")
+            log_t_b = open("log/byFiles/" + t_name + "_" + b_name + ".log", "w+")
             log_t_b.write(IND + str(datetime.now()))
             args = shlex.split(binary + " " +  file)
             print(args)
