@@ -39,28 +39,29 @@ one by version). We count the built-in measure of the time consumed.
 The column size contains the number of basic process / number
 of actions / max depth of the basic processes.
 We count the time consumed in seconds and the number of final
-tests (FT) (only when the quivalence is true) corresponding
-to the number of symbolic nodes that are explored.
+tests (FT) corresponding to the number of symbolic nodes that are explored.
+WARNING: FT is measured in COMP POST in a different way because the code was organized differently last year.
+         -> Todo: rewrite something similar in COmp POST in order to compare it with the new versions
 
 | Protocol                           | Size   | Ref (s/FT)       | Comp POST (s/FT)         | Red(s/FT)        | Comp Fossacs (s/FT) | -> + improper/FT |
 |------------------------------------+--------+------------------+--------------------------+------------------+---------------------+------------------|
-| Private Auth. 1 Sess.              | 2/9/5  | 0.164 / 790      | 0.012 / 60               | 0.004 / 60       |               0.864 |                  |
-| Private Auth. 2 Sess.              | 4/15/5 | (running) > 237h | 16.72 / 38721            | 11.856 / 29497   |               76.88 |                  |
-| Private Auth. 3 Sess.              | 6/21/5 | (running) > 237h | 379696(?)16767.28/ 114e6 | 91266 / 40311052 |         TODO (long) |                  |
-| Basic Ac. Ctrl. 1 S./1         (F) | 4/52/6 | 0.524            | 0.036                    | 0.008            |              0.0880 |            0.096 |
-| Basic Ac. Ctrl. 1 S./2         (F) | 4/52/6 |                  | 125.77                   | 5.0960           |               46.55 |            45.48 |
-| Wide Mouth Frog 1 S.               | 3/8/4  | 0.28/1141        | Bug [1]                  | 0.004/15         |               0.028 |                  |
-| Andrew S. RPC Strong sec.      (T) |        |                  | 1591.73                  | > 81h            |            20261.98 |                  |
-| Andrew S. RPC Strong auth.     (F) |        |                  | 0.2440                   |                  |               22.73 |            21.88 |
-| Andrew S. RPC BAN Strong sec.  (T) |        |                  | 586.77                   | > 53h            |            34459.72 |                  |
-| Andrew S. RPC BAN Strong auth. (F) |        | 1876.98          | 311.46                   |                  |               22.90 |                  |
+| Private Auth. 1 Sess.              | 2/9/5  | 0.164 / 790      | 0.012 / 60               | 0.004 / 60       | 0.028/152           | 0.012/122        |
+| Private Auth. 2 Sess.              | 4/15/5 | (running) > 237h | 16.72 / 38721            | 11.856 / 29497   | 77.58/112304        | 12.53/27002      |
+| Private Auth. 3 Sess.              | 6/21/5 | (running) > 237h | 379696(?)16767.28/ 114e6 | 91266 / 40311052 | TODO (long)         | TODO (long)      |
+| Basic Ac. Ctrl. 1 S./1         (F) | 4/52/6 | 0.524            | 0.036                    | 0.008            | 0.088/210           | 0.088/210        |
+| Basic Ac. Ctrl. 1 S./2         (F) | 4/52/6 |                  | 125.77                   | 5.0960           | 0.088/210           | 0.088/210        |
+| Wide Mouth Frog 1 S.               | 3/8/4  | 0.28/1141        | Bug [1]                  | 0.004/15         | 0.028/260           | 0.004/28         |
+| Andrew S. RPC Strong sec.      (T) |        | > 81h            | 1591.73                  |                  | 20411/9390899       | 1561/129187      |
+| Andrew S. RPC Strong auth.     (F) |        |                  | 0.2440                   |                  | 22.3/23812          | 0.12/33          |
+| Andrew S. RPC BAN Strong sec.  (T) |        | > 53h            | 586.77                   |                  | 33473/18055523      | 570.18/71211     |
+| Andrew S. RPC BAN Strong auth. (F) |        | 1876.98          | 311.46                   |                  | 23.70/23811         | 157.18/5794      |
 |------------------------------------+--------+------------------+--------------------------+------------------+---------------------+------------------|
-| Simple 3 parallels                 | 3/6/2  | 0.060 / 450      | 0.004 / 30               | 0.0040 / 24      |               0.008 |                  |
-| Simple 5 parallels                 | 5/10/2 | 178.8 / 670050   | 0.124 / 650              | 0.024 / 160      |                1.26 |             0.95 |
-| Simple 7 parallels                 | 7/14/2 | (running) > 163h | 8.512 / 27398            | 0.196 / 896      |              269.66 |           251.93 |
-| Simple 10 parallels                | 7/14/2 | (running) > 163h | 664 / 1972818            | 1.05 / 4608      |         TODO (long) |                  |
-| Complex 4 parallels                | 4/10/4 | 99.87 / 38074    | 0.55 / 130               | 0.136 / 66       |                3.10 |                  |
-| Complex 7 parallels                | 7/16/4 | (running) > 163h | 198077 / 27400           | 363.08 / 898     |         TODO (long) |                  |
+| Simple 3 parallels                 | 3/6/2  | 0.060 / 450      | 0.004 / 30               | 0.0040 / 24      | 0.008/118           | 0.004/46         |
+| Simple 5 parallels                 | 5/10/2 | 178.8 / 670050   | 0.124 / 650              | 0.024 / 160      | 1.284/9496          | 0.144/976        |
+| Simple 7 parallels                 | 7/14/2 | (running) > 163h | 8.512 / 27398            | 0.196 / 896      | 272.45/1595434      | 10.22/41098      |
+| Simple 10 parallels                | 7/14/2 | (running) > 163h | 664 / 1972818            | 1.05 / 4608      | 82412.0/459485164   | 741.85/2959228   |
+| Complex 4 parallels                | 4/10/4 | 99.87 / 38074    | 0.55 / 130               | 0.136 / 66       | 2.84/9863           | 0.604/323        |
+| Complex 7 parallels                | 7/16/4 | (running) > 163h | 198077 / 27400           | 363.08 / 898     | TODO (long)         | TODO (long)      |
 |------------------------------------+--------+------------------+--------------------------+------------------+---------------------+------------------|
 
 [1] [process.ml >> apply_output] Not a simple process (out). This error should not happen. It is raised because

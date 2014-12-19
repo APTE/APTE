@@ -14,7 +14,20 @@ import argparse
 
 
 def main():
-    log_all = open("log/results" + ".log", "a")
+    # PARSING ARGSSS
+    parser = argparse.ArgumentParser(description='Launch some benchmarks on different versions of APTE')
+    parser.add_argument('-d', '--difficulty',
+                        help='you can choose the type of examples you want to check by difficulty:  [easy,middle,hard]')
+    parser.add_argument('-f', '--file_log',
+                        help='you can choose a name for the results file')
+    parser.add_argument('-v', '--version', nargs='*',
+                        help='you can choose the version beteween [ref,comp,old_comp,comp_no_impro,red]')
+    args = parser.parse_args()
+
+    nameFile = "results"
+    if args.file_log:
+        nameFile = args.file_log
+    log_all = open("log/" + nameFile + ".log", "a")
     def print_all(s):
 #        print s
         log_all.write(s)
@@ -24,13 +37,6 @@ def main():
         log_all.write(s)
         log_all.flush()
 
-    # PARSING ARGSSS
-    parser = argparse.ArgumentParser(description='Launch some benchmarks on different versions of APTE')
-    parser.add_argument('-d', '--difficulty',
-                        help='you can choose the type of examples you want to check by difficulty:  [easy,middle,hard]')
-    parser.add_argument('-v', '--version', nargs='*',
-                        help='you can choose the version beteween [ref,comp,old_comp,comp_no_impro,red]')
-    args = parser.parse_args()
     list_tests_tout = glob.glob('../Simple_Example/Simple_*.txt')
     list_binaries_tout = glob.glob('../apte_*')
     list_tests = list_tests_tout
@@ -77,9 +83,9 @@ def main():
             if "middle" in args.difficulty:
                 tests_m = [i for i in list_tests_tout
                            if test_middle(i) and (not (i in list_tests)) ]
-                lists_tests += tests_m
+                list_tests += tests_m
             if "hard" in args.difficulty:
-                lists_tests += list_tests_tout
+                list_tests = list_tests_tout
     else:
         parser.print_help()
         list_tests = list_tests_tout
@@ -111,7 +117,7 @@ def main():
             pprint_all(HEADA + "Benchmark of Protocol: " + t_name + HEADA)
             log_all.write("\n")
             pprint_all(IND + str(datetime.now()) + "\n") # timestamp
-            log_t_b = open("log/" + t_name + "_" + b_name + ".log", "w+")
+            log_t_b = open("log/byFiles/" + t_name + "_" + b_name + ".log", "w+")
             log_t_b.write(IND + str(datetime.now()))
             args = shlex.split(binary + " " +  file)
             print(args)
