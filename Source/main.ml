@@ -143,16 +143,20 @@ let _ =
   while !i < Array.length Sys.argv && not !arret do
     match (Sys.argv).(!i) with
       | "-with_por" -> 
-          if (Sys.argv).(!i+1) = "compr"
-	  then begin
-	      Trace_equivalence.Algorithm.option_compr := true;
-	      i := !i + 2;
-	    end else
-	    begin
-	      Trace_equivalence.Algorithm.option_compr := true;
-	      Trace_equivalence.Algorithm.option_red := true;
-	      i := !i + 1;
-	    end
+	 Trace_equivalence.Algorithm.option_compr := true;
+	 if not(!i+1 = (Array.length Sys.argv))
+	 then begin
+             if (Sys.argv).(!i+1) = "compr"
+	     then i := !i + 1
+	     else if (Sys.argv).(!i+1) = "red"
+	     then begin
+		 i := !i + 1;
+		 Trace_equivalence.Algorithm.option_red := true;
+	       end
+	     else Trace_equivalence.Algorithm.option_red := true;
+	   end
+	 else Trace_equivalence.Algorithm.option_red := true;
+	 i := !i + 1;
       | "-no_comm" -> Trace_equivalence.Algorithm.option_internal_communication := false;
 		      i := !i + 1
       | "-unfold" -> 

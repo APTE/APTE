@@ -476,7 +476,7 @@ let apply_strategy_one_transition_por (* given .... *)
   in
 
   (* We keep exploring actions from this point only if all dependency constraints hold *)
-  if Process.test_dependency_constraints proc_left then
+  if not(!option_red) || Process.test_dependency_constraints proc_left then
 
     (* ** FIRST step: labelises processes and update 'has_focus': at this point, some new processes coming from 
         breaking a parallel composition are in the multiset. All those new processes come from a unique parallel
@@ -527,7 +527,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	 (* Using the flag block_complete_inp, we know if this is the first time processes have no focus.
 	   In this case, we must generate dependency constraints for the last inputs. *)
 	 let proc_left_label_red_up, proc_right_label_red_up =
-	   if not(Process.block_complete_inp proc_left_label_up)
+	   if !option_red && (Process.block_complete_inp proc_left_label_up)
 	   then begin
 	       Process.block_set_complete_inp proc_left_label_up;
 	       Process.block_set_complete_inp proc_right_label_up;
