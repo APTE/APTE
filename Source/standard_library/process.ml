@@ -307,46 +307,6 @@ type blocks = {
   mutable complete_inp : bool;	(* is set to true when performing a release of focus *)
 }
 
-let block_set_complete_inp symP = (List.hd symP.trace_blocks).complete_inp <- true
-let block_complete_inp symP = (List.hd symP.trace_blocks).complete_inp
-
-(* FORK *)
-(* Lucca Hirschi: NOTE - COMPRESSION
-   To implement the first compression step of the optimization, we adopt the
-   following method:
-   1) Each process of the multiset has now a unique index: it is an UID of its channel
-   if the whole process is simple;
-   2) last_action contains all information we need concerning the last action that
-   has been performed;
-   3) ifproper_flag is set to true then the process can not perform any other action.
-   4) we accept a "non-simple prefix" of actions: e.g. New k.in x.out k.(P_s) is acceptable
-   if P_s is a simple process. In order to allow such processes we do the following:
-      - initially, last_action.action is set to APrefix
-      - until we find a par (i.e. |) at top level, we go trough actions at top level
-        without applying compression or reduction (and last_action.action remains
-        APrefix)
-      - as soon as we find a par (i.e. |) at top level, we give a unique UID as index
-        for each sub processes (i.e. basic processes) and start to apply compression
-        and reduction with last-action.action = AInit.
-*)
-
-(* In trace_label the second compenent contains the index of the basic process that
-   has performed the action and (-1) for the "non-simple prefix"  *)
-
-(* type trace_label = *)
-(*   | Output of label * int * Recipe.recipe * Term.term * Recipe.axiom * Term.term *)
-(*   | Input of label * int * Recipe.recipe * Term.term * Recipe.recipe * Term.term *)
-(*   | Comm of internal_communication *)
-
-(* type action = | AInp | AOut | AInit | AStart    (\* init: no last action *\) *)
-(* type last_action = {                            (\* description of the last action *\) *)
-(*   action : action;                              (\* last action *\) *)
-(*   id : int;                                     (\* index of the last process that *)
-(*                                                    has performed an action *\) *)
-(*   improper_flag : bool;                         (\* is the last block improper *\) *)
-(* } *)
-(* END FORK *)
-
 type symbolic_process = 
   {
     axiom_name_assoc : (Recipe.recipe * Term.term) list;
@@ -358,7 +318,10 @@ type symbolic_process =
     trace_blocks : blocks list;
     marked : bool
   }
-  
+
+let block_set_complete_inp symP = (List.hd symP.trace_blocks).complete_inp <- true
+let block_complete_inp symP = (List.hd symP.trace_blocks).complete_inp
+
 let create_symbolic axiom_name_assoc proc csys = 
   {
     axiom_name_assoc = axiom_name_assoc;
@@ -367,7 +330,7 @@ let create_symbolic axiom_name_assoc proc csys =
     constraint_system = csys;
     forbidden_comm = [];
     trace = [];
-    trace = trace_blocks;
+    trace_blocks = [];
     marked = false
   }
   
@@ -674,19 +637,19 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
         let ch_r = Recipe.recipe_of_variable ch_var_r
         and t_r = Recipe.recipe_of_variable t_var_r in
 
-	let old_trace_block = symb_proc.trace_blocks in
+	let old_trace_blocks = symb_proc.trace_blocks in
 	let new_trace_blocks = 
           if old_trace_blocks = [] or (List.hd old_trace_blocks).complete_inp
 	  (* then: we start a new block *)
 	  then ({par_lab = fst l;
-		 in = [Term.term_of_variable y];
-		    out = [];
-		    complete_inp = false;
+		 inp = [ch_r];
+		 out = [];
+		 complete_inp = false;
 	       }) :: old_trace_blocks
 	  (* else: we complete the block with the new recipe *)
 	  else begin
 	      let block = List.hd old_trace_blocks in
-	      block.inp <- (Term.term_of_variable y) :: (block.inp);
+	      block.inp <- (ch_r) :: (block.inp);
 	      old_trace_blocks
 	    end in
 	
@@ -730,7 +693,7 @@ let apply_output with_por function_next ch_var_r symb_proc =
 	let axiom = Recipe.axiom (Constraint_system.get_maximal_support new_csys_4) in
 
 	(* Update of the last block *)
-	let old_trace_block = symb_proc.trace_blocks in
+	let old_trace_blocks = symb_proc.trace_blocks in
 	let block = List.hd old_trace_blocks in
 	block.out <- axiom :: (block.out);
 
@@ -774,7 +737,7 @@ let apply_output_filter ch_f function_next ch_var_r symb_proc =
        let axiom = Recipe.axiom (Constraint_system.get_maximal_support new_csys_4) in
        
        (* Update of the last block *)
-       let old_trace_block = symb_proc.trace_blocks in
+       let old_trace_blocks = symb_proc.trace_blocks in
        let block = List.hd old_trace_blocks in
        block.out <- axiom :: (block.out);
        
