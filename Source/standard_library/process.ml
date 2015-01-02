@@ -298,8 +298,18 @@ let set_to_be_labelled = function
 type trace_label =
   | Output of label * Recipe.recipe * Term.term * Recipe.axiom * Term.term * par_label
   | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term * par_label
-  | Comm of internal_communication  (* won't be produced if with_por = true*)
+  | Comm of internal_communication  (* won't be produced when with_por = true*)
   
+type blocks = {
+  par_lab : par_label;
+  mutable inp : Recipe.recipe list;
+  mutable out : Recipe.axiom list;
+  mutable complete_inp : bool;	(* is set to true when performing a release of focus *)
+}
+
+let block_set_complete_inp symP = (List.hd symP.trace_blocks).complete_inp <- true
+let block_complete_inp symP = (List.hd symP.trace_blocks).complete_inp
+
 (* FORK *)
 (* Lucca Hirschi: NOTE - COMPRESSION
    To implement the first compression step of the optimization, we adopt the
@@ -345,6 +355,7 @@ type symbolic_process =
     constraint_system : Constraint_system.constraint_system;
     forbidden_comm : internal_communication list;
     trace : trace_label list;
+    trace_blocks : blocks list;
     marked : bool
   }
   
@@ -356,6 +367,7 @@ let create_symbolic axiom_name_assoc proc csys =
     constraint_system = csys;
     forbidden_comm = [];
     trace = [];
+    trace = trace_blocks;
     marked = false
   }
   
@@ -661,13 +673,30 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
         
         let ch_r = Recipe.recipe_of_variable ch_var_r
         and t_r = Recipe.recipe_of_variable t_var_r in
-        
+
+	let old_trace_block = symb_proc.trace_blocks in
+	let new_trace_blocks = 
+          if old_trace_blocks = [] or (List.hd old_trace_blocks).complete_inp
+	  (* then: we start a new block *)
+	  then ({par_lab = fst l;
+		 in = [Term.term_of_variable y];
+		    out = [];
+		    complete_inp = false;
+	       }) :: old_trace_blocks
+	  (* else: we complete the block with the new recipe *)
+	  else begin
+	      let block = List.hd old_trace_blocks in
+	      block.inp <- (Term.term_of_variable y) :: (block.inp);
+	      old_trace_blocks
+	    end in
+	
         let symb_proc' = 
           { symb_proc with
             process = ((sub_proc,l)::q)@prev_proc;
             constraint_system = new_csys_3;
             forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
-            trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v, fst l))::symb_proc.trace
+            trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v, fst l))::symb_proc.trace;
+	    trace_blocks = new_trace_blocks;
           }
         in
         
@@ -698,14 +727,21 @@ let apply_output with_por function_next ch_var_r symb_proc =
         
         let ch_r = Recipe.recipe_of_variable ch_var_r in
         
+	let axiom = Recipe.axiom (Constraint_system.get_maximal_support new_csys_4) in
+
+	(* Update of the last block *)
+	let old_trace_block = symb_proc.trace_blocks in
+	let block = List.hd old_trace_blocks in
+	block.out <- axiom :: (block.out);
+
         let symb_proc' = 
           { symb_proc with
             process = ((sub_proc,l)::q)@prev_proc;
             constraint_system = new_csys_4;
             forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
             trace = (Output (label,ch_r,Term.term_of_variable y,
-			     Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),
-			     Term.term_of_variable x, fst l))::symb_proc.trace
+			     axiom,
+			     Term.term_of_variable x, fst l))::symb_proc.trace;
           }
         in
         
@@ -735,13 +771,20 @@ let apply_output_filter ch_f function_next ch_var_r symb_proc =
        
        let ch_r = Recipe.recipe_of_variable ch_var_r in
        
+       let axiom = Recipe.axiom (Constraint_system.get_maximal_support new_csys_4) in
+       
+       (* Update of the last block *)
+       let old_trace_block = symb_proc.trace_blocks in
+       let block = List.hd old_trace_blocks in
+       block.out <- axiom :: (block.out);
+       
        let symb_proc' = 
          { symb_proc with
            process = ((sub_proc,l)::q)@prev_proc;
            constraint_system = new_csys_4;
            forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
            trace = (Output (label,ch_r,Term.term_of_variable y,
-			    Recipe.axiom (Constraint_system.get_maximal_support new_csys_4),
+			    axiom,
 			    Term.term_of_variable x, fst l))::symb_proc.trace
          }
        in
