@@ -1103,21 +1103,12 @@ let set_focus new_flag symb_proc =
     
   }
 
-
-
-  (* FORKKKKKKKKKKKKKKK *)
-      (** BEGIN Lucca Hirschi **)
-
 let display_symb_process symP =
   Printf.printf "##################### Symbolic Process ###########################\n";
   List.iter (fun (p,i) -> Printf.printf "## Process (index %d): %s\n" 0 (* i *) (display_process p))
-    symP.process
+	    symP.process
 
-
-let is_improper symP = 	false
-(* symP.last_action.improper_flag *)
-
-let debug_f = ref false                 (* Do we print debugging information ?  *)
+let debug_f = ref true            (* Do we print debugging information ?  *)
 
 (* ********************************************************************** *)
 (*                 Test whether dependency constraints hold               *)
@@ -1128,32 +1119,34 @@ let test_dependency_constraints symP =
     | (_, []) -> true
     | ([], _) -> false
     | (r::lr , la) ->
-       not (Constraint.is_subset_noUse la frame)      (* = la \notsusbseteq NoUse *)
-       && 
        if Recipe.get_variables_of_recipe r != []
-      (* It is better to first check that r :: lr do not contain any
+       (* It is better to first check that r :: lr do not contain any
       non-ground recipes ? *)
-      then true                         (* cst is not ground *)
-      else (
-        if List.exists (fun ax -> Recipe.ax_occurs ax r) la
-        then true                     (* cst hold thanks to r *)
-        else test_cst frame (lr, la))
+       then true                         (* cst is not ground *)
+       else (
+         if List.exists (fun ax -> Recipe.ax_occurs ax r) la
+         then true                     (* cst hold thanks to r *)
+         else test_cst frame (lr, la))
   in
   (* Scan the list of dep. csts*)
   let rec scan_dep_csts frame = function
     | [] -> true
-    | cst :: l ->
-       if test_cst frame cst
-       then scan_dep_csts frame l
-       else false in
-
+    | ((lr, la) as cst) :: l ->
+       (* We made the choice to firstly check the noUse criterion and then the closed recipe criterion.
+	 Todo: find the most efficient order. *)
+       if la <> [] && (Constraint.is_subset_noUse la frame)     (* = la \susbseteq NoUse *)
+       then false
+       else (if test_cst frame cst
+	     then scan_dep_csts frame l
+	     else false) in
+  
   let csys = get_constraint_system symP in
   let frame = Constraint_system.get_frame csys in
 
   (* BEGIN DEBUG *)
   if true (* Debug.red *) then begin
     let csts = (Constraint_system.get_dependency_constraints csys) in
-    if List.length csts <> 0 then begin
+    if csts <> [] then begin
       Printf.printf "We will check those dependency constraints: %s\n"
         (Constraint_system.display_dependency_constraints csys);
       Printf.printf "Do those constraints hold?: %B.\n" (scan_dep_csts frame csts);
@@ -1163,99 +1156,77 @@ let test_dependency_constraints symP =
 
   scan_dep_csts frame (Constraint_system.get_dependency_constraints csys)
 
+(* Helping functions dealing with par_label *)
+let rec listDrop l = function
+  | 0 -> l
+  | n -> listDrop (List.tl l) (n-1)
+
+let extract_common l1 l2 =  
+  let s1,s2 = List.length l1, List.length l2 in
+  let s = min s1 s2 in
+  let l1d, l2d = listDrop l1 (s1-s), listDrop l2 (s2-s) in
+  let rec aux = function
+    | (x1 :: tl1 as l1, x2 :: tl2 as l2) -> 
+       if tl1 == tl2
+       then (x1,x2,tl1)
+       else aux (tl1,tl2)
+    | _, _ ->   Debug.internal_error "[Process.ml >> extact_common] Should not happen!" in
+
+  aux (l1,l2)
+
+(* l1 ||^s l2 *)
+let lab_inpar l1 l2 = 
+  let x1,x2,ld = extract_common l1 l2 in
+  if x1 = x2
+  then true
+  else false 
+
+(* l1 < l2 *)
+let lab_ord l1 l2 =
+  let x1,x2,ld = extract_common l1 l2 in
+  x1 < x2
+
+exception No_pattern
+
+(* Recusrive functions that looks for a pattern given the par_label [par_lab] of the last block
+   and  an accumulator of axioms [acc_axioms]*)
+let rec search_pattern par_lab acc_axioms = function
+  | [] -> raise No_pattern  
+  (* block <|> par_lab: No_pattern *)
+  | block :: trace when not(lab_inpar block.par_lab par_lab) -> raise No_pattern
+  (* block || par_lab and <: acc+1 and rec call *)
+  | block :: trace when lab_ord block.par_lab par_lab -> search_pattern par_lab (block.out @ acc_axioms) trace
+  (* block || par_lab and >: return acc+1 (DEP CST) *)
+  | block :: trace -> block.out @ acc_axioms
+
+
 (* ********************************************************************** *)
 (*                 Build dependency constraints given a symbolic process  *)
 (* ********************************************************************** *)
-exception No_pattern                    (* there is no well-formed pattern *)
-exception Channel_not_ground            (* a channel is not fully instantiated
-                                           (not a simple process?) *)
 
-type flagLabel = FIn | FOut           (* flag: last actions is eitehr an input or an output *)
-
-(* Scan a simple trace backward looking for a well-formed pattern assuming that last
-   action of the pattern has been performed by first_perf. Initially, last_perf=-1.
-   If there is such a pattern, it outputs the list of Recipe.axioms of the pattern. *)
-let rec search_pattern first_perf acc last_flag last_perf = function
-  | [] -> if first_perf < last_perf      (* end of a block and last_block > first_block *)
-    then acc
-    else raise No_pattern
-  | Output (_,perf,_,_,ax,_) :: l ->
-    if last_flag == FIn
-    then begin                            (* end of block *)
-      if first_perf < last_perf
-      then acc                            (* enf of block and last_block > first_block -> pattern *)
-      else 
- if true (* (perf != -1) && ((last_perf == -1) || (perf < first_perf)
-          || (perf > first_perf))         (* either begining, inside or end of pattern *)
-*)
-      then search_pattern first_perf (ax :: acc) FOut perf l
-      else raise No_pattern;
-    end else                                (* inside a block *)
-      if true (* (perf == -1) *)
-      then raise No_pattern
-      else if last_perf != perf then begin (* not a possible (compressed) trace*)
-        Debug.internal_error "[process.ml >> search_pattern] Not a simple process (out: it has not been detected yet!!!).";
-      end else search_pattern first_perf (ax :: acc) FOut perf l
-  | Input (_,perf,_,_,_,_) :: l ->
-    if true (* perf == -1 *)
-    then raise No_pattern
-    else if last_perf != perf then begin (* not a possible (compressed) trace -> pattern*)
-      Debug.internal_error "[process.ml >> search_pattern] Not a simple process (in: it has not been detected yet!!!)."
-    end else ();
-    search_pattern first_perf acc FIn perf l
-
-  | Comm _ :: l -> search_pattern first_perf acc last_flag last_perf l
-
-let count = ref 0                       (* DEBUGGING purpose *)
-
-(* CF. algorithm.ml|L.236 for a discussion about a trade off. We choose to add
-a dependency constraint only after the last input of any IO block.
-So we require that the trace ends with ....IN.OUT.
-*)
 let generate_dependency_constraints symP =
-  (* We extract the recipes of the last inputs and output it with
-     the remainder of the list and the index of those inputs.
-     last_perf : index that has performed last action (init=-1) *)
-  let rec extract_list_variables acc last_perf = function
-    | ((Output (_,perf,_,_,_,_) :: l) as rl) ->
-      if true
-    (* last_perf != -1 && perf != last_perf     (* TODO: two blocks on same channel? *) *)
-      then (acc, rl, last_perf)                   (* end of the first block *)
-      else extract_list_variables acc perf l      (* inside first block *)
-    | Input (_, perf, _, _, r, _) :: l ->
-      extract_list_variables (r::acc) perf l      (* perf instead of last_perf for improper blocks *)
-    | Comm _ :: l -> extract_list_variables acc last_perf l
-    | [] -> (acc, [], last_perf) in
-
-  (* Given the recipes of the first inputs, the remaining  trace and
-  the index of those inputs, it outputs the updated symbolic process *)
-  let construct_constraint list_recipes remaining_trace first_index symP =
-    (* looking for a well-formed pattern *)
-    try
-      let list_axioms = (Obj.magic 0) (* search_pattern first_index [] FIn (-1) remaining_trace*) in
-      (* add the correspondant dependency constraint *)
-      let new_sys  = add_dependency_constraint symP list_recipes list_axioms in
-      (* BEGIN DEBUG *)
-      if true (* Debug.red *) then begin
-        let dep_cst = Constraint_system.display_dependency_constraints
-          (get_constraint_system new_sys) in
-        Printf.printf "---------------------- A Dependency constraint HAS BEEN ADDED----------------------\n### Dependency constraints: %s\n" dep_cst;
-        Printf.printf "### Symbolic Process: %s\n" (display_trace_no_unif new_sys);
-      end;
-      (* END DEBUG *)
-      new_sys
-    with
-      | No_pattern -> symP
-  in
-  match symP.trace with                 (* We force the trace to be ..IN.OUT. *)
-    | (Output (_,perf,_,_,_,_)) :: (Input (_, perf', _, _, r, _)) :: l ->
-      if perf == perf' then begin
-        match extract_list_variables [r] perf l with
-           (* | ([],_,_) -> symP    (\* meaning that the last actions is actually an output *\) *)
-           | (list_recipes, trace, perf) -> construct_constraint (Obj.magic 0) (* list_recipes trace perf symP *) ;
-      end
-      else Obj.magic symP
-    | _ -> Obj.magic symP
-(** End Lucca Hirschi **)
-
-(* END FORKKK *)
+  if List.length symP.trace_blocks < 2
+  (* then only one block has been performed -> no constraint is added *)
+  then symP
+  else begin
+      let block = List.hd symP.trace_blocks
+      and trace = List.tl symP.trace_blocks in
+      let list_recipes = block.inp in
+      try 
+	let list_axioms = search_pattern block.par_lab [] trace in
+	let new_sys  = add_dependency_constraint symP list_recipes list_axioms in
+	
+	(* BEGIN DEBUG *)
+	if !debug_f
+	then begin
+	    let dep_cst = Constraint_system.display_dependency_constraints
+			    (get_constraint_system new_sys) in
+            Printf.printf "---------------------- A Dependency constraint HAS BEEN ADDED----------------------\n### Dependency constraints: %s\n" dep_cst;
+            Printf.printf "### Symbolic Process: %s\n" (display_trace_no_unif new_sys);
+	  end;
+	(* END DEBUG *)
+	
+	new_sys
+      with
+      | No_pattern -> symP;
+    end
