@@ -475,7 +475,10 @@ let apply_strategy_one_transition_por (* given .... *)
       end;
   in
 
-  (* ** FIRST step: labelises processes and update 'has_focus': at this point, some new processes coming from 
+  (* We keep exploring actions from this point only if all dependency constraints hold *)
+  if Process.test_dependency_constraints proc_left then
+
+    (* ** FIRST step: labelises processes and update 'has_focus': at this point, some new processes coming from 
         breaking a parallel composition are in the multiset. All those new processes come from a unique parallel
         composition, so we label them in an arbitrary order but consistently with right_symb_proc_list. *)
 
@@ -520,8 +523,20 @@ let apply_strategy_one_transition_por (* given .... *)
     | false, false ->
        (***************** WITHOUT FOCUS ****************************  *)
        begin
-	 
-	 let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label_up) in
+
+	 (* Using the flag block_complete_inp, we know if this is the first time processes have no focus.
+	   In this case, we must generate dependency constraints for the last inputs. *)
+	 let proc_left_label_red_up, proc_right_label_red_up =
+	   if not(Process.block_complete_inp proc_left_label_up)
+	   then begin
+	       Process.block_set_complete_inp proc_left_label_up;
+	       Process.block_set_complete_inp proc_right_label_up;
+	       (Process.generate_dependency_constraints proc_left_label_up,
+		Process.generate_dependency_constraints proc_right_label_up)
+	     end
+	   else (proc_left_label_up, proc_right_label_up) in
+
+	 let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label_red_up) in
 	 let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
 	 
 	 (* We look for the first negative process in proc_left_left. Case (i): there is a such process.
@@ -529,7 +544,7 @@ let apply_strategy_one_transition_por (* given .... *)
               corresponding process on the right.
 	     Note that, since we check that sk(P)=sk(Q) on new processes when labelling
 	     them, it is not necesseray to check this now.
-             Case (ii): P is positive. We iter over the whole list of proc_left_label_up.process:
+             Case (ii): P is positive. We iter over the whole list of proc_left_label_red_up.process:
 	     put the selected process under focus, set has_focus to true, try to do the same on the right
              and apply apply_input_on_focused.*)
 	 
@@ -541,7 +556,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	  in the next step when performing conditionals/splittings. *)
 	    left_output_set := (symb_proc_2,c)::!left_output_set)
 	   var_r_ch
-	   proc_left_label_up;
+	   proc_left_label_red_up;
 	 
 	 if List.length !left_output_set = 0
 	 then begin
@@ -553,9 +568,9 @@ let apply_strategy_one_transition_por (* given .... *)
 
 	     (* we build a list (P_i,ski) list of alternatives of choices of focused process with the corresponding
 	      focused process' skeleton ski*)
-	     let left_choose_focus = Process.list_of_choices_focus proc_left_label_up in
+	     let left_choose_focus = Process.list_of_choices_focus proc_left_label_red_up in
 	     (* using the latter we build a list (P_i,Q_i) list where Q_i is a choice of focus such that sk(P_i)=sk(Q_i) *)
-	     let listPairProc = Process.assemble_choices_focus left_choose_focus proc_right_label_up in
+	     let listPairProc = Process.assemble_choices_focus left_choose_focus proc_right_label_red_up in
 	     (* in listPairProc : (symbolic_process^2) list, we apply input_focus on each pair with a List.iter *)
 	     List.iter (fun (p_left,p_right) ->
 			apply_input_on_focused next_function_input p_left p_right)
@@ -574,7 +589,7 @@ let apply_strategy_one_transition_por (* given .... *)
 		(* same as above *)
 		right_output_set := symb_proc_2::!right_output_set)
 	       var_r_ch
-	       proc_right_label_up;
+	       proc_right_label_red_up;
 	     
 	     if !print_debug_por then
 	       Printf.printf "After OUT. Lists' sizes: %d,%d.\n"
@@ -586,7 +601,7 @@ let apply_strategy_one_transition_por (* given .... *)
 		 Printf.printf "Witness' type: right process cannot execute an output that the left one can perform.";
 		 Printf.printf "%s" (" Here is the channel of this output: "^(Term.display_term ch)^".\n");
 		 Printf.printf "%s\n" (Process.display_trace_no_unif proc_left_out);
-		 raise (Not_equivalent_left proc_left_label_up);
+		 raise (Not_equivalent_left proc_left_label_red_up);
 	       end
 	     else if List.length !right_output_set != 1
 	     then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen.";
