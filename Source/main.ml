@@ -24,10 +24,10 @@ let print_help () =
   Printf.printf "          traces.\n\n";
   Printf.printf "      -log <int> : Log all the symbolic processes and the matrices obtained on the\n";
   Printf.printf "          leaves for all traces of size smaller than or equal to <int>.\n\n";
-  Printf.printf "      -with_por [compr|red] : Uses Partial Order Reductions techniques to significantly\n";
+  Printf.printf "      -with_por [compr|red] [|improper]: Uses Partial Order Reductions techniques to significantly\n";
   Printf.printf "          improve performance. It is possible to choose a specific POR technique (compressed\n";
-  Printf.printf "          or reduced semantics). Without extra argument, -with_por option will enable the best\n";
-  Printf.printf "          POR tehnique (i.e., reduced semantics).\n";
+  Printf.printf "          or reduced semantics), improper is optional. Without extra argument, -with_por option\n";
+  Printf.printf "          will enable the best POR tehnique (i.e., reduced semantics with improper).\n";
   Printf.printf "          Note : This option automatically activates the option '-no_comm'.\n";
   Printf.printf "          WARNING : This option should only be used for action-determinate processes.\n\n";
   Printf.printf "      -no_comm : Does not consider the internal communication in the trace equivalence.\n";
@@ -77,14 +77,24 @@ let display_channel_and_stdout channel str =
   Printf.printf "%s" str;
   Printf.fprintf channel "%s" str
 
+let ps = Printf.sprintf
+
 let decide_trace_equivalence process1 process2 =
   let channel = Trace_equivalence.Statistic.reset_statistic () in
 
   display_channel_and_stdout channel "------------\n";
+  let text_improper =
+    if !Trace_equivalence.Algorithm.option_improper
+    then " (as well as the improper traces killing)"
+    else "" in
   if !Trace_equivalence.Algorithm.option_red
-  then display_channel_and_stdout channel "OPTIMIZATION: Reduction is enabled. Make sure processes are action-determinate.\n"
+  then display_channel_and_stdout channel
+				  (ps "OPTIMIZATION: Reduction is enabled%s. Make sure processes are action-determinate.\n"
+				      text_improper)
   else (if !Trace_equivalence.Algorithm.option_compr
-	then display_channel_and_stdout channel "OPTIMIZATION: Compression is enabled. Make sure processes are action-determinate.\n");
+	then display_channel_and_stdout channel
+					(ps "OPTIMIZATION: Compression is enabled%s. Make sure processes are action-determinate.\n"
+					    text_improper));
   
   display_channel_and_stdout channel "Equivalence between the two following processes:\n\n";
   
@@ -159,10 +169,23 @@ let _ =
 		 i := !i + 1;
 		 Trace_equivalence.Algorithm.option_red := true;
 	       end
-	     else Trace_equivalence.Algorithm.option_red := true;
+	     else if (Sys.argv).(!i+1) = "improper"
+	     then begin
+		 i := !i + 1;
+		 Trace_equivalence.Algorithm.option_improper := true;
+	       end else begin
+		       Trace_equivalence.Algorithm.option_red := true;
+		       Trace_equivalence.Algorithm.option_improper := true;
+		     end;
 	   end
 	 else Trace_equivalence.Algorithm.option_red := true;
 	 i := !i + 1;
+	 if not(!i+1 = (Array.length Sys.argv))
+	 then if (Sys.argv).(!i) = "improper"
+	      then begin
+		  Trace_equivalence.Algorithm.option_improper := true;
+		  i := !i + 1;
+		end
       | "-no_comm" -> Trace_equivalence.Algorithm.option_internal_communication := false;
 		      i := !i + 1
       | "-unfold" -> 

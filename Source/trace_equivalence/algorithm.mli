@@ -11,6 +11,9 @@ val option_compr : bool ref
 (** true if POR technique with compression plus reduction will be used (only for action-determinate proc.) *)
 val option_red : bool ref
 
+(** true if POR technique with killing improper traces will be used (only for action-determinate proc.) *)
+val option_improper : bool ref
+
 val option_internal_communication : bool ref
 
 val option_erase_double : bool ref

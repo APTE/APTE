@@ -506,10 +506,10 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
        let is_improper = symb_proc.is_improper ||
 			   (symb_proc.has_focus && (!has_broken_focus_0_case)) in
        function_next { symb_proc with process = prev_proc;
-					   constraint_system = csys;
-					   is_improper = is_improper;
-					   has_focus = symb_proc.has_focus && not(!has_broken_focus);
-			  }
+				      constraint_system = csys;
+				      is_improper = is_improper;
+				      has_focus = symb_proc.has_focus && not(!has_broken_focus);
+		     }
     (* Nil case: it enables to release the focus BUT produces an improper block -> set the two flags to true *)
     | (Nil,_)::q -> has_broken_focus := true;
 		    has_broken_focus_0_case := true;
