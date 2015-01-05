@@ -225,6 +225,9 @@ val get_quantifier : variable -> quantifier
     
 (** {3 Scanning} *)
 
+(** [is_closed t] returns [true] iff there is no variable in [t]. *)
+val is_closed : term -> bool
+
 (** [occurs v t] returns [true] iff the variable [v] occurs in the term [t].*)
 val var_occurs : variable -> term -> bool
 

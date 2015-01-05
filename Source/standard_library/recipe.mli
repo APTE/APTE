@@ -65,6 +65,9 @@ val variable_of_recipe : recipe -> variable
 (** [get_variables_of_recipe r] returns the list of variables in [r]. *)
 val get_variables_of_recipe : recipe -> variable list
 
+(** [is_closed r] returns [true] iff there is no variable in [r]. *)
+val is_closed : recipe -> bool
+
 (** [axiom_of_recipe r] returns the recipe [r] as an axiom.
     @raise Internal_error if [r] is not an axiom.*)
 val axiom_of_recipe : recipe -> axiom

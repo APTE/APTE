@@ -440,10 +440,14 @@ let apply_strategy_one_transition_por (* given .... *)
    only one symbolic process. *)
 
   if !print_debug_por then
-    Printf.printf "\n################### Before starting apply_strategy_one. Size of lists: %d,%d. Trace's size: %d\n"
-		  (List.length left_symb_proc_list)
-		  (List.length right_symb_proc_list)
-		  (Process.size_trace (List.hd left_symb_proc_list));
+    begin
+      Printf.printf "\n################### Before starting apply_strategy_one. Size of lists: %d,%d. Trace's size: %d\n"
+		    (List.length left_symb_proc_list)
+		    (List.length right_symb_proc_list)
+		    (Process.size_trace (List.hd left_symb_proc_list));
+      Printf.printf "%s" (Process.display_trace_no_unif_no_csts (List.hd left_symb_proc_list));
+      Printf.printf "%s" (Process.display_trace_blocks (List.hd left_symb_proc_list));
+    end;
   
   (* We check that sets of processes are singletons *)
   if List.length left_symb_proc_list != 1 || List.length right_symb_proc_list != 1

@@ -98,6 +98,11 @@ let rec get_variables_of_recipe = function
   | Axiom _ -> []
   | Func (_, list) -> List.concat (List.map get_variables_of_recipe list)
 
+let rec is_closed = function
+  | Var v -> false
+  | Axiom _ -> true
+  | Func (_, list) -> List.for_all is_closed list
+
 let apply_function symbol list_sons = 
   (***[BEGIN DEBUG]***)
   Debug.low_debugging (fun () ->

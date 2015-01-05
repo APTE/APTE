@@ -1164,30 +1164,32 @@ let set_focus new_flag symb_proc =
 let display_symb_process symP =
   Printf.printf "##################### Symbolic Process ###########################\n";
   List.iter (fun (p,i) -> Printf.printf "## Process (index %d): %s\n" 0 (* i *) (display_process p))
-	    symP.process
+	    symP.process;
+  Printf.printf "%s" (display_trace_blocks symP)
 
-let debug_f = ref true            (* Do we print debugging information ?  *)
+let debug_f = ref false           (* Do we print debugging information ?  *)
 
 (* ********************************************************************** *)
 (*                 Test whether dependency constraints hold               *)
 (* ********************************************************************** *)
 let test_dependency_constraints symP =
   (* Test whether one dep. cst hold *)
-  let rec test_cst frame = function
+  let rec test_cst frame r_subst = function
     | (_, []) -> true
     | ([], _) -> false
     | (r::lr , la) ->
-       if Recipe.get_variables_of_recipe r != []
+       let r_t' = Recipe.apply_substitution r_subst r (fun t f -> f t) in
+       if not(Recipe.is_closed r_t')
        (* It is better to first check that r :: lr do not contain any
       non-ground recipes ? *)
        then true                         (* cst is not ground *)
        else (
          if List.exists (fun ax -> Recipe.ax_occurs ax r) la
          then true                     (* cst hold thanks to r *)
-         else test_cst frame (lr, la))
+         else test_cst frame r_subst (lr, la))
   in
   (* Scan the list of dep. csts*)
-  let rec scan_dep_csts frame = function
+  let rec scan_dep_csts frame r_subst = function
     | [] -> true
     | ((lr, la) as cst) :: l ->
        (* We made the choice to firstly check the noUse criterion and then the closed recipe criterion.
@@ -1195,27 +1197,29 @@ let test_dependency_constraints symP =
        if la <> [] && (false && (Constraint.is_subset_noUse la frame))     (* = la \susbseteq NoUse *)
        (* TODO: enlever le false et debugger is_subset_nouse *)
        then false
-       else (if test_cst frame cst
-	     then scan_dep_csts frame l
+       else (if test_cst frame r_subst cst
+	     then scan_dep_csts frame r_subst l
 	     else false) in
   
   let csys = get_constraint_system symP in
   let frame = Constraint_system.get_frame csys in
+  let recipe_eq = Constraint_system.get_recipe_equations csys in
+  let r_subst = Recipe.unify recipe_eq in
 
   (* BEGIN DEBUG *)
-  if true (* Debug.red *) then begin
+  if !debug_f then begin
     let csts = (Constraint_system.get_dependency_constraints csys) in
-    if true || csts <> [] then
+    if csts <> [] then
       begin
 	Printf.printf "### Symbolic Process: %s" (display_trace_no_unif symP);
 	Printf.printf "We will check those dependency constraints: %s"
 		      (Constraint_system.display_dependency_constraints csys);
-	Printf.printf "Do those constraints hold?: ---- %B ----.\n\n" (scan_dep_csts frame csts);
+	Printf.printf "Do those constraints hold?: ---- %B ----.\n\n" (scan_dep_csts frame r_subst csts);
       end;
 		end;
   (* END DEBUG *)
 
-  scan_dep_csts frame (Constraint_system.get_dependency_constraints csys)
+  scan_dep_csts frame r_subst (Constraint_system.get_dependency_constraints csys)
 
 (* Helping functions dealing with par_label *)
 let rec listDrop l = function
