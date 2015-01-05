@@ -302,9 +302,10 @@ type trace_label =
   
 type blocks = {
   par_lab : par_label;
-  mutable inp : Recipe.recipe list;
-  mutable out : Recipe.axiom list;
+  inp : Recipe.recipe list;
+  out : Recipe.axiom list;
   mutable complete_inp : bool;	(* is set to true when performing a release of focus *)
+(* TODO: is mutable dangerous here? when backtracking???????? CHECK THIS OUT *)
 }
 
 type symbolic_process = 
@@ -319,8 +320,16 @@ type symbolic_process =
     marked : bool
   }
 
-let block_set_complete_inp symP = (List.hd symP.trace_blocks).complete_inp <- true
-let block_complete_inp symP = (List.hd symP.trace_blocks).complete_inp
+let pp s = Printf.printf "%s%!" s
+
+let block_set_complete_inp symP = 
+  let trace_blocks = symP.trace_blocks in
+  if not(trace_blocks = [])
+  then (List.hd trace_blocks).complete_inp <- true
+					       
+let block_complete_inp symP =
+  let trace_blocks = symP.trace_blocks in
+  trace_blocks <> [] && (List.hd symP.trace_blocks).complete_inp
 
 let create_symbolic axiom_name_assoc proc csys = 
   {
@@ -346,6 +355,28 @@ let display_parlab pl =
      (fun str_acc i -> (str_acc^(string_of_int i)^" "))
      "[" pl_rev)^"]"
 	       
+let display_block b =
+  if b.complete_inp
+  then ps "{%s:%s/%s}" 
+	  (display_parlab b.par_lab)
+	  ((List.fold_left
+	      ((fun str_acc r -> (str_acc^(Recipe.display_recipe r))^","))
+	      "" b.inp)^"")
+	  ((List.fold_left
+	      ((fun str_acc a -> (str_acc^(Recipe.display_axiom a))^","))
+	      "" b.out)^"")
+  else ps "{{%s:%s/.}}" 
+	  (display_parlab b.par_lab)
+	  ((List.fold_left
+	      ((fun str_acc s -> (str_acc^(Recipe.display_recipe s))^","))
+	      "" b.inp)^"")
+
+let display_trace_blocks symP = 
+  ps "Trace_Blocks:  [%s].\n"
+     (List.fold_left
+	(fun str_acc b -> (str_acc^(display_block b))^" ")
+	"" symP.trace_blocks)
+     
 let display_trace_label r_subst m_subst recipe_term_assoc = function 
   | Output(label,r_ch,m_ch,ax,t,pl) -> 
       let r_ch' = Recipe.apply_substitution r_subst r_ch (fun t f -> f t) in
@@ -642,15 +673,19 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
           if old_trace_blocks = [] or (List.hd old_trace_blocks).complete_inp
 	  (* then: we start a new block *)
 	  then ({par_lab = fst l;
-		 inp = [ch_r];
+		 inp = [t_r];
 		 out = [];
 		 complete_inp = false;
 	       }) :: old_trace_blocks
 	  (* else: we complete the block with the new recipe *)
 	  else begin
 	      let block = List.hd old_trace_blocks in
-	      block.inp <- (ch_r) :: (block.inp);
-	      old_trace_blocks
+	      let old_traces = List.tl old_trace_blocks in
+	      let new_block = {
+		block with
+		inp =(t_r) :: (block.inp);
+	      } in
+	      new_block :: old_traces
 	    end in
 	
         let symb_proc' = 
@@ -694,8 +729,13 @@ let apply_output with_por function_next ch_var_r symb_proc =
 
 	(* Update of the last block *)
 	let old_trace_blocks = symb_proc.trace_blocks in
-	let block = List.hd old_trace_blocks in
-	block.out <- axiom :: (block.out);
+	let old_block = List.hd old_trace_blocks in
+	let old_blocks = List.tl old_trace_blocks in
+	let new_block = {
+	  old_block with
+	  out = axiom :: (old_block.out);
+	} in
+
 
         let symb_proc' = 
           { symb_proc with
@@ -705,6 +745,7 @@ let apply_output with_por function_next ch_var_r symb_proc =
             trace = (Output (label,ch_r,Term.term_of_variable y,
 			     axiom,
 			     Term.term_of_variable x, fst l))::symb_proc.trace;
+	    trace_blocks = new_block :: old_blocks;
           }
         in
         
@@ -738,8 +779,12 @@ let apply_output_filter ch_f function_next ch_var_r symb_proc =
        
        (* Update of the last block *)
        let old_trace_blocks = symb_proc.trace_blocks in
-       let block = List.hd old_trace_blocks in
-       block.out <- axiom :: (block.out);
+       let old_block = List.hd old_trace_blocks in
+       let old_blocks = List.tl old_trace_blocks in
+       let new_block = {
+	 old_block with
+	 out = axiom :: (old_block.out);
+       } in
        
        let symb_proc' = 
          { symb_proc with
@@ -748,7 +793,9 @@ let apply_output_filter ch_f function_next ch_var_r symb_proc =
            forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
            trace = (Output (label,ch_r,Term.term_of_variable y,
 			    axiom,
-			    Term.term_of_variable x, fst l))::symb_proc.trace
+			    Term.term_of_variable x, fst l))::symb_proc.trace;
+	   trace_blocks = new_block :: old_blocks;
+								
          }
        in
        function_next symb_proc'
@@ -890,6 +937,17 @@ let display_trace_no_unif symb_proc =
     ) "" (List.rev symb_proc.trace) in
   
   Printf.sprintf "%s\n%s\n" trace (Constraint_system.display symb_proc.constraint_system)
+
+let display_trace_no_unif_no_csts symb_proc =
+  let message_eq = Constraint_system.get_message_equations symb_proc.constraint_system in
+  
+  let subst = Term.unify message_eq in
+  
+  let trace = 
+    List.fold_left (fun str_acc tr_label ->
+      str_acc^(display_trace_label_no_unif subst symb_proc.axiom_name_assoc tr_label)
+    ) "" (List.rev symb_proc.trace) in
+  Printf.sprintf "%s" trace
 
 let add_dependency_constraint sys variables axioms =
   let old = sys.constraint_system in
@@ -1134,7 +1192,8 @@ let test_dependency_constraints symP =
     | ((lr, la) as cst) :: l ->
        (* We made the choice to firstly check the noUse criterion and then the closed recipe criterion.
 	 Todo: find the most efficient order. *)
-       if la <> [] && (Constraint.is_subset_noUse la frame)     (* = la \susbseteq NoUse *)
+       if la <> [] && (false && (Constraint.is_subset_noUse la frame))     (* = la \susbseteq NoUse *)
+       (* TODO: enlever le false et debugger is_subset_nouse *)
        then false
        else (if test_cst frame cst
 	     then scan_dep_csts frame l
@@ -1146,12 +1205,14 @@ let test_dependency_constraints symP =
   (* BEGIN DEBUG *)
   if true (* Debug.red *) then begin
     let csts = (Constraint_system.get_dependency_constraints csys) in
-    if csts <> [] then begin
-      Printf.printf "We will check those dependency constraints: %s\n"
-        (Constraint_system.display_dependency_constraints csys);
-      Printf.printf "Do those constraints hold?: %B.\n" (scan_dep_csts frame csts);
-    end;
-  end;
+    if true || csts <> [] then
+      begin
+	Printf.printf "### Symbolic Process: %s" (display_trace_no_unif symP);
+	Printf.printf "We will check those dependency constraints: %s"
+		      (Constraint_system.display_dependency_constraints csys);
+	Printf.printf "Do those constraints hold?: ---- %B ----.\n\n" (scan_dep_csts frame csts);
+      end;
+		end;
   (* END DEBUG *)
 
   scan_dep_csts frame (Constraint_system.get_dependency_constraints csys)
@@ -1205,6 +1266,10 @@ let rec search_pattern par_lab acc_axioms = function
 (* ********************************************************************** *)
 
 let generate_dependency_constraints symP =
+  if !debug_f then begin
+		  pp "We are going to generate some dep. csts. on: ";
+		  Printf.printf "%s\n" (display_trace_blocks symP);
+		end;
   if List.length symP.trace_blocks < 2
   (* then only one block has been performed -> no constraint is added *)
   then symP

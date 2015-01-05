@@ -440,7 +440,7 @@ let apply_strategy_one_transition_por (* given .... *)
    only one symbolic process. *)
 
   if !print_debug_por then
-    Printf.printf "Before starting apply_strategy_one. Size of lists: %d,%d. Trace's size: %d\n"
+    Printf.printf "\n################### Before starting apply_strategy_one. Size of lists: %d,%d. Trace's size: %d\n"
 		  (List.length left_symb_proc_list)
 		  (List.length right_symb_proc_list)
 		  (Process.size_trace (List.hd left_symb_proc_list));
@@ -475,67 +475,69 @@ let apply_strategy_one_transition_por (* given .... *)
       end;
   in
 
-  (* We keep exploring actions from this point only if all dependency constraints hold *)
-  if not(!option_red) || Process.test_dependency_constraints proc_left then
-
-    (* ** FIRST step: labelises processes and update 'has_focus': at this point, some new processes coming from 
+  (* ** FIRST step: labelises processes and update 'has_focus': at this point, some new processes coming from 
         breaking a parallel composition are in the multiset. All those new processes come from a unique parallel
         composition, so we label them in an arbitrary order but consistently with right_symb_proc_list. *)
 
-    let proc_left_label, how_to_label = try_P proc_left proc_right (lazy (Process.labelise proc_left)) in
-    let proc_right_label = try_P proc_left proc_right (lazy (Process.labelise_consistently how_to_label proc_right)) in
-    (* Updating 'has_focus' on the left : set to false if focused process is negative *)
-    let proc_left_label_up =
-      if Process.has_focus proc_left_label 
-      then (match Process.sk_of_symp proc_left_label with
-	    | Process.OutS t -> Process.set_focus false proc_left_label
-	    | _ -> proc_left_label)
-      else proc_left_label
-    (* Updating 'has_focus' on the right : set to false if focused process is negative *)
-    and proc_right_label_up =
-      if Process.has_focus proc_right_label 
-      then (match Process.sk_of_symp proc_right_label with
-	    | Process.OutS t -> Process.set_focus false proc_right_label
-	    | _ -> proc_right_label)
-      else proc_right_label in 
+  let proc_left_label, how_to_label = try_P proc_left proc_right (lazy (Process.labelise proc_left)) in
+  let proc_right_label = try_P proc_left proc_right (lazy (Process.labelise_consistently how_to_label proc_right)) in
+  (* Updating 'has_focus' on the left : set to false if focused process is negative *)
+  let proc_left_label_up =
+    if Process.has_focus proc_left_label 
+    then (match Process.sk_of_symp proc_left_label with
+	  | Process.OutS t -> Process.set_focus false proc_left_label
+	  | _ -> proc_left_label)
+    else proc_left_label
+  (* Updating 'has_focus' on the right : set to false if focused process is negative *)
+  and proc_right_label_up =
+    if Process.has_focus proc_right_label 
+    then (match Process.sk_of_symp proc_right_label with
+	  | Process.OutS t -> Process.set_focus false proc_right_label
+	  | _ -> proc_right_label)
+    else proc_right_label in 
 
-    if !print_debug_por then Printf.printf "end of labelling process...\n";
+  if !print_debug_por then Printf.printf "end of labelling process...\n";
 
-							
+  (* Using the flag block_complete_inp, we know if this is the first time processes have no focus.
+	   In this case, we must generate dependency constraints for the last inputs. *)
+  let proc_left_label_red_up, proc_right_label_red_up =
+    if !option_red &&
+	 (not (Process.has_focus proc_left_label_up) && not (Process.block_complete_inp proc_left_label_up))
+    (* no focus (no more input) and flag complete_inp not already set to true -> first time without focus -> generate dep csts *)
+    then begin
+	if !print_debug_por then Printf.printf "End of INs blocks, we are going to try to add dependency constraints .... \n";
+	Process.block_set_complete_inp proc_left_label_up;
+	Process.block_set_complete_inp proc_right_label_up;
+	(* For the moment we use only the left part to generate and test dependency constraints *)
+	(Process.generate_dependency_constraints proc_left_label_up,
+	 proc_right_label_up)
+      end
+    else (proc_left_label_up, proc_right_label_up) in
+  
+  (* We keep exploring actions from this point only if all dependency constraints hold or reduction is not enabled *)
+  if not(!option_red) || Process.test_dependency_constraints proc_left_label_red_up then
+    
     (* ** SECOND step: Distinguish two cases whether pro_left/right_label have focus or not.
          (if they do not have the same status we raise an error. *)
-    match (Process.has_focus proc_left_label_up, Process.has_focus proc_right_label_up) with
+    match (Process.has_focus proc_left_label_red_up, Process.has_focus proc_right_label_red_up) with
     | true, false -> begin
 		     Printf.printf "Witness' type: Release focus on the left, not on the right.\n";
-		     raise (Not_equivalent_right proc_right_label_up);
+		     raise (Not_equivalent_right proc_right_label_red_up);
 		   end
 
     | false, true -> begin
 		     Printf.printf "Witness' type: Release focus on the right, not on the left.\n";
-		     raise (Not_equivalent_left proc_left_label_up);
+		     raise (Not_equivalent_left proc_left_label_red_up);
 		   end
     | true, true ->
        (****************** WITH FOCUS ****************************  *)
-       (* In that case, the first process of proc_left/right_label_up is under focus. We perform
+       (* In that case, the first process of proc_left/right_label_red_up is under focus. We perform
           their first input in case thay have the same skeleton and raise an exception otherwise.
 	  We assume here that focus have been removed as soon as a negative pop out.*)
-       apply_input_on_focused next_function_input proc_left_label_up proc_right_label_up
+       apply_input_on_focused next_function_input proc_left_label_red_up proc_right_label_red_up
     | false, false ->
        (***************** WITHOUT FOCUS ****************************  *)
        begin
-
-	 (* Using the flag block_complete_inp, we know if this is the first time processes have no focus.
-	   In this case, we must generate dependency constraints for the last inputs. *)
-	 let proc_left_label_red_up, proc_right_label_red_up =
-	   if !option_red && (Process.block_complete_inp proc_left_label_up)
-	   then begin
-	       Process.block_set_complete_inp proc_left_label_up;
-	       Process.block_set_complete_inp proc_right_label_up;
-	       (Process.generate_dependency_constraints proc_left_label_up,
-		Process.generate_dependency_constraints proc_right_label_up)
-	     end
-	   else (proc_left_label_up, proc_right_label_up) in
-
 	 let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label_red_up) in
 	 let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
 	 

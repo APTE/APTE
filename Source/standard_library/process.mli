@@ -44,6 +44,10 @@ val display_trace : symbolic_process -> string
 
 val display_trace_no_unif : symbolic_process -> string
 
+val display_trace_no_unif_no_csts : symbolic_process -> string
+
+val display_trace_blocks :  symbolic_process -> string
+
 (** {4 Testing} *)
 
 val is_bottom : symbolic_process -> bool
