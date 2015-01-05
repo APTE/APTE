@@ -80,6 +80,11 @@ let decide_trace_equivalence process1 process2 =
   let channel = Trace_equivalence.Statistic.reset_statistic () in
 
   display_channel_and_stdout channel "------------\n";
+  if !Trace_equivalence.Algorithm.option_red
+  then display_channel_and_stdout channel "OPTIMIZATION: Reduction is enabled. Make sure processes are action-determinate.\n"
+  else (if !Trace_equivalence.Algorithm.option_compr
+	then display_channel_and_stdout channel "OPTIMIZATION: Compression is enabled. Make sure processes are action-determinate.\n");
+  
   display_channel_and_stdout channel "Equivalence between the two following processes:\n\n";
   
   
