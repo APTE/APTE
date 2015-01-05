@@ -46,6 +46,10 @@ val display_trace_simple : symbolic_process -> string
 
 val display_trace_no_unif : symbolic_process -> string
 
+val display_trace_no_unif_no_csts : symbolic_process -> string
+
+val display_trace_blocks :  symbolic_process -> string
+
 (** {4 Testing} *)
 
 val is_bottom : symbolic_process -> bool
@@ -76,6 +80,8 @@ val apply_output : bool -> ((symbolic_process*Term.term) -> unit) -> Recipe.vari
 
 (** {3 Optimisation} *)
 
+val display_symb_process : symbolic_process -> unit
+
 val is_same_input_output : symbolic_process -> symbolic_process -> bool
 
 (* (\** Scan a list of processes and return the channel of its first output (if any) *\) *)
@@ -83,6 +89,9 @@ val is_same_input_output : symbolic_process -> symbolic_process -> bool
 
 
 (** {Annotated semantics} *)
+
+exception Not_eq_left of string
+exception Not_eq_right of string
 
 (*** Skeletons ***)
 (** Skeletons of actions *)
@@ -131,7 +140,9 @@ val is_improper : symbolic_process -> bool
 (** Modify the 'has_focus' flag *)
 val set_focus : bool -> symbolic_process -> symbolic_process
 
-(*** 'Filtered' semantics ***)
+
+(** {Compressed semantics} *)
+
 (** the first term is the channel used for filtering outputs actions, next_function takes the pair (continuation,channel of produced action) *)
 val apply_output_filter : Term.term -> (symbolic_process -> unit) -> Recipe.variable -> symbolic_process -> unit
 
@@ -142,5 +153,18 @@ val list_of_choices_focus : symbolic_process -> (symbolic_process * skeleton) li
    it assembles the corresponding answers of the right process (or raises a non-equ exception) *)
 val assemble_choices_focus: (symbolic_process * skeleton) list -> symbolic_process -> (symbolic_process * symbolic_process) list
 
-exception Not_eq_left of string
-exception Not_eq_right of string
+
+(** {Reduced semantics} *)
+
+(**  [test_dependency_constraints symP] test whether dependency constraints of [symP] hold. *)
+val test_dependency_constraints : symbolic_process -> bool
+
+(**  [generate_dependency_constraints symP] add to the set of dependency constrants
+     of symP the dependency constraint for the block of inputs of the trace.  *)
+val generate_dependency_constraints : symbolic_process -> symbolic_process
+
+(** [block_set_complete_inp symP] set the flag complete_inp to true (inputs of last block are complete) *)
+val block_set_complete_inp : symbolic_process -> unit
+
+(** [block_set_complete_inp symP] returns the flag complete_inp (true if inputs of last block are complete) *)
+val block_complete_inp : symbolic_process -> bool
