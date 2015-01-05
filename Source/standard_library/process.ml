@@ -313,6 +313,7 @@ type symbolic_process =
     axiom_name_assoc : (Recipe.recipe * Term.term) list;
     process : (process*proc_label) list; (* Represent a multiset of labelled processes *)
     has_focus : bool;	    (* if true: process[0] is under focus, otherwise: no focus *)
+    is_improper : bool;	    (* if true, last block is improper -> cannot be executed any more *)
     constraint_system : Constraint_system.constraint_system;
     forbidden_comm : internal_communication list;
     trace : trace_label list;
@@ -336,6 +337,7 @@ let create_symbolic axiom_name_assoc proc csys =
     axiom_name_assoc = axiom_name_assoc;
     process = [(proc, init_proc_label)];
     has_focus = false;
+    is_improper = false;
     constraint_system = csys;
     forbidden_comm = [];
     trace = [];
@@ -350,9 +352,9 @@ let ps = Printf.sprintf
 (* Warning: I use list.rev here to pretty print par_labs. par_labs should be small
    but it still can slow down the program. *)
 let display_parlab pl = 
-  let pl_rev = List.rev pl in
+  let pl_rev = List.tl (List.rev pl) in (* we do not display the first '0' *)
   (List.fold_left
-     (fun str_acc i -> (str_acc^(string_of_int i)^" "))
+     (fun str_acc i -> (str_acc^(string_of_int i)))
      "[" pl_rev)^"]"
 	       
 let display_block b =
@@ -444,6 +446,16 @@ let display_trace symb_proc =
     str_acc^(display_trace_label r_subst m_subst !recipe_term_assoc tr_label)
   ) intro (List.rev symb_proc.trace)
 
+let display_trace_simple symb_proc = 
+  let trace = symb_proc.trace in
+  let rec display_trace_label_simple = function
+    | Output (lab, _, _, _, _, pl) -> Printf.sprintf "Out{%d}%s" lab (display_parlab pl)
+    | Input (lab, _, _, _, _, pl) -> Printf.sprintf "In{%d}%s" lab (display_parlab pl)
+    | Comm _ -> "SHOULD NOT HAPPEN\n\nBug: see process.ml > display_traces_simple !!\n\n" in
+  "[| " ^ (List.fold_left (fun str_acc tr_label ->
+			 str_acc^(display_trace_label_simple tr_label)^"; "
+			) "" (List.rev trace))^" |]"
+	  
 (******* Testing ********)
 
 let is_bottom symb_proc = Constraint_system.is_bottom symb_proc.constraint_system
@@ -485,16 +497,22 @@ let instanciate_trace symb_proc =
   
 let apply_internal_transition_without_comm with_por function_next symb_proc = 
   let has_broken_focus = ref false in
+  let has_broken_focus_0_case = ref false in
   let was_with_focus = symb_proc.has_focus in
 
   let rec go_through prev_proc csys = function
     (* when we have gone trough all processes (no more conditionals at top level) *)
-    | [] -> function_next { symb_proc with process = prev_proc;
+    | [] -> 
+       let is_improper = symb_proc.is_improper ||
+			   (symb_proc.has_focus && (!has_broken_focus_0_case)) in
+       function_next { symb_proc with process = prev_proc;
 					   constraint_system = csys;
+					   is_improper = is_improper;
 					   has_focus = symb_proc.has_focus && not(!has_broken_focus);
 			  }
-			  
+    (* Nil case: it enables to release the focus BUT produces an improper block -> set the two flags to true *)
     | (Nil,_)::q -> has_broken_focus := true;
+		    has_broken_focus_0_case := true;
 		    go_through prev_proc csys q 
     | (Choice(p1,p2), l)::q -> 
        if with_por
@@ -1154,6 +1172,8 @@ let assemble_choices_focus listChoices symP =
 
 
 let has_focus symb_proc = symb_proc.has_focus
+
+let is_improper symb_proc = symb_proc.is_improper
 
 let set_focus new_flag symb_proc =
   { symb_proc with

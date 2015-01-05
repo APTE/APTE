@@ -17,6 +17,8 @@ val option_erase_double : bool ref
 
 val option_alternating_strategy : bool ref
 
+val display_traces : bool ref
+
 (** Functions for the strategy *)
 
 val partionate_matrix :
