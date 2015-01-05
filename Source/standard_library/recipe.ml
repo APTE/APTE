@@ -93,6 +93,16 @@ let variable_of_recipe = function
   | Var v -> v
   | _ -> Debug.internal_error "[recipe.ml >> variable_of_recipe] A variable was expected"
 
+let rec get_variables_of_recipe = function
+  | Var v -> [v]
+  | Axiom _ -> []
+  | Func (_, list) -> List.concat (List.map get_variables_of_recipe list)
+
+let rec is_closed = function
+  | Var v -> false
+  | Axiom _ -> true
+  | Func (_, list) -> List.for_all is_closed list
+
 let apply_function symbol list_sons = 
   (***[BEGIN DEBUG]***)
   Debug.low_debugging (fun () ->
@@ -119,6 +129,11 @@ let rec occurs var = function
   | Func(_,args) -> List.exists (occurs var) args
   | _ -> false
   
+let rec ax_occurs ax = function
+  | Axiom(a) when a == ax -> true
+  | Func(_,args) -> List.exists (ax_occurs ax) args
+  | _ -> false
+
 let is_equal_variable v1 v2 = v1 == v2  
 
 let is_equal_axiom ax1 ax2 = ax1 = ax2  
