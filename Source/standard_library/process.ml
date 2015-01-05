@@ -1257,7 +1257,7 @@ let extract_common l1 l2 =
        else aux (tl1,tl2)
     | _, _ ->   Debug.internal_error "[Process.ml >> extact_common] Should not happen!" in
 
-  aux (l1,l2)
+  aux (l1d,l2d)
 
 (* l1 ||^s l2 *)
 let lab_inpar l1 l2 = 
