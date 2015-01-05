@@ -1238,7 +1238,7 @@ let extract_common l1 l2 =
 (* l1 ||^s l2 *)
 let lab_inpar l1 l2 = 
   let x1,x2,ld = extract_common l1 l2 in
-  if x1 = x2
+  if x1 <> x2
   then true
   else false 
 
