@@ -21,7 +21,7 @@ def main():
     parser.add_argument('-f', '--file_log',
                         help='you can choose a name for the results file')
     parser.add_argument('-v', '--version', nargs='*',
-                        help='you can choose the version beteween [ref,old_com,comp,comp_no_impro,old_red,red,red_no_impro]')
+                        help='you can choose the version beteween [ref,old_comp,comp,comp_no_impro,old_red,red,red_no_impro]')
     args = parser.parse_args()
 
     nameFile = "results"
