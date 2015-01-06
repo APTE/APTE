@@ -693,7 +693,7 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
 	 then old_trace_blocks
 	 else
 	   (* Update of trace_blocks *)
-           if old_trace_blocks = [] or (List.hd old_trace_blocks).complete_inp
+           if old_trace_blocks = [] || (List.hd old_trace_blocks).complete_inp
 	   (* then: we start a new block *)
 	   then ({par_lab = fst l;
 		  inp = [t_r];
@@ -754,27 +754,28 @@ let apply_output with_por function_next ch_var_r symb_proc =
 	let new_trace_blocks =
 	  if not(with_por)
 	  then old_trace_blocks
-	  else
-	    (* Update of trace_blocks *)
-	    let old_block = List.hd old_trace_blocks in
-	    let old_blocks = List.tl old_trace_blocks in
-	    let new_block = {
-	      old_block with
-	      out = axiom :: (old_block.out);
-	    } in
-	    new_block :: old_blocks in
+	  else (if old_trace_blocks = []
+		then Debug.internal_error "[process.ml >> apply_output] The process is not initial (an output is at top level)."
+		else (* Update of trace_blocks *)
+		  let old_block = List.hd old_trace_blocks in
+		  let old_blocks = List.tl old_trace_blocks in
+		  let new_block = {
+		    old_block with
+		    out = axiom :: (old_block.out);
+		  } in
+		  new_block :: old_blocks) in
 
-        let symb_proc' = 
-          { symb_proc with
-            process = ((sub_proc,l)::q)@prev_proc;
-            constraint_system = new_csys_4;
-            forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
-            trace = (Output (label,ch_r,Term.term_of_variable y,
+	let symb_proc' = 
+	  { symb_proc with
+	    process = ((sub_proc,l)::q)@prev_proc;
+	    constraint_system = new_csys_4;
+	    forbidden_comm = remove_out_label label symb_proc.forbidden_comm;
+	    trace = (Output (label,ch_r,Term.term_of_variable y,
 			     axiom,
 			     Term.term_of_variable x, fst l))::symb_proc.trace;
 	    trace_blocks = new_trace_blocks;
-          }
-        in
+	  }
+	in
         
         function_next (symb_proc',ch);
         if not(with_por)
@@ -809,15 +810,16 @@ let apply_output_filter ch_f function_next ch_var_r symb_proc =
        let new_trace_blocks =
 	 if not(with_por)
 	 then old_trace_blocks
-	 else
-	   (* Update of trace_blocks *)
-	   let old_block = List.hd old_trace_blocks in
-	   let old_blocks = List.tl old_trace_blocks in
-	   let new_block = {
-	     old_block with
-	     out = axiom :: (old_block.out);
-	   } in
-	   new_block :: old_blocks in
+	 else (if old_trace_blocks = []
+	       then Debug.internal_error "[process.ml >> apply_output] The process is not initial (an output is at top level)."
+	       else (* Update of trace_blocks *)
+		 let old_block = List.hd old_trace_blocks in
+		 let old_blocks = List.tl old_trace_blocks in
+		 let new_block = {
+		   old_block with
+		   out = axiom :: (old_block.out);
+		 } in
+		 new_block :: old_blocks) in
        
        let symb_proc' = 
          { symb_proc with
