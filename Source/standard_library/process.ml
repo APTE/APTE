@@ -669,46 +669,50 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
   let rec go_through prev_proc = function
     | [] -> ()
     | ((In(ch,v,sub_proc,label),l) as proc)::q ->
-        let y = Term.fresh_variable_from_id Term.Free "y" in
-        let t_y = Term.term_of_variable y in
-        
-        let new_csys_1 = Constraint_system.add_new_deducibility_constraint symb_proc.constraint_system ch_var_r t_y  in
-        let new_csys_2 = Constraint_system.add_new_deducibility_constraint new_csys_1  t_var_r (Term.term_of_variable v) in
-        let new_csys_3 = Constraint_system.add_message_equation new_csys_2 t_y ch in
-        
-        let ch_r = Recipe.recipe_of_variable ch_var_r
-        and t_r = Recipe.recipe_of_variable t_var_r in
+       let y = Term.fresh_variable_from_id Term.Free "y" in
+       let t_y = Term.term_of_variable y in
+       
+       let new_csys_1 = Constraint_system.add_new_deducibility_constraint symb_proc.constraint_system ch_var_r t_y  in
+       let new_csys_2 = Constraint_system.add_new_deducibility_constraint new_csys_1  t_var_r (Term.term_of_variable v) in
+       let new_csys_3 = Constraint_system.add_message_equation new_csys_2 t_y ch in
+       
+       let ch_r = Recipe.recipe_of_variable ch_var_r
+       and t_r = Recipe.recipe_of_variable t_var_r in
 
-	let old_trace_blocks = symb_proc.trace_blocks in
-	let new_trace_blocks = 
-          if old_trace_blocks = [] or (List.hd old_trace_blocks).complete_inp
-	  (* then: we start a new block *)
-	  then ({par_lab = fst l;
-		 inp = [t_r];
-		 out = [];
-		 complete_inp = false;
-	       }) :: old_trace_blocks
-	  (* else: we complete the block with the new recipe *)
-	  else begin
-	      let block = List.hd old_trace_blocks in
-	      let old_traces = List.tl old_trace_blocks in
-	      let new_block = {
-		block with
-		inp =(t_r) :: (block.inp);
-	      } in
-	      new_block :: old_traces
-	    end in
-	
-        let symb_proc' = 
-          { symb_proc with
-            process = ((sub_proc,l)::q)@prev_proc;
-            constraint_system = new_csys_3;
-            forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
-            trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v, fst l))::symb_proc.trace;
-	    trace_blocks = new_trace_blocks;
-          }
-        in
-        
+       let old_trace_blocks = symb_proc.trace_blocks in
+       let new_trace_blocks = 
+	 if not(with_por)
+	 then old_trace_blocks
+	 else
+	   (* Update of trace_blocks *)
+           if old_trace_blocks = [] or (List.hd old_trace_blocks).complete_inp
+	   (* then: we start a new block *)
+	   then ({par_lab = fst l;
+		  inp = [t_r];
+		  out = [];
+		  complete_inp = false;
+		}) :: old_trace_blocks
+	   (* else: we complete the block with the new recipe *)
+	   else begin
+	       let block = List.hd old_trace_blocks in
+	       let old_traces = List.tl old_trace_blocks in
+	       let new_block = {
+		 block with
+		 inp =(t_r) :: (block.inp);
+	       } in
+	       new_block :: old_traces
+	     end in
+       
+       let symb_proc' = 
+         { symb_proc with
+           process = ((sub_proc,l)::q)@prev_proc;
+           constraint_system = new_csys_3;
+           forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
+           trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v, fst l))::symb_proc.trace;
+	   trace_blocks = new_trace_blocks;
+         }
+       in
+       
         function_next (symb_proc',ch);
         if not(with_por)	(* if with_por=true we only consider performing the process under focus *)
 	then go_through (proc::prev_proc) q
@@ -738,15 +742,19 @@ let apply_output with_por function_next ch_var_r symb_proc =
         
 	let axiom = Recipe.axiom (Constraint_system.get_maximal_support new_csys_4) in
 
-	(* Update of the last block *)
 	let old_trace_blocks = symb_proc.trace_blocks in
-	let old_block = List.hd old_trace_blocks in
-	let old_blocks = List.tl old_trace_blocks in
-	let new_block = {
-	  old_block with
-	  out = axiom :: (old_block.out);
-	} in
-
+	let new_trace_blocks =
+	  if not(with_por)
+	  then old_trace_blocks
+	  else
+	    (* Update of trace_blocks *)
+	    let old_block = List.hd old_trace_blocks in
+	    let old_blocks = List.tl old_trace_blocks in
+	    let new_block = {
+	      old_block with
+	      out = axiom :: (old_block.out);
+	    } in
+	    new_block :: old_blocks in
 
         let symb_proc' = 
           { symb_proc with
@@ -756,7 +764,7 @@ let apply_output with_por function_next ch_var_r symb_proc =
             trace = (Output (label,ch_r,Term.term_of_variable y,
 			     axiom,
 			     Term.term_of_variable x, fst l))::symb_proc.trace;
-	    trace_blocks = new_block :: old_blocks;
+	    trace_blocks = new_trace_blocks;
           }
         in
         
@@ -788,14 +796,20 @@ let apply_output_filter ch_f function_next ch_var_r symb_proc =
        
        let axiom = Recipe.axiom (Constraint_system.get_maximal_support new_csys_4) in
        
-       (* Update of the last block *)
        let old_trace_blocks = symb_proc.trace_blocks in
-       let old_block = List.hd old_trace_blocks in
-       let old_blocks = List.tl old_trace_blocks in
-       let new_block = {
-	 old_block with
-	 out = axiom :: (old_block.out);
-       } in
+       let with_por = true in
+       let new_trace_blocks =
+	 if not(with_por)
+	 then old_trace_blocks
+	 else
+	   (* Update of trace_blocks *)
+	   let old_block = List.hd old_trace_blocks in
+	   let old_blocks = List.tl old_trace_blocks in
+	   let new_block = {
+	     old_block with
+	     out = axiom :: (old_block.out);
+	   } in
+	   new_block :: old_blocks in
        
        let symb_proc' = 
          { symb_proc with
@@ -805,8 +819,7 @@ let apply_output_filter ch_f function_next ch_var_r symb_proc =
            trace = (Output (label,ch_r,Term.term_of_variable y,
 			    axiom,
 			    Term.term_of_variable x, fst l))::symb_proc.trace;
-	   trace_blocks = new_block :: old_blocks;
-								
+	   trace_blocks = new_trace_blocks;
          }
        in
        function_next symb_proc'
