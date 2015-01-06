@@ -28,11 +28,11 @@ let process_Bob k_a k_b cb =
 		
 ### Main
 
-let instance1 =
+let instance1 = in(c,x);
   new k_a ; new k_b ; new k_c ; out(c,pk(k_a)) ; out(c,pk(k_b)) ; out(c,pk(k_c)); 
   ( process_Alice k_a k_b ca1 | process_Bob k_a k_b cb1 | process_Alice k_c k_b ca2 | process_Bob k_c k_b cb2 | process_Alice k_b k_b ca3 | process_Bob k_b k_b cb3).
 
-let instance2 =
+let instance2 = in(c,x);
   new k_a ; new k_b ; new k_c ; out(c,pk(k_a)) ; out(c,pk(k_b)) ; out(c,pk(k_c)); 
   ( process_Alice k_c k_b ca1 | process_Bob k_c k_b cb1 | process_Alice k_c k_b ca2 | process_Bob k_c k_b cb2 | process_Alice k_b k_b ca3 | process_Bob k_b k_b cb3).
   
