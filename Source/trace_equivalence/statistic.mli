@@ -38,3 +38,5 @@ type display_mode =
 val initialise_display : display_mode -> unit  
   
 val display_statistic : unit -> unit
+
+val end_of_checking : unit -> unit
