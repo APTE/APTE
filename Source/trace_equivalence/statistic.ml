@@ -103,26 +103,25 @@ let log_dir = ref (
   let main_dir = String.sub executable_name 0 (index_slash+1) in
   (main_dir^"log"))
 
-let rm_ok = ref false
+let token = ref ((!log_dir)^"/token")
 
 let _ = begin
-    (try begin
-	 Sys.command (Printf.sprintf "rm -rf %s" !log_dir);
-	 rm_ok := true;
-       end
-     (* if the line above failed, then the folder is currently used  *)
-     with _ -> ()
-    );
-    if !rm_ok
-    then Sys.command (Printf.sprintf "mkdir %s" !log_dir)
+    if not(Sys.file_exists !token)
+    then begin
+	Sys.command (Printf.sprintf "rm -rf %s" !log_dir);
+	Sys.command (Printf.sprintf "mkdir %s" !log_dir);
+	Sys.command (Printf.sprintf "touch %s" !token);
+      end
     else begin
 	Random.self_init ();
 	let rdm = Random.int 100000000 in
 	log_dir := (!log_dir)^(Printf.sprintf "%d" rdm);
+	token := (!log_dir)^"/token";
+	Sys.command (Printf.sprintf "touch %s" !token);
 	Sys.command (Printf.sprintf "mkdir %s" !log_dir);
       end;
   end
-
+	  
 let reset_statistic () =
   statistic_DB := [];
   number_of_input := !number_of_input + 1;
@@ -503,6 +502,8 @@ let initialise_display = function
     
 let display_statistic () = !display_statistic_function ()
   
+let end_of_checking () = Sys.remove (!token)
+
 (** Initialise statistic *)
 
 let initialise_log size_trace = 
