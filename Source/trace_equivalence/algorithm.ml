@@ -191,18 +191,16 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
 (** Strategy for the complete unfolding without POR *)
 
 let apply_strategy_one_transition next_function_output next_function_input left_symb_proc_list right_symb_proc_list = 
-
   (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
   incr(final_test_count);
 
-  if !display_traces
-  then let one_proc = if left_symb_proc_list <> []
-		      then List.hd left_symb_proc_list
-		      else List.hd right_symb_proc_list in
-       Printf.printf "%s\n" (Process.display_trace_simple one_proc);
+  if !display_traces && (left_symb_proc_list <> [] || right_symb_proc_list <> [])
+  then (let one_proc = if left_symb_proc_list <> []
+		       then List.hd left_symb_proc_list
+		       else List.hd right_symb_proc_list in
+	Printf.printf "%s\n" (Process.display_trace_simple one_proc));
 
-  (* ** Option Erase Double *)
-  
+  (* ** Option Erase Double *)  
   let left_erase_set = 
     if !option_erase_double 
     then erase_double (List.map Process.instanciate_trace left_symb_proc_list)
@@ -749,11 +747,11 @@ let rec apply_alternating left_symb_proc_list right_symb_proc_list =
 				   then apply_strategy_one_transition_por
 				   else apply_strategy_one_transition
      and next_out = next_function
-		      (if false (* !option_compr*)
+		      (if !option_compr
 		       then Strategy.apply_full_strategy 
 		       else Strategy.apply_strategy_output)
      and next_in = next_function
-		     (if false (* !option_compr *)
+		     (if !option_compr
 		      then Strategy.apply_full_strategy 
 		      else Strategy.apply_strategy_input)
      in
