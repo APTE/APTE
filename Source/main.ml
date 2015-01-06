@@ -115,6 +115,7 @@ let decide_trace_equivalence process1 process2 =
   display_channel_and_stdout channel (Printf.sprintf "Result : The trace equivalence is %b\n" result);
   display_channel_and_stdout channel (Printf.sprintf "Result obtained in %f seconds\n" time_spent);
   Trace_equivalence.Statistic.display_statistic ();
+  Trace_equivalence.Statistic.end_of_checking ();
   flush_all ();
   close_out channel
   
