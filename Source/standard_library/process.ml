@@ -350,11 +350,13 @@ let ps = Printf.sprintf
 (* Warning: I use list.rev here to pretty print par_labs. par_labs should be small
    but it still can slow down the program. *)
 let display_parlab pl = 
-  let pl_rev = List.rev pl in
-  (List.fold_left
-     (fun str_acc i -> (str_acc^(string_of_int i)^" "))
-     "[" pl_rev)^"]"
-	       
+  if pl <> []
+  then let pl_rev = List.tl (List.rev pl) in (* we do not display the first '0' *)
+       (List.fold_left
+	  (fun str_acc i -> (str_acc^(string_of_int i)))
+	  "[" pl_rev)^"]"
+  else ""
+
 let display_block b =
   if b.complete_inp
   then ps "{%s:%s/%s}" 
@@ -444,6 +446,15 @@ let display_trace symb_proc =
     str_acc^(display_trace_label r_subst m_subst !recipe_term_assoc tr_label)
   ) intro (List.rev symb_proc.trace)
 
+let display_trace_simple symb_proc = 
+  let trace = symb_proc.trace in
+  let rec display_trace_label_simple = function
+    | Output (lab, _, _, _, _, pl) -> Printf.sprintf "Out{%d}%s" lab (display_parlab pl)
+    | Input (lab, _, _, _, _, pl) -> Printf.sprintf "In{%d}%s" lab (display_parlab pl)
+    | Comm _ -> "Comm" in
+  "[| " ^ (List.fold_left (fun str_acc tr_label ->
+			 str_acc^(display_trace_label_simple tr_label)^"; "
+			) "" (List.rev trace))^" |]"
 (******* Testing ********)
 
 let is_bottom symb_proc = Constraint_system.is_bottom symb_proc.constraint_system
