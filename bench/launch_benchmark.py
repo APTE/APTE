@@ -21,7 +21,7 @@ def main():
     parser.add_argument('-f', '--file_log',
                         help='you can choose a name for the results file')
     parser.add_argument('-v', '--version', nargs='*',
-                        help='you can choose the version beteween [ref,comp,old_comp,comp_no_impro,red]')
+                        help='you can choose the version beteween [ref,old_com,comp,comp_no_impro,old_red,red,red_no_impro]')
     args = parser.parse_args()
 
     nameFile = "results"
@@ -49,18 +49,25 @@ def main():
                 list_binaries.append(bina)
             if "comp" in args.version:
                 bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
-                bina = bina + " -with_por "
+                bina = bina + " -with_por compr improper"
                 list_binaries.append(bina)
             if "old_comp" in args.version:
                 bina = [i for i in list_binaries_tout if ("_2_" in i)][0]
                 list_binaries.append(bina)
             if "comp_no_impro" in args.version:
-                bina = [i for i in list_binaries_tout if ("_4_" in i)][0]
-                bina = bina + " -with_por "
-                list_binaries.append(bina)
-            if "red" in args.version: # TODO
                 bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
-                bina = bina + " -with_por red "
+                bina = bina + " -with_por compr"
+                list_binaries.append(bina)
+            if "old_red" in args.version:
+                bina = [i for i in list_binaries_tout if ("_3_" in i)][0]
+                list_binaries.append(bina)
+            if "red" in args.version:
+                bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
+                bina = bina + " -with_por reduction "
+                list_binaries.append(bina)
+            if "red_no_impro" in args.version:
+                bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
+                bina = bina + " -with_por reduction improper"
                 list_binaries.append(bina)
         if args.difficulty:
             print(args.difficulty)
