@@ -97,21 +97,38 @@ let initial_process_statistic =
     stat_per_step = Array.make 0 initial_matrix_statistic
   }
   
-let log_dir = 
+let log_dir = ref (
   let executable_name = Sys.executable_name in
   let index_slash = String.rindex executable_name '/' in
   let main_dir = String.sub executable_name 0 (index_slash+1) in
-  (main_dir^"log")
-  
-let _ = Sys.command (Printf.sprintf "rm -rf %s" log_dir)
-let _ = Sys.command (Printf.sprintf "mkdir %s" log_dir)  
-  
+  (main_dir^"log"))
+
+let rm_ok = ref false
+
+let _ = begin
+    (try begin
+	 Sys.command (Printf.sprintf "rm -rf %s" !log_dir);
+	 rm_ok := true;
+       end
+     (* if the line above failed, then the folder is currently used  *)
+     with _ -> ()
+    );
+    if !rm_ok
+    then Sys.command (Printf.sprintf "mkdir %s" !log_dir)
+    else begin
+	Random.self_init ();
+	let rdm = Random.int 100000000 in
+	log_dir := (!log_dir)^(Printf.sprintf "%d" rdm);
+	Sys.command (Printf.sprintf "mkdir %s" !log_dir);
+      end;
+  end
+
 let reset_statistic () =
   statistic_DB := [];
   number_of_input := !number_of_input + 1;
   
-  let main_out_channel = open_out (Printf.sprintf "%s/input_%d.log" log_dir !number_of_input) in
-  let dir_for_matrix = Printf.sprintf "%s/input_%d_matrices" log_dir !number_of_input in
+  let main_out_channel = open_out (Printf.sprintf "%s/input_%d.log" !log_dir !number_of_input) in
+  let dir_for_matrix = Printf.sprintf "%s/input_%d_matrices" !log_dir !number_of_input in
   let _ = Sys.command ("mkdir "^dir_for_matrix) in
   let initial = 
     {
