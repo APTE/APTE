@@ -67,7 +67,7 @@ def main():
                 list_binaries.append(bina)
             if "red_no_impro" in args.version:
                 bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
-                bina = bina + " -with_por reduction improper"
+                bina = bina + " -with_por red improper"
                 list_binaries.append(bina)
         if args.difficulty:
             print(args.difficulty)
