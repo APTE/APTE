@@ -1208,7 +1208,7 @@ let debug_f = ref false           (* Do we print debugging information ?  *)
 (* ********************************************************************** *)
 (*                 Test whether dependency constraints hold               *)
 (* ********************************************************************** *)
-let test_dependency_constraints symP =
+let test_dependency_constraints symP testNoUse =
   (* Test whether one dep. cst hold *)
   let rec test_cst frame r_subst = function
     | (_, []) -> true
@@ -1230,8 +1230,8 @@ let test_dependency_constraints symP =
     | ((lr, la) as cst) :: l ->
        (* We made the choice to firstly check the noUse criterion and then the closed recipe criterion.
 	 Todo: find the most efficient order. *)
-       if la <> [] && (Constraint.is_subset_noUse la frame)     (* = la \susbseteq NoUse *)
-       (* TODO: enlever le false et debugger is_subset_nouse *)
+       
+       if testNoUse && (la <> [] && (Constraint.is_subset_noUse la frame))    (* = la \susbseteq NoUse *)
        then false
        else (if test_cst frame r_subst cst
 	     then scan_dep_csts frame r_subst l
