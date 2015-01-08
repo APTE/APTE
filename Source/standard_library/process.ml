@@ -1230,7 +1230,7 @@ let test_dependency_constraints symP =
     | ((lr, la) as cst) :: l ->
        (* We made the choice to firstly check the noUse criterion and then the closed recipe criterion.
 	 Todo: find the most efficient order. *)
-       if la <> [] && (false && (Constraint.is_subset_noUse la frame))     (* = la \susbseteq NoUse *)
+       if la <> [] && (Constraint.is_subset_noUse la frame)     (* = la \susbseteq NoUse *)
        (* TODO: enlever le false et debugger is_subset_nouse *)
        then false
        else (if test_cst frame r_subst cst
