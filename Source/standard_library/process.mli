@@ -156,8 +156,9 @@ val assemble_choices_focus: (symbolic_process * skeleton) list -> symbolic_proce
 
 (** {Reduced semantics} *)
 
-(**  [test_dependency_constraints symP] test whether dependency constraints of [symP] hold. *)
-val test_dependency_constraints : symbolic_process -> bool
+(**  [test_dependency_constraints symP usingNoUse] test whether dependency constraints of [symP] hold. If usingNoUse is true then we use
+the NoUse criterion as well. *)
+val test_dependency_constraints : symbolic_process -> bool -> bool
 
 (**  [generate_dependency_constraints symP] add to the set of dependency constrants
      of symP the dependency constraint for the block of inputs of the trace.  *)

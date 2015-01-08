@@ -24,10 +24,10 @@ let print_help () =
   Printf.printf "          traces.\n\n";
   Printf.printf "      -log <int> : Log all the symbolic processes and the matrices obtained on the\n";
   Printf.printf "          leaves for all traces of size smaller than or equal to <int>.\n\n";
-  Printf.printf "      -with_por [compr|red] [|improper]: Uses Partial Order Reductions techniques to significantly\n";
+  Printf.printf "      -with_por [compr|red] [improper] [nouse]: Uses Partial Order Reductions techniques to significantly\n";
   Printf.printf "          improve performance. It is possible to choose a specific POR technique (compressed\n";
-  Printf.printf "          or reduced semantics), improper is optional. Without extra argument, -with_por option\n";
-  Printf.printf "          will enable the best POR tehnique (i.e., reduced semantics with improper).\n";
+  Printf.printf "          or reduced semantics), improper and nouse are optional. Without extra argument, -with_por option\n";
+  Printf.printf "          will enable the best POR technique (i.e., reduced semantics with improper and nouse).\n";
   Printf.printf "          Note : This option automatically activates the option '-no_comm'.\n";
   Printf.printf "          WARNING : This option should only be used for action-determinate processes.\n\n";
   Printf.printf "      -no_comm : Does not consider the internal communication in the trace equivalence.\n";
@@ -83,18 +83,27 @@ let decide_trace_equivalence process1 process2 =
   let channel = Trace_equivalence.Statistic.reset_statistic () in
 
   display_channel_and_stdout channel "------------\n";
+  if !Trace_equivalence.Algorithm.option_nouse && not(!Trace_equivalence.Algorithm.option_red)
+  then begin
+      display_channel_and_stdout channel "YOU CANNOT ENABLE NoUse criterion without Reduction.\n";
+      exit 0;
+    end;
   let text_improper =
     if !Trace_equivalence.Algorithm.option_improper
     then " (as well as the improper traces killing)"
     else "" in
+  let text_nouse =
+    if !Trace_equivalence.Algorithm.option_nouse
+    then " (as well as the NoUse criterion)"
+    else "" in
   if !Trace_equivalence.Algorithm.option_red
   then display_channel_and_stdout channel
-				  (ps "OPTIMIZATION: Reduction is enabled%s. Make sure processes are action-determinate.\n"
-				      text_improper)
+				  (ps "OPTIMIZATION: Reduction is enabled%s%s. Make sure processes are action-determinate.\n"
+				      text_improper text_nouse)
   else (if !Trace_equivalence.Algorithm.option_compr
 	then display_channel_and_stdout channel
-					(ps "OPTIMIZATION: Compression is enabled%s. Make sure processes are action-determinate.\n"
-					    text_improper));
+					(ps "OPTIMIZATION: Compression is enabled%s%s. Make sure processes are action-determinate.\n"
+					    text_improper text_nouse));
   
   display_channel_and_stdout channel "Equivalence between the two following processes:\n\n";
   
@@ -170,22 +179,28 @@ let _ =
 	     then begin
 		 i := !i + 1;
 		 Trace_equivalence.Algorithm.option_red := true;
-	       end
-	     else if (Sys.argv).(!i+1) = "improper"
-	     then begin
-		 i := !i + 1;
-		 Trace_equivalence.Algorithm.option_improper := true;
 	       end else begin
 		       Trace_equivalence.Algorithm.option_red := true;
 		       Trace_equivalence.Algorithm.option_improper := true;
+		       Trace_equivalence.Algorithm.option_nouse := true;
 		     end;
 	   end
-	 else Trace_equivalence.Algorithm.option_red := true;
+	 else begin 
+	     Trace_equivalence.Algorithm.option_red := true;
+	     Trace_equivalence.Algorithm.option_improper := true;
+	     Trace_equivalence.Algorithm.option_nouse := true;
+	   end;
 	 i := !i + 1;
 	 if not(!i+1 = (Array.length Sys.argv))
 	 then if (Sys.argv).(!i) = "improper"
 	      then begin
 		  Trace_equivalence.Algorithm.option_improper := true;
+		  i := !i + 1;
+		end;
+	 if not(!i+1 = (Array.length Sys.argv))
+	 then if (Sys.argv).(!i) = "nouse"
+	      then begin
+		  Trace_equivalence.Algorithm.option_nouse := true;
 		  i := !i + 1;
 		end
       | "-no_comm" -> Trace_equivalence.Algorithm.option_internal_communication := false;
