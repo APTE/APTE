@@ -86,8 +86,8 @@ let recipe_of_variable var = Var(var)
 let recipe_of_axiom axiom = Axiom(axiom)
 
 let axiom_of_recipe = function
-  | Axiom i -> i
-  | _ -> Debug.internal_error "[recipe.ml >> axiom_of_recipe] An axiom was expected"
+  | Axiom i -> Some i
+  | _ -> None
 
 let variable_of_recipe = function
   | Var v -> v

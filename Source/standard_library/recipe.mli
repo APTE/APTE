@@ -68,9 +68,8 @@ val get_variables_of_recipe : recipe -> variable list
 (** [is_closed r] returns [true] iff there is no variable in [r]. *)
 val is_closed : recipe -> bool
 
-(** [axiom_of_recipe r] returns the recipe [r] as an axiom.
-    @raise Internal_error if [r] is not an axiom.*)
-val axiom_of_recipe : recipe -> axiom
+(** [axiom_of_recipe r] returns the recipe [r] as an axiom if it is an axiom. *)
+val axiom_of_recipe : recipe -> axiom option
 
 (** [apply_function f args] applies the the function symbol [f] to the arguments [args].
     If [args] is the list [[r1;...;rn]] then the recipe obtained is [f(r1,...,rn)].

@@ -22,6 +22,8 @@ let option_compr = ref false
 
 let option_red = ref false
 
+let option_nouse = ref false
+
 let option_improper = ref false
 
 let option_internal_communication = ref true
@@ -557,7 +559,7 @@ let apply_strategy_one_transition_por (* given .... *)
     else (proc_left_label_up, proc_right_label_up) in
   
   (* We keep exploring actions from this point only if all dependency constraints hold or reduction is not enabled *)
-  if not(!option_red) || Process.test_dependency_constraints proc_left_label_red_up then
+  if not(!option_red) || Process.test_dependency_constraints proc_left_label_red_up !option_nouse then
     
     (* ** SECOND step: Distinguish two cases whether pro_left/right_label have focus or not.
          (if they do not have the same status we raise an error. *)
