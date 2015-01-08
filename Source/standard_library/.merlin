@@ -1,0 +1,17 @@
+# Where are source files
+S ./
+S ../trace_equivalence/
+S ../length_equivalence/
+S ../parser/
+
+# Where are compiled files
+B ./
+B ../trace_equivalence/
+B ../length_equivalence/
+B ../parser/
+
+# What are packages
+# PKG debug
+# PKG trace_equivalence
+# PKG length_equivalence
+# PKG standard_library
