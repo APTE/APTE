@@ -21,7 +21,7 @@ def main():
     parser.add_argument('-f', '--file_log',
                         help='you can choose a name for the results file')
     parser.add_argument('-v', '--version', nargs='*',
-                        help='you can choose the version beteween [ref,old_comp,comp,comp_no_impro,old_red,red,red_no_impro,red_no_nouse,red_no_nouse_improper]')
+                        help='you can choose the version beteween [ref,old_comp,comp,comp_no_impro,old_red,red,red_no_impro,red_no_nouse,red_no_2_nouse_improper]')
     args = parser.parse_args()
 
     nameFile = "results"
@@ -73,7 +73,7 @@ def main():
                 bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
                 bina = bina + " -with_por red improper"
                 list_binaries.append(bina)
-            if "red_no_nouse_improper" in args.version:
+            if "red_no_2_nouse_improper" in args.version:
                 bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
                 bina = bina + " -with_por red"
                 list_binaries.append(bina)
