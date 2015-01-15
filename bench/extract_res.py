@@ -13,77 +13,16 @@ import logging
 import math
 import marshal
 
+from texttable import *
+
+import data
 ## I reuse an old script (for SPEC)
 
 logging.basicConfig(stream=sys.stdout,
-                    level=logging.WARNING)
-
-
-DICO = {
-    'ref' : {
-        "name" : "Apte without POR (reference version)",
-        "call" : "apte_1_new_all",
-        "branch" : "",
-        "benchs": {
-            "TEST": {
-                "file": "TEST.txt",
-                "res" : True,
-                "date" : "1263",
-                "time": "453",
-                "nbExplo" : "4674",
-                "fileFrom" : "BENCH.log"
-            }
-        }
-    },
-    'old_comp' : {
-        "name" : "Old compression like defined in POST'14",
-        "call" : "apte_2_old_compr",
-        "branch" : "",
-        "benchs": {}
-    },
-    'old_red' : {
-        "name" : "Old reduction like defined in POST'14",
-        "call" : "apte_3_old_red",
-        "branch" : "",
-        "benchs": {}
-    },
-    'comp' : {
-        "name" : "Compression (+ killing improper)",
-        "call" : "apte_1_new_all -with_por compr improper",
-        "branch" : "",
-        "benchs": {}
-    },
-    'comp_no_impro' : {
-        "name" : "Compression (- killing improper)",
-        "call" : "apte_1_new_all -with_por compr",
-        "branch" : "",
-        "benchs": {}
-    },
-    'red' : {
-        "name" : "Reduction (+ killing improper + NoUse criterion)",
-        "call" : "apte_1_new_all -with_por red improper nouse",
-        "branch" : "",
-        "benchs": {}
-    },
-    'red_no_impro' : {
-        "name" : "Reduction (- killing improper + NoUse criterion)",
-        "call" : "apte_1_new_all -with_por red nouse",
-        "branch" : "",
-        "benchs": {}
-    },
-    'red_no_nouse' : {
-        "name" : "Reduction (+ killing improper - NoUse criterion)",
-        "call" : "apte_1_new_all -with_por red improper",
-        "branch" : "",
-        "benchs": {}
-    },
-    'red_no_2_nouse_improper' : {
-        "name" : "Reduction (- killing improper - NoUse criterion)",
-        "call" : "apte_1_new_all -with_por red",
-        "branch" : "",
-        "benchs": {}
-    }
-}
+                    level=logging.ERROR)
+isLoad = True
+TESTSDICO = data.get_testsDico()
+VERSDICO = data.get_versDico()
 
 def extractBench(text):
     lastBench = text.split("=============== STARTING A NEW BENCHMARK ===============")[1]
@@ -117,22 +56,79 @@ def extractTests(text):
         i = i+2
     return(listTests2)
 
-def findVers(call, dico):
+def findVers(call, dicoVersions):
     res = {}
     resKey = ""
-    for versKey in dico:
-        vers = dico[versKey]
+    for versKey in dicoVersions:
+        vers = dicoVersions[versKey]
         if (vers["call"].strip() == call.strip()):
             res = vers
             resKey = versKey
     return(resKey)
 
-    # MAIN
+def findTest(fileName, dicoTests):
+    res = {}
+    resKey = ""
+    for testKey in dicoTests:
+        test = dicoTests[testKey]
+        if (test["file"].strip() == fileName.strip()):
+            res = test
+            resKey = testKey
+            return(resKey)
+
+def pprintMatrix(matrix):
+    lm = len(matrix[0])-1
+    table = Texttable()
+    firstWidth = 15
+    width = 12
+    # table.set_cols_align(["l", "r", "c"])
+    # table.set_deco(Texttable.HEADER)
+    table.set_deco(Texttable.BORDER | Texttable.HEADER)
+    table.set_precision(2)
+    table.set_cols_width([firstWidth]+ ([width]*lm))
+    table.set_cols_align(["l"] + (["c"]*lm))
+    table.set_cols_dtype(['t'] +  # text 
+                         (['a']*lm)) # automatic
+    # table.set_cols_valign(["t", "m", "b"])
+    table.add_rows(matrix)
+    return(table.draw())
+
+def extractResults(dicoV, sortedV, dicoT, keyT):
+    # First column of the line:
+    res = [keyT]
+    for keyV in sortedV:
+        versionDico = dicoV[keyV]
+        versionBenchs = versionDico["benchs"]
+        found = False
+        for bench in versionBenchs:
+            if (not(found) and
+                 versionBenchs[bench]["file"].strip() == dicoT[keyT]["file"].strip()):
+                #res.append((versionBenchs[bench]["time"], versionBenchs[bench]["nbExplo"]))
+                res.append(versionBenchs[bench]["time"])
+                found = True
+        if not(found):
+            res.append(-100)
+    return(res)
+
+def fromVersToTests(dicoVersions, dicoTests):
+    sortedVersions = ['ref', 'old_comp', 'comp_no_impr', 'comp',  'old_red',  'red_no_2', 'red_no_impr', 'red_no_nouse', 'red']
+    listTestsKey = sorted(dicoTests.keys())
+    listTestsFile = map(lambda x: dicoTests[x]['file'], listTestsKey)
+    # first line of the matrix:
+    matrix = [[" / "] + sortedVersions]
+    for i in range(len(listTestsFile)):
+        keyTest = listTestsKey[i]
+        fileName = listTestsFile[i]
+        listResults = extractResults(dicoVersions, sortedVersions, dicoTests, keyTest)
+        matrix.append(listResults)
+    return(pprintMatrix(matrix))
+
+
+# --------------------------- MAIN ------------------------------------------ #
 def main():
     nameFile = "summary"
     log_all = open("summary/" + nameFile + ".log", "a")
     def print_all(s):
-#        print s
         log_all.write(s)
         log_all.flush()
     def pprint_all(s):
@@ -152,13 +148,13 @@ def main():
     listLog = glob.glob('log_BCK/red_red_nouse.log')
     listLog = glob.glob('log_BCK/*.log')
     dicoPath = "summary/DumpRes.json"
-    isLoad = True
+    TestsDico = TESTSDICO
     if isLoad:
         dicoFile = open(dicoPath, 'rb')
-        dico = marshal.load(dicoFile)
+        VersionsDico = marshal.load(dicoFile)
         dicoFile.close()
     else:
-        dico = DICO
+        VersionsDico = VERSDICO
     for log in listLog:
         logging.debug("=" * 20 + "   NEW logFile   " + "=" * 20)
         logging.debug("logFile: " + log + "\n")
@@ -170,8 +166,8 @@ def main():
         for el in listVers:
             nbVers = nbVers +1
             (version, benchVers) = el
-            versionKey = findVers(version, dico)
-            versionDico =dico[versionKey] 
+            versionKey = findVers(version, VersionsDico)
+            versionDico =VersionsDico[versionKey] 
             versionName = versionDico["name"]
             logging.debug(" ----- NEW version: " + versionName + " ----- ")
             listTests = extractTests(benchVers)
@@ -184,9 +180,17 @@ def main():
                 else:
                     nbTests = nbTests + 1
                     testName = test.split(".")[0]
-                    testFile = test
+                    testFile = test.strip() + ".txt"
                     isTrue = ("true" in benchTests)
                     date = benchTests.splitlines()[1].strip()
+                    testKey = findTest(testFile, TestsDico)
+                    if testKey == "":
+                        logging.error("The tests %s cannot be found.\n" % testFile)
+                        return()
+                    testDico = TestsDico[testKey]
+                    if testDico['res'] != isTrue:
+                        logging.error("NOT EXPECTED RESULT. The version %s on test %s answerd %s.\n"
+                                      % (versionName, testName, str(isTrue)))
                     if "explorations:" in benchTests:
                         nbExplo = int(benchTests.split("explorations:")[1].split(".")[0])
                     else:
@@ -195,7 +199,7 @@ def main():
                     logging.info("New test: " + testName + "|: True? " + str(isTrue) + ", nbExplo: " + str(nbExplo) +
                                  ", date: " + date + ", time: " + str(time) + "  |  ")
                     testDico = {
-                        "file": testFile,
+                        "file": testFile,    # str
                         "res" : isTrue,      # bool
                         "date" : date,       # string
                         "time" : time,       # float
@@ -234,7 +238,15 @@ def main():
     print("~~~~~~~~~ Some Stats ~~~~~~~~~\n" +
           "Nb. of Tests: %d. Number of versions: %d. Number of new tests: %d. Number of rewrites: %d." % (nbTests, nbVers, nbNewTests, nbRewrite))
     dicoFile = open(dicoPath, 'wb')
-    marshal.dump(dico, dicoFile)
+    marshal.dump(VersionsDico, dicoFile)
     dicoFile.close()
 
+    print("\n~~~~~~~~~ Results ~~~~~~~~~")
+    print(fromVersToTests(VersionsDico, TestsDico))
+
+
 main()
+
+
+# LIB TEXTTABLE:
+#     # table.set_deco(Texttable.HEADER)
