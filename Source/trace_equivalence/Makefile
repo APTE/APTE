@@ -10,8 +10,8 @@ NAME_MODULE_MAJ = Trace_equivalence
 INCLUDES= 
 INDLUDES_MOD = -I ../
 
-OCAMLFLAGS = $(INCLUDES) $(INDLUDES_MOD) -w Ae # add other options for ocamlc here 
-OCAMLOPTFLAGS = $(INCLUDES) $(INDLUDES_MOD) -w Ae # add other options for ocamlopt here
+OCAMLFLAGS = -bin-annot $(INCLUDES) $(INDLUDES_MOD) -w Ae # add other options for ocamlc here 
+OCAMLOPTFLAGS = -bin-annot $(INCLUDES) $(INDLUDES_MOD) -w Ae # add other options for ocamlopt here
 
 # STANDARD LIBRARY
 
@@ -29,7 +29,8 @@ main: .depend display $(COMPILE)
 	@echo Packing of all module files :
 	@echo
 	$(OCAMLOPT) -pack -o ../$(NAME_MODULE_OBJ).cmx $(OCAMLOPTFLAGS) $(OBJ)
-	
+
+
 debug: .depend display $(COMPILE_DEBUG)
 	@echo
 	@echo Packing of all module files :
