@@ -1,0 +1,331 @@
+=============== STARTING A NEW BENCHMARK ===============
+Date: 2015-01-12 10:38:20.151252
+You choose those version: ['../apte_1_new_all -with_por compr improper', '../apte_2_old_compr', '../apte_1_new_all -with_por compr', '../apte_1_new_all -with_por red improper nouse', '../apte_1_new_all -with_por red', '../apte_1_new_all -with_por red improper', '../apte_1_new_all -with_por red']
+On all those examples: ['../Simple_Example/Simple_tests_h_4par.txt', '../Simple_Example/Simple_Private_Authentication_Protocol.txt', '../Simple_Example/Simple_Basic_Access_Control_protocol_FR.txt', '../Simple_Example/Simple_Basic_Access_Control_protocol_UK.txt', '../Simple_Example/Simple_bench_3par.txt', '../Simple_Example/Simple_wmf.txt', '../Simple_Example/Simple_bench_5par.txt', '../Simple_Example/Simple_Private_Authentication_Protocol_2_sessions.txt', '../Simple_Example/Simple_bench_7par.txt', '../Simple_Example/Simple_Andrew_Secure_RPC_BAN_auth.txt', '../Simple_Example/Simple_Andrew_Secure_RPC_sec.txt', '../Simple_Example/Simple_Andrew_Secure_RPC_auth.txt', '../Simple_Example/Simple_bench_10par.txt', '../Simple_Example/Simple_Andrew_Secure_RPC_BAN_sec.txt']
+Am I right?
+ ########## Starting a benchmark version: apte_1_new_all -with_por compr ########## 
+                                                  2015-01-12 10:38:21.988706
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_BAN_auth --- 
+                                                  2015-01-12 10:38:21.988760
+Number of final tests: 23811.
+Result : The trace equivalence is false
+Number of explorations: 23811.
+Result obtained in 27.916000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_BAN_sec --- 
+                                                  2015-01-12 10:38:50.051191
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_auth --- 
+                                                  2015-01-12 18:28:17.327070
+Number of final tests: 23812.
+Result : The trace equivalence is false
+Number of explorations: 23812.
+Result obtained in 28.288000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_sec --- 
+                                                  2015-01-12 18:28:45.656922
+Result : The trace equivalence is true
+Number of explorations: 9390899.
+Result obtained in 22947.244000 seconds
+
+ --- Benchmark of Protocol: Simple_Basic_Access_Control_protocol_FR --- 
+                                                  2015-01-13 00:51:12.198785
+Number of final tests: 214.
+Result : The trace equivalence is false
+Number of explorations: 214.
+Result obtained in 0.144000 seconds
+
+ --- Benchmark of Protocol: Simple_Basic_Access_Control_protocol_UK --- 
+                                                  2015-01-13 00:51:12.359019
+Number of final tests: 214.
+Result : The trace equivalence is false
+Number of explorations: 214.
+Result obtained in 0.144000 seconds
+
+ --- Benchmark of Protocol: Simple_Private_Authentication_Protocol --- 
+                                                  2015-01-13 00:51:12.518276
+Result : The trace equivalence is true
+Number of explorations: 153.
+Result obtained in 0.028000 seconds
+
+ --- Benchmark of Protocol: Simple_Private_Authentication_Protocol_2_sessions --- 
+                                                  2015-01-13 00:51:12.558603
+Result : The trace equivalence is true
+Number of explorations: 112305.
+Result obtained in 93.680000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_10par --- 
+                                                  2015-01-13 00:52:46.250322
+
+ --- Benchmark of Protocol: Simple_bench_3par --- 
+                                                  2015-01-13 09:07:05.913220
+Result : The trace equivalence is true
+Number of explorations: 118.
+Result obtained in 0.020000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_5par --- 
+                                                  2015-01-13 09:07:05.948261
+Result : The trace equivalence is true
+Number of explorations: 9496.
+Result obtained in 3.580000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_7par --- 
+                                                  2015-01-13 09:07:09.542543
+Result : The trace equivalence is true
+Number of explorations: 1595434.
+Result obtained in 1058.512000 seconds
+
+ --- Benchmark of Protocol: Simple_tests_h_4par --- 
+                                                  2015-01-13 09:24:48.002818
+Result : The trace equivalence is true
+Number of explorations: 9863.
+Result obtained in 3.736000 seconds
+
+ --- Benchmark of Protocol: Simple_wmf --- 
+                                                  2015-01-13 09:24:51.754335
+Result : The trace equivalence is true
+Number of explorations: 260.
+Result obtained in 0.052000 seconds
+
+
+
+ ########## Starting a benchmark version: apte_1_new_all -with_por compr improper ########## 
+                                                  2015-01-13 09:24:51.820267
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_BAN_auth --- 
+                                                  2015-01-13 09:24:51.820307
+Number of final tests: 5794.
+Result : The trace equivalence is false
+Number of explorations: 5794.
+Result obtained in 164.948000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_BAN_sec --- 
+                                                  2015-01-13 09:27:36.773820
+Result : The trace equivalence is true
+Number of explorations: 71211.
+Result obtained in 596.452000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_auth --- 
+                                                  2015-01-13 09:37:33.212447
+Number of final tests: 33.
+Result : The trace equivalence is false
+Number of explorations: 33.
+Result obtained in 0.132000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_sec --- 
+                                                  2015-01-13 09:37:33.358139
+Result : The trace equivalence is true
+Number of explorations: 129187.
+Result obtained in 1583.160000 seconds
+
+ --- Benchmark of Protocol: Simple_Basic_Access_Control_protocol_FR --- 
+                                                  2015-01-13 10:03:56.462259
+Number of final tests: 214.
+Result : The trace equivalence is false
+Number of explorations: 214.
+Result obtained in 0.144000 seconds
+
+ --- Benchmark of Protocol: Simple_Basic_Access_Control_protocol_UK --- 
+                                                  2015-01-13 10:03:56.622090
+Number of final tests: 214.
+Result : The trace equivalence is false
+Number of explorations: 214.
+Result obtained in 0.144000 seconds
+
+ --- Benchmark of Protocol: Simple_Private_Authentication_Protocol --- 
+                                                  2015-01-13 10:03:56.780483
+Result : The trace equivalence is true
+Number of explorations: 123.
+Result obtained in 0.020000 seconds
+
+ --- Benchmark of Protocol: Simple_Private_Authentication_Protocol_2_sessions --- 
+                                                  2015-01-13 10:03:56.813169
+Result : The trace equivalence is true
+Number of explorations: 27003.
+Result obtained in 17.252000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_10par --- 
+                                                  2015-01-13 10:04:14.078215
+Result : The trace equivalence is true
+Number of explorations: 2959228.
+Result obtained in 3656.212000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_3par --- 
+                                                  2015-01-13 11:05:10.103476
+Result : The trace equivalence is true
+Number of explorations: 46.
+Result obtained in 0.008000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_5par --- 
+                                                  2015-01-13 11:05:10.133619
+Result : The trace equivalence is true
+Number of explorations: 976.
+Result obtained in 0.480000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_7par --- 
+                                                  2015-01-13 11:05:10.628408
+Result : The trace equivalence is true
+Number of explorations: 41098.
+Result obtained in 39.180000 seconds
+
+ --- Benchmark of Protocol: Simple_tests_h_4par --- 
+                                                  2015-01-13 11:05:49.820508
+Result : The trace equivalence is true
+Number of explorations: 323.
+Result obtained in 0.556000 seconds
+
+ --- Benchmark of Protocol: Simple_wmf --- 
+                                                  2015-01-13 11:05:50.390410
+Result : The trace equivalence is true
+Number of explorations: 28.
+Result obtained in 0.004000 seconds
+
+
+
+ ########## Starting a benchmark version: apte_1_new_all -with_por red ########## 
+                                                  2015-01-13 11:05:50.407628
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_BAN_auth --- 
+                                                  2015-01-13 11:05:50.407661
+Number of final tests: 271630.
+Result : The trace equivalence is false
+Number of explorations: 271630.
+Result obtained in 373.792000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_BAN_sec --- 
+                                                  2015-01-13 11:12:04.193255
+Result : The trace equivalence is true
+Number of explorations: 9092221.
+Result obtained in 9299.124000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_auth --- 
+                                                  2015-01-13 13:47:02.920800
+Number of final tests: 271631.
+Result : The trace equivalence is false
+Number of explorations: 271631.
+Result obtained in 370.192000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_sec --- 
+                                                  2015-01-13 13:53:13.117832
+Result : The trace equivalence is true
+Number of explorations: 5415542.
+Result obtained in 6578.724000 seconds
+
+ --- Benchmark of Protocol: Simple_Basic_Access_Control_protocol_FR --- 
+                                                  2015-01-13 15:42:51.618108
+Number of final tests: 230.
+Result : The trace equivalence is false
+Number of explorations: 230.
+Result obtained in 0.148000 seconds
+
+ --- Benchmark of Protocol: Simple_Basic_Access_Control_protocol_UK --- 
+                                                  2015-01-13 15:42:51.779876
+Number of final tests: 230.
+Result : The trace equivalence is false
+Number of explorations: 230.
+Result obtained in 0.148000 seconds
+
+ --- Benchmark of Protocol: Simple_Private_Authentication_Protocol --- 
+                                                  2015-01-13 15:42:51.941498
+Result : The trace equivalence is true
+Number of explorations: 151.
+Result obtained in 0.024000 seconds
+
+ --- Benchmark of Protocol: Simple_Private_Authentication_Protocol_2_sessions --- 
+                                                  2015-01-13 15:42:51.986793
+Result : The trace equivalence is true
+Number of explorations: 107120.
+Result obtained in 90.720000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_10par --- 
+                                                  2015-01-13 15:44:22.740070
+Result : The trace equivalence is true
+Number of explorations: 100637664.
+Result obtained in 69464.468000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_3par --- 
+                                                  2015-01-14 11:02:04.695818
+Result : The trace equivalence is true
+Number of explorations: 99.
+Result obtained in 0.016000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_5par --- 
+                                                  2015-01-14 11:02:04.728277
+Result : The trace equivalence is true
+Number of explorations: 5464.
+Result obtained in 1.752000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_7par --- 
+                                                  2015-01-14 11:02:06.498046
+Result : The trace equivalence is true
+Number of explorations: 577972.
+Result obtained in 309.640000 seconds
+
+ --- Benchmark of Protocol: Simple_tests_h_4par --- 
+                                                  2015-01-14 11:07:16.145365
+Result : The trace equivalence is true
+Number of explorations: 8840.
+Result obtained in 2.156000 seconds
+
+ --- Benchmark of Protocol: Simple_wmf --- 
+                                                  2015-01-14 11:07:18.314238
+Result : The trace equivalence is true
+Number of explorations: 247.
+Result obtained in 0.040000 seconds
+
+
+
+ ########## Starting a benchmark version: apte_1_new_all -with_por red ########## 
+                                                  2015-01-14 11:07:18.374845
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_BAN_auth --- 
+                                                  2015-01-14 11:07:18.374900
+Number of final tests: 271630.
+Result : The trace equivalence is false
+Number of explorations: 271630.
+Result obtained in 374.940000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_BAN_sec --- 
+                                                  2015-01-14 11:13:33.320218
+Result : The trace equivalence is true
+Number of explorations: 9092221.
+Result obtained in 9264.120000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_auth --- 
+                                                  2015-01-14 13:47:57.135062
+Number of final tests: 271631.
+Result : The trace equivalence is false
+Number of explorations: 271631.
+Result obtained in 370.400000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_sec --- 
+                                                  2015-01-14 13:54:07.538967
+Result : The trace equivalence is true
+Number of explorations: 5415542.
+Result obtained in 6562.028000 seconds
+
+ --- Benchmark of Protocol: Simple_Basic_Access_Control_protocol_FR --- 
+                                                  2015-01-14 15:43:29.313530
+Number of final tests: 230.
+Result : The trace equivalence is false
+Number of explorations: 230.
+Result obtained in 0.148000 seconds
+
+ --- Benchmark of Protocol: Simple_Basic_Access_Control_protocol_UK --- 
+                                                  2015-01-14 15:43:29.476243
+Number of final tests: 230.
+Result : The trace equivalence is false
+Number of explorations: 230.
+Result obtained in 0.148000 seconds
+
+ --- Benchmark of Protocol: Simple_Private_Authentication_Protocol --- 
+                                                  2015-01-14 15:43:29.637593
+Result : The trace equivalence is true
+Number of explorations: 151.
+Result obtained in 0.024000 seconds
+
+ --- Benchmark of Protocol: Simple_Private_Authentication_Protocol_2_sessions --- 
+                                                  2015-01-14 15:43:29.677324
+Result : The trace equivalence is true
+Number of explorations: 107120.
+Result obtained in 88.676000 seconds
+
+ --- Benchmark of Protocol: Simple_bench_10par --- 
+                                                  2015-01-14 15:44:58.365091
