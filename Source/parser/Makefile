@@ -9,8 +9,8 @@ NAME_MODULE_MAJ = Parser
 INCLUDES = 
 INDLUDES_MOD = -I ../ 
 
-OCAMLFLAGS = $(INCLUDES) $(INDLUDES_MOD) -w Ae # add other options for ocamlc here 
-OCAMLOPTFLAGS = $(INCLUDES) $(INDLUDES_MOD) -w Ae # add other options for ocamlopt here
+OCAMLFLAGS = -bin-annot $(INCLUDES) $(INDLUDES_MOD) -w Ae # add other options for ocamlc here 
+OCAMLOPTFLAGS = -bin-annot $(INCLUDES) $(INDLUDES_MOD) -w Ae # add other options for ocamlopt here
 
 # STANDARD LIBRARY
 

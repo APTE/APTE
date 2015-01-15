@@ -8,8 +8,8 @@ NAME_PROGRAMME = APTE
 
 INCLUDES = 
 
-OCAMLFLAGS = $(INCLUDES) -w Ae # add other options for ocamlc here 
-OCAMLOPTFLAGS = $(INCLUDES) -w Ae # add other options for ocamlopt here
+OCAMLFLAGS = -bin-annot $(INCLUDES) -w Ae # add other options for ocamlc here 
+OCAMLOPTFLAGS = -bin-annot $(INCLUDES) -w Ae # add other options for ocamlopt here
 
 MODULES = standard_library.mod trace_equivalence.mod length_equivalence.mod parser.mod
 MODULES_COMPILE = $(MODULES:%.mod=%.cmx)
