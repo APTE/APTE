@@ -11,6 +11,7 @@ depend
 *.cmxa
 *~
 log*
+bench/log/*
 # OS generated files #
 ######################
 .DS_Store

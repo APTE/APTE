@@ -100,7 +100,7 @@ def main():
                            if test_middle(i) and (not (i in list_tests)) ]
                 list_tests += tests_m
             if "hard" in args.difficulty:
-                list_tests = list_tests_tout
+                list_tests = [x for x in list_tests_tout if x not in list_tests]
     else:
         parser.print_help()
         list_tests = list_tests_tout

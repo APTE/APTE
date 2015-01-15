@@ -145,8 +145,6 @@ def main():
     list_binaries_tout = glob.glob('../apte_*')
     list_tests = list_tests_tout
     listLog = glob.glob('log/*.log')
-    listLog = glob.glob('log_BCK/red_red_nouse.log')
-    listLog = glob.glob('log_BCK/*.log')
     dicoPath = "summary/DumpRes.json"
     TestsDico = TESTSDICO
     if isLoad:
@@ -225,7 +223,7 @@ def main():
                                     " " * 30 + "OLD/NEW for time: %f/%f, Date: %s / %s" +
                                     ", logFile: %s/%s.") %
                                    (diffRel, overWrite, versionKey, testName, diff, oldTime, time, oldDate, date, oldFile, log))
-                        if diffRel > 0.05:
+                        if diffRel > 0.07:
                             logging.error(toPrint)
                         elif diffRel > 0.0001:
                             logging.warning(toPrint)
