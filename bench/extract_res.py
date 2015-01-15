@@ -19,7 +19,25 @@ import data
 ## I reuse an old script (for SPEC)
 
 logging.basicConfig(stream=sys.stdout,
-                    level=logging.ERROR)
+                    level=logging.WARNING,
+                    format="%(message)s")
+rootLogger = logging.getLogger()
+
+logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s] | %(message)s")
+warn=logging.FileHandler("summary/LOG_warn.log")
+err=logging.FileHandler("summary/LOG_err.log")
+debug=logging.FileHandler("summary/LOG_debug.log")
+warn.setFormatter(logFormatter)
+err.setFormatter(logFormatter)
+debug.setFormatter(logFormatter)
+warn.setLevel(logging.WARNING)
+err.setLevel(logging.ERROR)
+debug.setLevel(logging.DEBUG)
+rootLogger.addHandler(warn)
+rootLogger.addHandler(debug)
+rootLogger.addHandler(err)
+
+
 isLoad = True
 TESTSDICO = data.get_testsDico()
 VERSDICO = data.get_versDico()
@@ -104,10 +122,13 @@ def extractResults(dicoV, sortedV, dicoT, keyT):
             if (not(found) and
                  versionBenchs[bench]["file"].strip() == dicoT[keyT]["file"].strip()):
                 #res.append((versionBenchs[bench]["time"], versionBenchs[bench]["nbExplo"]))
-                res.append(versionBenchs[bench]["time"])
+                if versionBenchs[bench]["res"] != dicoT[keyT]["res"]:
+                    res.append("> X <")
+                else:
+                    res.append(versionBenchs[bench]["time"])
                 found = True
         if not(found):
-            res.append(-100)
+            res.append(".")
     return(res)
 
 def fromVersToTests(dicoVersions, dicoTests):
@@ -173,8 +194,8 @@ def main():
             for el in listTests:
                 (test, benchTests) = el
                 if not("obtained" in benchTests):
-                    logging.info("new test: " + test)
-                    logging.info("Test is not yet finished...")
+                    logging.debug("new test: " + test)
+                    logging.debug("Test is not yet finished...")
                 else:
                     nbTests = nbTests + 1
                     testName = test.split(".")[0]
@@ -187,14 +208,14 @@ def main():
                         return()
                     testDico = TestsDico[testKey]
                     if testDico['res'] != isTrue:
-                        logging.error("NOT EXPECTED RESULT. The version %s on test %s answerd %s.\n"
+                        logging.error("NOT EXPECTED RESULT. The version %s on test %s answerd %s."
                                       % (versionName, testName, str(isTrue)))
                     if "explorations:" in benchTests:
                         nbExplo = int(benchTests.split("explorations:")[1].split(".")[0])
                     else:
                         nbExplo = -1
                     time = float(benchTests.split("obtained in")[1].split(" seconds")[0])
-                    logging.info("New test: " + testName + "|: True? " + str(isTrue) + ", nbExplo: " + str(nbExplo) +
+                    logging.debug("New test: " + testName + "|: True? " + str(isTrue) + ", nbExplo: " + str(nbExplo) +
                                  ", date: " + date + ", time: " + str(time) + "  |  ")
                     testDico = {
                         "file": testFile,    # str
@@ -215,34 +236,40 @@ def main():
                         else:
                             diffRel = (diff / max(time,oldTime))
                         overWrite = ""
+                        isOverWrite = False
                         if (date > oldDate): # NE MARCHE PAS SI ON COMPARE DS LA MEME JOURNEE !!
                             nbRewrite = nbRewrite + 1
                             overWrite = " --> OVERWRITTEN! "
                             versionDico["benchs"][testName] = testDico
+                            isOverWrite = True
                         toPrint = (("Diff rel: %f%s--- Clash for version %s on test %s.   --- Difference: %f.\n" +
                                     " " * 30 + "OLD/NEW for time: %f/%f, Date: %s / %s" +
                                     ", logFile: %s/%s.") %
                                    (diffRel, overWrite, versionKey, testName, diff, oldTime, time, oldDate, date, oldFile, log))
-                        if diffRel > 0.07:
+                        if diffRel > 0.07 or isOverWrite:
                             logging.error(toPrint)
                         elif diffRel > 0.0001:
                             logging.warning(toPrint)
                     else:
                         nbNewTests = nbNewTests + 1
                         versionDico["benchs"][testName] = testDico
-            logging.info("\n")
+            logging.debug("\n")
 
     # pp.pprint(dico)
-    print("~~~~~~~~~ Some Stats ~~~~~~~~~\n" +
+    def print2(s):
+        print(s)
+        logging.info(s)
+
+    print2("\n~~~~~~~~~ Some Stats ~~~~~~~~~\n" +
           "Nb. of Tests: %d. Number of versions: %d. Number of new tests: %d. Number of rewrites: %d." % (nbTests, nbVers, nbNewTests, nbRewrite))
     dicoFile = open(dicoPath, 'wb')
     marshal.dump(VersionsDico, dicoFile)
     dicoFile.close()
 
-    print("\n~~~~~~~~~ Results ~~~~~~~~~")
-    print(fromVersToTests(VersionsDico, TestsDico))
-
-
+    print2("\n~~~~~~~~~ Results ~~~~~~~~~")
+    print2(fromVersToTests(VersionsDico, TestsDico))
+    print2("Captions: [> X <] if the returned result is false, [.] if is there is no benchmark.")
+    logging.error("#" * 80 + "\n")
 main()
 
 
