@@ -1,0 +1,29 @@
+=============== STARTING A NEW BENCHMARK ===============
+Date: 2015-01-12 10:46:31.534203
+You choose those version: ['../apte_1_new_all -with_por red improper nouse', '../apte_1_new_all -with_por red nouse', '../apte_1_new_all -with_por red improper', '../apte_1_new_all -with_por red']
+On all those examples: ['../Simple_Example/Simple_tests_h_4par.txt', '../Simple_Example/Simple_bench_5par.txt', '../Simple_Example/Simple_Private_Authentication_Protocol.txt', '../Simple_Example/Simple_Private_Authentication_Protocol_2_sessions.txt', '../Simple_Example/Simple_Basic_Access_Control_protocol_FR.txt', '../Simple_Example/Simple_Basic_Access_Control_protocol_UK.txt', '../Simple_Example/Simple_bench_3par.txt', '../Simple_Example/Simple_tests_h_7par.txt', '../Simple_Example/Simple_bench_7par.txt', '../Simple_Example/Simple_Andrew_Secure_RPC_BAN_auth.txt', '../Simple_Example/Simple_Passport_PA_Unlinkability.txt', '../Simple_Example/Simple_wmf.txt', '../Simple_Example/Simple_Andrew_Secure_RPC_sec.txt', '../Simple_Example/Simple_Private_Authentication_Protocol_3_sessions.txt', '../Simple_Example/Simple_Andrew_Secure_RPC_auth.txt', '../Simple_Example/Simple_bench_10par.txt', '../Simple_Example/Simple_Andrew_Secure_RPC_BAN_sec.txt']
+Am I right?
+ ########## Starting a benchmark version: apte_1_new_all -with_por red ########## 
+                                                  2015-01-12 10:46:39.962166
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_BAN_auth --- 
+                                                  2015-01-12 10:46:39.962221
+Number of final tests: 271630.
+Result : The trace equivalence is false
+Number of explorations: 271630.
+Result obtained in 384.496000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_BAN_sec --- 
+                                                  2015-01-12 10:53:04.463102
+Result : The trace equivalence is true
+Number of explorations: 9092221.
+Result obtained in 9559.624000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_auth --- 
+                                                  2015-01-12 13:32:23.913148
+Number of final tests: 271631.
+Result : The trace equivalence is false
+Number of explorations: 271631.
+Result obtained in 386.152000 seconds
+
+ --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_sec --- 
+                                                  2015-01-12 13:38:50.072266
