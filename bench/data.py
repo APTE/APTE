@@ -96,6 +96,7 @@ DICO = {
         "branch" : "",
         "benchs": {
             "TEST": {
+                "new" : False,
                 "file": "TEST.txt",
                 "res" : True,
                 "date" : "1263",
