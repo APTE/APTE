@@ -167,7 +167,7 @@ def main():
                             diffRel = (diff / max(time,oldTime))
                         overWrite = ""
                         isOverWrite = False
-                        if (date > oldDate): # NE MARCHE PAS SI ON COMPARE DS LA MEME JOURNEE !!
+                        if (dateutil.parser.parse(date) > dateutil.parser.parse(oldDate)):
                             nbRewrite = nbRewrite + 1
                             overWrite = " --> OVERWRITTEN! "
                             versionDico["benchs"][testName] = testDico
