@@ -210,7 +210,7 @@ def main():
 
 
     print(toPrintColor)
-    print2("Captions: [> X <] if the returned result is false, [.] if is there is no benchmark, [--> t <--] for new tests and [t] if test performed in the last 2 hours.")
+    print2("Captions: [> X <] if the returned result is false, [.] if is there is no benchmark, [--> t <--] for new tests and [[t]] if test performed in the last 2 hours.")
     logging.error("#" * 80 + "\n")
 
     dicoFile = open(dicoPath, 'wb')
