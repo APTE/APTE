@@ -5,7 +5,7 @@ import sys
 import glob                     # for regexp
 from time import clock, time
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 import shlex
 import argparse
 import pprint
@@ -13,12 +13,14 @@ import logging
 import math
 import marshal
 
+import dateutil.parser
 from rainbow_logging_handler import RainbowLoggingHandler
 from texttable import *
 
 import data
-## I reuse an old script (for SPEC)
+from utils import *
 
+# -- LOGGING --
 rootLogger = logging.getLogger()
 rootLogger.setLevel(logging.DEBUG)
 DATEFMT_L = "%m-%d %H:%M:%S"
@@ -51,111 +53,24 @@ handler.setFormatter(logFormatter)
 handler.setLevel(logging.WARNING)
 rootLogger.addHandler(handler)
 
+# -- OPTIONS AND DATA (from data.py) --
 isLoad = True
 TESTSDICO = data.get_testsDico()
 VERSDICO = data.get_versDico()
 
-def extractBench(text):
-    lastBench = text.split("=============== STARTING A NEW BENCHMARK ===============")[1]
-    return(lastBench)
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
-def extractVers(text):
-    SEP = "##########"
-    if not(SEP in text):
-        return []
-    listVers = text.split(SEP)[1:]
-    listVers2 = []
-    i = 0
-    while(i <len(listVers)):
-        vers = listVers[i].split(": ")[1]
-        benchVers = listVers[i+1]
-        listVers2.append((vers, benchVers))
-        i = i + 2
-    return(listVers2)
-
-def extractTests(text):
-    SEP = "---"
-    if not(SEP in text):
-        return []
-    listTests = text.split(SEP)[1:]
-    listTests2 = []
-    i = 0
-    while(i <len(listTests)):
-        vers = listTests[i].split(": ")[1]
-        benchTests = listTests[i+1]
-        listTests2.append((vers, benchTests))
-        i = i+2
-    return(listTests2)
-
-def findVers(call, dicoVersions):
-    res = {}
-    resKey = ""
-    for versKey in dicoVersions:
-        vers = dicoVersions[versKey]
-        if (vers["call"].strip() == call.strip()):
-            res = vers
-            resKey = versKey
-    return(resKey)
-
-def findTest(fileName, dicoTests):
-    res = {}
-    resKey = ""
-    for testKey in dicoTests:
-        test = dicoTests[testKey]
-        if (test["file"].strip() == fileName.strip()):
-            res = test
-            resKey = testKey
-            return(resKey)
-
-def pprintMatrix(matrix):
-    lm = len(matrix[0])-1
-    table = Texttable()
-    firstWidth = 15
-    width = 12
-    # table.set_cols_align(["l", "r", "c"])
-    # table.set_deco(Texttable.HEADER)
-    table.set_deco(Texttable.BORDER | Texttable.HEADER)
-    table.set_precision(2)
-    table.set_cols_width([firstWidth]+ ([width]*lm))
-    table.set_cols_align(["l"] + (["c"]*lm))
-    table.set_cols_dtype(['t'] +  # text 
-                         (['a']*lm)) # automatic
-    # table.set_cols_valign(["t", "m", "b"])
-    table.add_rows(matrix)
-    return(table.draw())
-
-def extractResults(dicoV, sortedV, dicoT, keyT):
-    # First column of the line:
-    res = [keyT]
-    for keyV in sortedV:
-        versionDico = dicoV[keyV]
-        versionBenchs = versionDico["benchs"]
-        found = False
-        for bench in versionBenchs:
-            if (not(found) and
-                 versionBenchs[bench]["file"].strip() == dicoT[keyT]["file"].strip()):
-                #res.append((versionBenchs[bench]["time"], versionBenchs[bench]["nbExplo"]))
-                if versionBenchs[bench]["res"] != dicoT[keyT]["res"]:
-                    res.append("> X <")
-                else:
-                    res.append(versionBenchs[bench]["time"])
-                found = True
-        if not(found):
-            res.append(".")
-    return(res)
-
-def fromVersToTests(dicoVersions, dicoTests):
-    sortedVersions = ['ref', 'old_comp', 'comp_no_impr', 'comp',  'old_red',  'red_no_2', 'red_no_impr', 'red_no_nouse', 'red']
-    listTestsKey = sorted(dicoTests.keys())
-    listTestsFile = map(lambda x: dicoTests[x]['file'], listTestsKey)
-    # first line of the matrix:
-    matrix = [[" / "] + sortedVersions]
-    for i in range(len(listTestsFile)):
-        keyTest = listTestsKey[i]
-        fileName = listTestsFile[i]
-        listResults = extractResults(dicoVersions, sortedVersions, dicoTests, keyTest)
-        matrix.append(listResults)
-    return(pprintMatrix(matrix))
+def print2(s):
+    print(s)
+    logging.debug(s)
 
 
 # --------------------------- MAIN ------------------------------------------ #
@@ -187,6 +102,7 @@ def main():
         dicoFile.close()
     else:
         VersionsDico = VERSDICO
+    VersionsDico = setNoNew(VersionsDico)
     for log in listLog:
         logging.debug("=" * 20 + "   NEW logFile   " + "=" * 20)
         logging.debug("logFile: " + log + "\n")
@@ -231,6 +147,7 @@ def main():
                     logging.debug("New test: " + testName + "|: True? " + str(isTrue) + ", nbExplo: " + str(nbExplo) +
                                  ", date: " + date + ", time: " + str(time) + "  |  ")
                     testDico = {
+                        "new" : True,        # bool
                         "file": testFile,    # str
                         "res" : isTrue,      # bool
                         "date" : date,       # string
@@ -275,23 +192,29 @@ def main():
                                          % (versionName, testName, time, nbExplo))
             logging.debug("\n")
 
-    # pp.pprint(dico)
-    def print2(s):
-        print(s)
-        logging.debug(s)
 
     print2("\n~~~~~~~~~ Some Stats ~~~~~~~~~\n" +
           "Nb. of Tests: %d. Number of versions: %d. Number of new tests: %d. Number of rewrites: %d." % (nbTests, nbVers, nbNewTests, nbRewrite))
+
+    print2("\n~~~~~~~~~ Results ~~~~~~~~~")
+    toPrint = fromVersToTests(VersionsDico, TestsDico)
+    logging.debug(toPrint)
+    toPrintColor = toPrint
+    toPrintColor = toPrintColor.replace(" >", bcolors.FAIL + " >")
+    toPrintColor = toPrintColor.replace("< ", "< "  + bcolors.ENDC)
+    toPrintColor = toPrintColor.replace("-->", bcolors.WARNING + "-->")
+    toPrintColor = toPrintColor.replace("<--", "<--"  + bcolors.ENDC)
+    toPrintColor = toPrintColor.replace(" [", bcolors.HEADER + " [")
+    toPrintColor = toPrintColor.replace("] ", "] "  + bcolors.ENDC)
+    toPrintColor = toPrintColor.replace(" . ", bcolors.OKBLUE + " . " + bcolors.ENDC)
+
+
+    print(toPrintColor)
+    print2("Captions: [> X <] if the returned result is false, [.] if is there is no benchmark, [--> t <--] for new tests and [t] if test performed in the last 2 hours.")
+    logging.error("#" * 80 + "\n")
+
     dicoFile = open(dicoPath, 'wb')
     marshal.dump(VersionsDico, dicoFile)
     dicoFile.close()
 
-    print2("\n~~~~~~~~~ Results ~~~~~~~~~")
-    print2(fromVersToTests(VersionsDico, TestsDico))
-    print2("Captions: [> X <] if the returned result is false, [.] if is there is no benchmark.")
-    logging.error("#" * 80 + "\n")
 main()
-
-
-# LIB TEXTTABLE:
-#     # table.set_deco(Texttable.HEADER)
