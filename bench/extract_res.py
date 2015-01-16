@@ -13,30 +13,43 @@ import logging
 import math
 import marshal
 
+from rainbow_logging_handler import RainbowLoggingHandler
 from texttable import *
 
 import data
 ## I reuse an old script (for SPEC)
 
-logging.basicConfig(stream=sys.stdout,
-                    level=logging.WARNING,
-                    format="%(message)s")
 rootLogger = logging.getLogger()
-
-logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s] | %(message)s")
-warn=logging.FileHandler("summary/LOG_warn.log")
+rootLogger.setLevel(logging.DEBUG)
+DATEFMT_L = "%m-%d %H:%M:%S"
+DATEFMT_S = "%d %H:%M:%S"
+# logging.basicConfig(stream=sys.stdout,
+#                     level=logging.WARNING,
+#                     format="%(message)s")
 err=logging.FileHandler("summary/LOG_err.log")
+warn=logging.FileHandler("summary/LOG_warn.log")
 debug=logging.FileHandler("summary/LOG_debug.log")
+
+logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s] | %(message)s",
+                                 datefmt=DATEFMT_L)
 warn.setFormatter(logFormatter)
 err.setFormatter(logFormatter)
 debug.setFormatter(logFormatter)
 warn.setLevel(logging.WARNING)
 err.setLevel(logging.ERROR)
 debug.setLevel(logging.DEBUG)
+
+# Files
 rootLogger.addHandler(warn)
 rootLogger.addHandler(debug)
 rootLogger.addHandler(err)
 
+# Stdout
+handler = RainbowLoggingHandler(sys.stderr,
+                                datefmt=DATEFMT_S)
+handler.setFormatter(logFormatter)
+handler.setLevel(logging.WARNING)
+rootLogger.addHandler(handler)
 
 isLoad = True
 TESTSDICO = data.get_testsDico()
@@ -204,11 +217,11 @@ def main():
                     date = benchTests.splitlines()[1].strip()
                     testKey = findTest(testFile, TestsDico)
                     if testKey == "":
-                        logging.error("The tests %s cannot be found.\n" % testFile)
+                        logging.critical("The tests %s cannot be found.\n" % testFile)
                         return()
                     testDico = TestsDico[testKey]
                     if testDico['res'] != isTrue:
-                        logging.error("NOT EXPECTED RESULT. The version %s on test %s answerd %s."
+                        logging.critical("NOT EXPECTED RESULT. The version %s on test %s answerd %s."
                                       % (versionName, testName, str(isTrue)))
                     if "explorations:" in benchTests:
                         nbExplo = int(benchTests.split("explorations:")[1].split(".")[0])
@@ -246,19 +259,26 @@ def main():
                                     " " * 30 + "OLD/NEW for time: %f/%f, Date: %s / %s" +
                                     ", logFile: %s/%s.") %
                                    (diffRel, overWrite, versionKey, testName, diff, oldTime, time, oldDate, date, oldFile, log))
-                        if diffRel > 0.07 or isOverWrite:
+                        if diffRel > 0.2:
+                            logging.critical(toPrint)
+                        elif diffRel > 0.07:
                             logging.error(toPrint)
-                        elif diffRel > 0.0001:
+                        elif isOverWrite:
                             logging.warning(toPrint)
+                        elif diffRel > 0.0001:
+                            logging.debug(toPrint)
                     else:
                         nbNewTests = nbNewTests + 1
                         versionDico["benchs"][testName] = testDico
+                        logging.critical(("----------------------------------------------- NEW RESULT:"
+                                          "Version %s on test %s. Time: %f, nbExplo: %d.")
+                                         % (versionName, testName, time, nbExplo))
             logging.debug("\n")
 
     # pp.pprint(dico)
     def print2(s):
         print(s)
-        logging.info(s)
+        logging.debug(s)
 
     print2("\n~~~~~~~~~ Some Stats ~~~~~~~~~\n" +
           "Nb. of Tests: %d. Number of versions: %d. Number of new tests: %d. Number of rewrites: %d." % (nbTests, nbVers, nbNewTests, nbRewrite))
