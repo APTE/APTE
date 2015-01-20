@@ -304,8 +304,10 @@ type blocks = {
   par_lab : par_label;
   inp : Recipe.recipe list;
   out : Recipe.axiom list;
-  mutable complete_inp : bool;	(* is set to true when performing a release of focus *)
+  complete_inp : bool;	(* is set to true when performing a release of focus *)
+  has_generate_dep_csts : bool;	(* is set to true when we add the corresponding dependency constraints (for the inputs) *)
 (* TODO: is mutable dangerous here? when backtracking???????? CHECK THIS OUT *)
+(* POSE UN GROS PROBLEME DONC CORRIGE: si on backtrack un peu et on se retrouve avec un block partiel pas terminé !!! *)
 }
 
 type symbolic_process = 
@@ -326,11 +328,22 @@ let pp s = Printf.printf "%s%!" s
 let block_set_complete_inp symP = 
   let trace_blocks = symP.trace_blocks in
   if not(trace_blocks = [])
-  then (List.hd trace_blocks).complete_inp <- true
-					       
+  then if (List.hd trace_blocks).complete_inp 
+       then { symP with
+	      trace_blocks = {(List.hd symP.trace_blocks) with
+			       complete_inp = true;
+			     } :: (List.tl symP.trace_blocks);
+	    }
+       else symP
+  else symP
+
 let block_complete_inp symP =
   let trace_blocks = symP.trace_blocks in
   trace_blocks <> [] && (List.hd symP.trace_blocks).complete_inp
+
+let has_generate_dep_csts symP =
+  let trace_blocks = symP.trace_blocks in
+  trace_blocks = [] || (List.hd symP.trace_blocks).has_generate_dep_csts
 
 let create_symbolic axiom_name_assoc proc csys = 
   {
@@ -360,17 +373,20 @@ let display_parlab pl =
   else ""
 
 let display_block b =
+  let is_gen = if b.has_generate_dep_csts then "::" else ":" in
   if b.complete_inp
-  then ps "{%s:%s/%s}" 
+  then ps "{%s%s%s/%s}" 
 	  (display_parlab b.par_lab)
+	  (is_gen)
 	  ((List.fold_left
 	      ((fun str_acc r -> (str_acc^(Recipe.display_recipe r))^","))
 	      "" b.inp)^"")
 	  ((List.fold_left
 	      ((fun str_acc a -> (str_acc^(Recipe.display_axiom a))^","))
 	      "" b.out)^"")
-  else ps "{{%s:%s/.}}" 
+  else ps "{{%s%s%s/.}}" 
 	  (display_parlab b.par_lab)
+	  (is_gen)
 	  ((List.fold_left
 	      ((fun str_acc s -> (str_acc^(Recipe.display_recipe s))^","))
 	      "" b.inp)^"")
@@ -701,6 +717,7 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
 		  inp = [t_r];
 		  out = [];
 		  complete_inp = false;
+		  has_generate_dep_csts = false;
 		}) :: old_trace_blocks
 	   (* else: we complete the block with the new recipe *)
 	   else begin
@@ -1309,7 +1326,6 @@ let rec search_pattern par_lab acc_axioms = function
 (* ********************************************************************** *)
 (*                 Build dependency constraints given a symbolic process  *)
 (* ********************************************************************** *)
-
 let generate_dependency_constraints symP =
   if !debug_f then begin
 		  pp "We are going to generate some dep. csts. on: ";
@@ -1336,7 +1352,16 @@ let generate_dependency_constraints symP =
 	  end;
 	(* END DEBUG *)
 	
-	new_sys
+	{new_sys with
+	  trace_blocks = ({block with has_generate_dep_csts = true;}
+			  :: trace);
+	}
       with
       | No_pattern -> symP;
     end
+
+let must_generate_dep_csts symP = 
+  not (has_generate_dep_csts symP) &&
+    (symP.trace_blocks <> [] &&
+       (List.hd symP.trace_blocks).out <> [])
+  
