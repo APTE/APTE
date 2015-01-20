@@ -1045,8 +1045,8 @@ module Skeleton =
       match (sk1,sk2) with
       | (InS t1, InS t2) -> compare_term t1 t2
       | (InS t1, OutS t2) -> 1
-      | (OutS t1, InS t2) -> compare_term t1 t2
-      | (OutS t1, OutS t2) -> -1
+      | (OutS t1, OutS t2) -> compare_term t1 t2
+      | (OutS t1, InS t2) -> -1
 
     let equal sk1 sk2 = (compare sk1 sk2) = 0
   end
@@ -1066,6 +1066,9 @@ let equal_skeleton = Skeleton.equal
 let display_sk = function
   | InS t -> "In_"^(Term.display_term t)
   | OutS t -> "Out "^(Term.display_term t)
+
+let display_map m = MapS.iter (fun sk lab -> Printf.printf "Key: %s, Lab: %s;   " (display_sk sk) (display_parlab lab)) m
+
 
 let sk_of_symp symp = 
   try
