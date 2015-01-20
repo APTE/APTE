@@ -512,8 +512,10 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
 				      has_focus = symb_proc.has_focus && not(!has_broken_focus);
 		     }
     (* Nil case: it enables to release the focus BUT produces an improper block -> set the two flags to true *)
-    | (Nil,_)::q -> has_broken_focus := true;
-		    has_broken_focus_0_case := true;
+    | (Nil,_)::q -> if not(!has_broken_focus)
+		    (* this is needed to avoid to stop exploring because of improper prefixes in cases like 'in.(out | if false then P)' *)
+		    then has_broken_focus_0_case := true;
+		    has_broken_focus := true;
 		    go_through prev_proc csys q 
     | (Choice(p1,p2), l)::q -> 
        if with_por
@@ -566,7 +568,7 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
     | proc::q -> if with_por && was_with_focus && not(!has_broken_focus)
 		 then function_next { symb_proc with process = proc :: q; (* in that case (has_broken_focus = false), we know that prev = [] *)
 						     constraint_system = csys;
-						     has_focus = symb_proc.has_focus && not(!has_broken_focus)
+						     has_focus = symb_proc.has_focus;
 				    }
 		 else go_through (proc::prev_proc) csys q in
   
