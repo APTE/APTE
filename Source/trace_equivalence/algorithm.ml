@@ -542,16 +542,23 @@ let apply_strategy_one_transition_por (* given .... *)
 
   if !print_debug_por then Printf.printf "end of labelling process...\n";
 
-  (* Using the flag block_complete_inp, we know if this is the first time processes have no focus.
+  (* We now update the complete_inp flag *)
+  let proc_left_label_up,proc_right_label_up =
+    if !option_red && (not (Process.has_focus proc_left_label_up) && not (Process.block_complete_inp proc_left_label_up))
+    (* no focus (no more input) and flag complete_inp not already set to true -> first time without focus -> 
+         we cannot already generate dep csts but we must set complete_inp flag to true *)
+    then begin
+	(Process.block_set_complete_inp proc_left_label_up,
+	 Process.block_set_complete_inp proc_right_label_up)
+      end
+    else (proc_left_label_up,proc_right_label_up ) in
+
+    (* Using the flag has_generate_dep_csts, we know if this is the first time last block has at least one output
 	   In this case, we must generate dependency constraints for the last inputs. *)
   let proc_left_label_red_up, proc_right_label_red_up =
-    if !option_red &&
-	 (not (Process.has_focus proc_left_label_up) && not (Process.block_complete_inp proc_left_label_up))
-    (* no focus (no more input) and flag complete_inp not already set to true -> first time without focus -> generate dep csts *)
+    if Process.must_generate_dep_csts proc_left_label_up
     then begin
 	if !print_debug_por then Printf.printf "End of INs blocks, we are going to try to add dependency constraints .... \n";
-	Process.block_set_complete_inp proc_left_label_up;
-	Process.block_set_complete_inp proc_right_label_up;
 	(* For the moment we use only the left part to generate and test dependency constraints *)
 	(Process.generate_dependency_constraints proc_left_label_up,
 	 proc_right_label_up)

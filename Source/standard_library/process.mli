@@ -165,7 +165,11 @@ val test_dependency_constraints : symbolic_process -> bool -> bool
 val generate_dependency_constraints : symbolic_process -> symbolic_process
 
 (** [block_set_complete_inp symP] set the flag complete_inp to true (inputs of last block are complete) *)
-val block_set_complete_inp : symbolic_process -> unit
+val block_set_complete_inp : symbolic_process -> symbolic_process
 
-(** [block_set_complete_inp symP] returns the flag complete_inp (true if inputs of last block are complete) *)
+(** [block_complete_inp symP] returns the flag complete_inp (true if inputs of last block are complete) *)
 val block_complete_inp : symbolic_process -> bool
+
+(** [must_generate_dep_csts symP] returns true if we must generate dependency constraints (it is the first time that the last block
+    is of the form [In* : Out] (only one output. *)
+val must_generate_dep_csts : symbolic_process -> bool

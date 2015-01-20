@@ -304,8 +304,10 @@ type blocks = {
   par_lab : par_label;
   inp : Recipe.recipe list;
   out : Recipe.axiom list;
-  mutable complete_inp : bool;	(* is set to true when performing a release of focus *)
+  complete_inp : bool;	(* is set to true when performing a release of focus *)
+  has_generate_dep_csts : bool;	(* is set to true when we add the corresponding dependency constraints (for the inputs) *)
 (* TODO: is mutable dangerous here? when backtracking???????? CHECK THIS OUT *)
+(* POSE UN GROS PROBLEME DONC CORRIGE: si on backtrack un peu et on se retrouve avec un block partiel pas terminé !!! *)
 }
 
 type symbolic_process = 
@@ -326,11 +328,22 @@ let pp s = Printf.printf "%s%!" s
 let block_set_complete_inp symP = 
   let trace_blocks = symP.trace_blocks in
   if not(trace_blocks = [])
-  then (List.hd trace_blocks).complete_inp <- true
-					       
+  then if (List.hd trace_blocks).complete_inp 
+       then { symP with
+	      trace_blocks = {(List.hd symP.trace_blocks) with
+			       complete_inp = true;
+			     } :: (List.tl symP.trace_blocks);
+	    }
+       else symP
+  else symP
+
 let block_complete_inp symP =
   let trace_blocks = symP.trace_blocks in
   trace_blocks <> [] && (List.hd symP.trace_blocks).complete_inp
+
+let has_generate_dep_csts symP =
+  let trace_blocks = symP.trace_blocks in
+  trace_blocks = [] || (List.hd symP.trace_blocks).has_generate_dep_csts
 
 let create_symbolic axiom_name_assoc proc csys = 
   {
@@ -360,17 +373,20 @@ let display_parlab pl =
   else ""
 
 let display_block b =
+  let is_gen = if b.has_generate_dep_csts then "::" else ":" in
   if b.complete_inp
-  then ps "{%s:%s/%s}" 
+  then ps "{%s%s%s/%s}" 
 	  (display_parlab b.par_lab)
+	  (is_gen)
 	  ((List.fold_left
 	      ((fun str_acc r -> (str_acc^(Recipe.display_recipe r))^","))
 	      "" b.inp)^"")
 	  ((List.fold_left
 	      ((fun str_acc a -> (str_acc^(Recipe.display_axiom a))^","))
 	      "" b.out)^"")
-  else ps "{{%s:%s/.}}" 
+  else ps "{{%s%s%s/.}}" 
 	  (display_parlab b.par_lab)
+	  (is_gen)
 	  ((List.fold_left
 	      ((fun str_acc s -> (str_acc^(Recipe.display_recipe s))^","))
 	      "" b.inp)^"")
@@ -512,8 +528,10 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
 				      has_focus = symb_proc.has_focus && not(!has_broken_focus);
 		     }
     (* Nil case: it enables to release the focus BUT produces an improper block -> set the two flags to true *)
-    | (Nil,_)::q -> has_broken_focus := true;
-		    has_broken_focus_0_case := true;
+    | (Nil,_)::q -> if not(!has_broken_focus)
+		    (* this is needed to avoid to stop exploring because of improper prefixes in cases like 'in.(out | if false then P)' *)
+		    then has_broken_focus_0_case := true;
+		    has_broken_focus := true;
 		    go_through prev_proc csys q 
     | (Choice(p1,p2), l)::q -> 
        if with_por
@@ -566,7 +584,7 @@ let apply_internal_transition_without_comm with_por function_next symb_proc =
     | proc::q -> if with_por && was_with_focus && not(!has_broken_focus)
 		 then function_next { symb_proc with process = proc :: q; (* in that case (has_broken_focus = false), we know that prev = [] *)
 						     constraint_system = csys;
-						     has_focus = symb_proc.has_focus && not(!has_broken_focus)
+						     has_focus = symb_proc.has_focus;
 				    }
 		 else go_through (proc::prev_proc) csys q in
   
@@ -699,6 +717,7 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
 		  inp = [t_r];
 		  out = [];
 		  complete_inp = false;
+		  has_generate_dep_csts = false;
 		}) :: old_trace_blocks
 	   (* else: we complete the block with the new recipe *)
 	   else begin
@@ -1045,8 +1064,8 @@ module Skeleton =
       match (sk1,sk2) with
       | (InS t1, InS t2) -> compare_term t1 t2
       | (InS t1, OutS t2) -> 1
-      | (OutS t1, InS t2) -> compare_term t1 t2
-      | (OutS t1, OutS t2) -> -1
+      | (OutS t1, OutS t2) -> compare_term t1 t2
+      | (OutS t1, InS t2) -> -1
 
     let equal sk1 sk2 = (compare sk1 sk2) = 0
   end
@@ -1066,6 +1085,9 @@ let equal_skeleton = Skeleton.equal
 let display_sk = function
   | InS t -> "In_"^(Term.display_term t)
   | OutS t -> "Out "^(Term.display_term t)
+
+let display_map m = MapS.iter (fun sk lab -> Printf.printf "Key: %s, Lab: %s;   " (display_sk sk) (display_parlab lab)) m
+
 
 let sk_of_symp symp = 
   try
@@ -1304,7 +1326,6 @@ let rec search_pattern par_lab acc_axioms = function
 (* ********************************************************************** *)
 (*                 Build dependency constraints given a symbolic process  *)
 (* ********************************************************************** *)
-
 let generate_dependency_constraints symP =
   if !debug_f then begin
 		  pp "We are going to generate some dep. csts. on: ";
@@ -1331,7 +1352,16 @@ let generate_dependency_constraints symP =
 	  end;
 	(* END DEBUG *)
 	
-	new_sys
+	{new_sys with
+	  trace_blocks = ({block with has_generate_dep_csts = true;}
+			  :: trace);
+	}
       with
       | No_pattern -> symP;
     end
+
+let must_generate_dep_csts symP = 
+  not (has_generate_dep_csts symP) &&
+    (symP.trace_blocks <> [] &&
+       (List.hd symP.trace_blocks).out <> [])
+  
