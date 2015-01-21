@@ -1363,5 +1363,6 @@ let generate_dependency_constraints symP =
 let must_generate_dep_csts symP = 
   not (has_generate_dep_csts symP) &&
     (symP.trace_blocks <> [] &&
-       (List.hd symP.trace_blocks).out <> [])
+       not (symP.has_focus) &&
+	 not ((List.hd symP.trace_blocks).has_generate_dep_csts))
   
