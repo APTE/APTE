@@ -137,8 +137,14 @@ def main():
                         return()
                     testDico = TestsDico[testKey]
                     if testDico['res'] != isTrue:
-                        logging.critical("NOT EXPECTED RESULT. The version %s on test %s answerd %s."
-                                      % (versionName, testName, str(isTrue)))
+                        if ((dateutil.parser.parse(date) < dateutil.parser.parse('2015-01-21 14:13:38.616735')) and
+                            versionKey[0:3] == "red"):
+                            logging.info("NOT EXPECTED RESULT. But this is normal since this version was before the major patch."
+                                         "The version %s on test %s answerd %s."
+                                         % (versionName, testName, str(isTrue)))
+                        else:
+                            logging.critical("NOT EXPECTED RESULT. The version %s on test %s answerd %s."
+                                             % (versionName, testName, str(isTrue)))
                     if "explorations:" in benchTests:
                         nbExplo = int(benchTests.split("explorations:")[1].split(".")[0])
                     else:
@@ -167,16 +173,23 @@ def main():
                             diffRel = (diff / max(time,oldTime))
                         overWrite = ""
                         isOverWrite = False
+                        comm = ""
+                        dateMajorPatch = dateutil.parser.parse('2015-01-21 14:13:38.616735')
+                        if ((dateutil.parser.parse(date) < dateMajorPatch or (dateutil.parser.parse(oldDate) <dateMajorPatch)) and
+                            versionKey[0:3] == "red"):
+                            comm = "Not surprising, we compare two benchs on a reduced version before and after the major patch! -- "
                         if (dateutil.parser.parse(date) > dateutil.parser.parse(oldDate)):
                             nbRewrite = nbRewrite + 1
                             overWrite = " --> OVERWRITTEN! "
                             versionDico["benchs"][testName] = testDico
                             isOverWrite = True
-                        toPrint = (("Diff rel: %f%s--- Clash for version %s on test %s.   --- Difference: %f.\n" +
+                        toPrint = (("Diff rel: %f%s--- %sClash for version %s on test %s.   --- Difference: %f.\n" +
                                     " " * 30 + "OLD/NEW for time: %f/%f, Date: %s / %s" +
                                     ", logFile: %s/%s.") %
-                                   (diffRel, overWrite, versionKey, testName, diff, oldTime, time, oldDate, date, oldFile, log))
-                        if diffRel > 0.2:
+                                   (diffRel, comm, overWrite, versionKey, testName, diff, oldTime, time, oldDate, date, oldFile, log))
+                        if comm != "":
+                            logging.info(toPrint)
+                        elif diffRel > 0.2:
                             logging.critical(toPrint)
                         elif diffRel > 0.07:
                             logging.error(toPrint)
@@ -200,12 +213,12 @@ def main():
     toPrint = fromVersToTests(VersionsDico, TestsDico)
     logging.debug(toPrint)
     toPrintColor = toPrint
-    toPrintColor = toPrintColor.replace(" >", bcolors.FAIL + " >")
-    toPrintColor = toPrintColor.replace("< ", "< "  + bcolors.ENDC)
-    toPrintColor = toPrintColor.replace("-->", bcolors.WARNING + "-->")
-    toPrintColor = toPrintColor.replace("<--", "<--"  + bcolors.ENDC)
-    toPrintColor = toPrintColor.replace(" [", bcolors.HEADER + " [")
-    toPrintColor = toPrintColor.replace("] ", "] "  + bcolors.ENDC)
+    toPrintColor = toPrintColor.replace(" >", " >" + bcolors.FAIL)
+    toPrintColor = toPrintColor.replace("< ", bcolors.ENDC + "< ")
+    toPrintColor = toPrintColor.replace("-->", "-->" + bcolors.WARNING)
+    toPrintColor = toPrintColor.replace("<--", bcolors.ENDC + "<--")
+    toPrintColor = toPrintColor.replace(" [", " [" + bcolors.HEADER)
+    toPrintColor = toPrintColor.replace("] ", bcolors.ENDC + "] ")
     toPrintColor = toPrintColor.replace(" . ", bcolors.OKBLUE + " . " + bcolors.ENDC)
 
 
