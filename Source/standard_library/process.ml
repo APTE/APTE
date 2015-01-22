@@ -1242,7 +1242,7 @@ let test_dependency_constraints symP testNoUse =
       non-ground recipes ? *)
        then true                         (* cst is not ground *)
        else (
-         if List.exists (fun ax -> Recipe.ax_occurs ax r) la
+         if List.exists (fun ax -> Recipe.ax_occurs ax r_t') la
          then true                     (* cst hold thanks to r *)
          else test_cst frame r_subst (lr, la))
   in
