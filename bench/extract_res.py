@@ -20,6 +20,9 @@ from texttable import *
 import data
 from utils import *
 
+isLoad = True
+dateMajorPatch = dateutil.parser.parse('2015-01-22 18:35:38.616735')
+
 # -- LOGGING --
 rootLogger = logging.getLogger()
 rootLogger.setLevel(logging.DEBUG)
@@ -54,7 +57,6 @@ handler.setLevel(logging.WARNING)
 rootLogger.addHandler(handler)
 
 # -- OPTIONS AND DATA (from data.py) --
-isLoad = True
 TESTSDICO = data.get_testsDico()
 VERSDICO = data.get_versDico()
 
@@ -174,7 +176,6 @@ def main():
                         overWrite = ""
                         isOverWrite = False
                         comm = ""
-                        dateMajorPatch = dateutil.parser.parse('2015-01-21 14:13:38.616735')
                         if ((dateutil.parser.parse(date) < dateMajorPatch or (dateutil.parser.parse(oldDate) <dateMajorPatch)) and
                             versionKey[0:3] == "red"):
                             comm = "Not surprising, we compare two benchs on a reduced version before and after the major patch! -- "
@@ -198,11 +199,15 @@ def main():
                         elif diffRel > 0.0001:
                             logging.debug(toPrint)
                     else:
-                        nbNewTests = nbNewTests + 1
-                        versionDico["benchs"][testName] = testDico
-                        logging.critical(("----------------------------------------------- NEW RESULT:"
-                                          "Version %s on test %s. Time: %f, nbExplo: %d.")
-                                         % (versionName, testName, time, nbExplo))
+                        if ((dateutil.parser.parse(date) < dateMajorPatch) and
+                            versionKey[0:3] == "red"):
+                            logging.info("We do not take this test into account since it concerns an old version of red*.")
+                        else:
+                            nbNewTests = nbNewTests + 1
+                            versionDico["benchs"][testName] = testDico
+                            logging.critical(("----------------------------------------------- NEW RESULT:"
+                                              "Version %s on test %s. Time: %f, nbExplo: %d.")
+                                             % (versionName, testName, time, nbExplo))
             logging.debug("\n")
 
 
