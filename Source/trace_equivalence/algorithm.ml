@@ -48,11 +48,12 @@ let pp = Printf.printf
 (* use the following function to print all information about symP when its trace
    match the given witness. Write your witness as a list of integers (one integer
    per action accordingly to how Apte numbers/parses processes. *)
-let witness = [2;3;4;27;28] 		(* examples *)
+let witness = [2;3;4;27;28] 		(* example of witness *)
+let size = 4				(* example of the 'looking' size *)
 let displayIfWitness message symP =
   if (Process.is_subtrace witness size symP)
   then begin
-      Printf.printf "%s%s" s (Process.display_trace symP);
+      Printf.printf "%s%s" message (Process.display_trace symP);
       Printf.printf "%s" (Process.display_trace_blocks symP);
       Printf.printf "Here are its dependency constraints: %s" (Process.display_dep_csts symP);
       Process.display_symb_process symP;
