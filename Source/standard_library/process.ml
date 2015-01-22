@@ -328,7 +328,7 @@ let pp s = Printf.printf "%s%!" s
 let block_set_complete_inp symP = 
   let trace_blocks = symP.trace_blocks in
   if not(trace_blocks = [])
-  then if (List.hd trace_blocks).complete_inp 
+  then if not((List.hd trace_blocks).complete_inp)
        then { symP with
 	      trace_blocks = {(List.hd symP.trace_blocks) with
 			       complete_inp = true;
@@ -384,7 +384,7 @@ let display_block b =
 	  ((List.fold_left
 	      ((fun str_acc a -> (str_acc^(Recipe.display_axiom a))^","))
 	      "" b.out)^"")
-  else ps "{{%s%s%s/.}}" 
+  else ps "{%s%s%s/.}" 
 	  (display_parlab b.par_lab)
 	  (is_gen)
 	  ((List.fold_left
@@ -1357,12 +1357,12 @@ let generate_dependency_constraints symP =
 			  :: trace);
 	}
       with
-      | No_pattern -> symP;
+      | No_pattern -> 	{symP with
+			  trace_blocks = ({block with has_generate_dep_csts = true;}
+					  :: trace);
+			};
     end
 
 let must_generate_dep_csts symP = 
-  not (has_generate_dep_csts symP) &&
-    (symP.trace_blocks <> [] &&
-       not (symP.has_focus) &&
-	 not ((List.hd symP.trace_blocks).has_generate_dep_csts))
+  not(has_focus symP) && not(has_generate_dep_csts symP)
   
