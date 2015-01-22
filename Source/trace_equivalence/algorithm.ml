@@ -556,7 +556,7 @@ let apply_strategy_one_transition_por (* given .... *)
     (* Using the flag has_generate_dep_csts, we know if this is the first time last block has at least one output
 	   In this case, we must generate dependency constraints for the last inputs. *)
   let proc_left_label_red_up, proc_right_label_red_up =
-    if Process.must_generate_dep_csts proc_left_label_up
+    if !option_red && Process.must_generate_dep_csts proc_left_label_up
     then begin
 	if !print_debug_por then Printf.printf "End of INs blocks, we are going to try to add dependency constraints .... \n";
 	(* For the moment we use only the left part to generate and test dependency constraints *)
