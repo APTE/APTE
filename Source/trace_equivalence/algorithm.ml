@@ -489,18 +489,11 @@ let apply_strategy_one_transition_por (* given .... *)
   (* We check whether processes are improper or not and continue only if they are not *)
   (* Note that, the flag is_improper might be set to true when applying 'apply_internal[...]_without_comm *)
   let is_improper_left, is_improper_right = Process.is_improper proc_left, Process.is_improper proc_right in
-  if (is_improper_left || is_improper_right)
-  then if (is_improper_left && is_improper_right)
-       (* two proc are improper -> we stop the exploration at this point *)
-       then ()
-       (* otherwise, there is a mismatch: we must raise the corresponding exception *)
-       else if is_improper_left
-       then begin Printf.printf "Witness' type: Improper on the left, not on the right.\n";
-		  raise (Not_equivalent_right proc_right);
-	    end else begin
-		    Printf.printf "Witness' type: Improper focus on the right, not on the left.\n";
-		    raise (Not_equivalent_left proc_left);
-		  end
+  if (is_improper_left && is_improper_right)
+  (* one of the two proc is improper -> we stop the exploration at this point *)
+  (* if there is a mismatch: we cannot conclude anything since we only under-approximate improper block
+          (e.g. on In.(if False then 0 | if False then 0)) *)
+  then ()
   else
     (* we keep exploring the semantics *)
     begin
