@@ -39,6 +39,28 @@ let display_traces = ref false
 (** Statistics info *)
 let final_test_count = ref 0
 
+
+(************************************
+***    Debugging tools            ***
+*************************************)
+
+let pp = Printf.printf
+(* use the following function to print all information about symP when its trace
+   match the given witness. Write your witness as a list of integers (one integer
+   per action accordingly to how Apte numbers/parses processes. *)
+let witness = [2;3;4;27;28] 		(* examples *)
+let displayIfWitness message symP =
+  if (Process.is_subtrace witness size symP)
+  then begin
+      Printf.printf "%s%s" s (Process.display_trace symP);
+      Printf.printf "%s" (Process.display_trace_blocks symP);
+      Printf.printf "Here are its dependency constraints: %s" (Process.display_dep_csts symP);
+      Process.display_symb_process symP;
+      Printf.printf "%!\n";
+    end
+let ifWitness symP = (Process.is_subtrace witness size symP)
+
+
 (************************************
 ***    Partition of the matrix    ***
 *************************************)
@@ -457,12 +479,13 @@ let apply_strategy_one_transition_por (* given .... *)
 
   if !print_debug_por then
     begin
+      let proc_left = (List.hd left_symb_proc_list) in
       Printf.printf "\n################### Before starting apply_strategy_one. Size of lists: %d,%d. Trace's size: %d\n"
 		    (List.length left_symb_proc_list)
 		    (List.length right_symb_proc_list)
-		    (Process.size_trace (List.hd left_symb_proc_list));
-      Printf.printf "%s" (Process.display_trace_no_unif_no_csts (List.hd left_symb_proc_list));
-      Printf.printf "%s" (Process.display_trace_blocks (List.hd left_symb_proc_list));
+		    (Process.size_trace proc_left);
+      Printf.printf "%s" (Process.display_trace proc_left);
+      Printf.printf "%s" (Process.display_trace_blocks proc_left);
     end;
   
   (* We check that sets of processes are singletons *)

@@ -1221,11 +1221,11 @@ let set_focus new_flag symb_proc =
 
 let display_symb_process symP =
   Printf.printf "##################### Symbolic Process ###########################\n";
-  List.iter (fun (p,i) -> Printf.printf "## Process (index %d): %s\n" 0 (* i *) (display_process p))
+  List.iter (fun (p,pl) -> Printf.printf "## Process (index %s):\n%s\n" (display_parlab (fst pl)) (display_process p))
 	    symP.process;
   Printf.printf "%s" (display_trace_blocks symP)
 
-let debug_f = ref false           (* Do we print debugging information ?  *)
+let debug_f = ref false          (* Do we print debugging information ?  *)
 
 (* ********************************************************************** *)
 (*                 Test whether dependency constraints hold               *)
@@ -1365,4 +1365,28 @@ let generate_dependency_constraints symP =
 
 let must_generate_dep_csts symP = 
   not(has_focus symP) && not(has_generate_dep_csts symP)
-  
+  && (List.hd (symP.trace_blocks)).out <> []
+
+
+let is_subtrace traceinfo size symP =
+  let trace = symP.trace in
+  let extractinfo =
+    List.map
+      (fun action ->
+       match action with
+       | Output (lab, _, _, _, _, pl) -> lab
+       | Input (lab, _, _, _, _, pl) -> lab
+       | Comm _ ->  Debug.internal_error "[Process.ml >> is_subtrace] Should not happen!"
+      ) trace in
+  let rec compare = function
+    | (0, l1, l2) -> true
+    | (_, [], _) -> true
+    | (_, _, []) -> true
+    | (n, x1::tl1, x2 :: tl2) when x1=x2 -> compare (n-1, tl1, tl2)
+    | _ -> false in
+  compare (size, traceinfo, List.rev extractinfo) &&
+    List.length extractinfo > 8
+
+
+let display_dep_csts symP =
+  Constraint_system.display_dependency_constraints symP.constraint_system

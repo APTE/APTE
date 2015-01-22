@@ -80,8 +80,6 @@ val apply_output : bool -> ((symbolic_process*Term.term) -> unit) -> Recipe.vari
 
 (** {3 Optimisation} *)
 
-val display_symb_process : symbolic_process -> unit
-
 val is_same_input_output : symbolic_process -> symbolic_process -> bool
 
 (* (\** Scan a list of processes and return the channel of its first output (if any) *\) *)
@@ -173,3 +171,13 @@ val block_complete_inp : symbolic_process -> bool
 (** [must_generate_dep_csts symP] returns true if we must generate dependency constraints (it is the first time that the last block
     is of the form [In* : Out] (only one output. *)
 val must_generate_dep_csts : symbolic_process -> bool
+
+
+
+(** {4 Debugging tools} *)
+(** [is_subtrace traceinfo size symP] Returns true if symP has executed a trace whose the [size] first actions are
+    the same as in [traceinfo] *)
+val is_subtrace : int list -> int -> symbolic_process -> bool
+val display_symb_process : symbolic_process -> unit
+val display_dep_csts : symbolic_process -> string
+
