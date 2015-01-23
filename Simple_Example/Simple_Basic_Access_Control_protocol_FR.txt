@@ -53,12 +53,14 @@ let system1 error_mac =
   new k_e2; new k_m2;
   (((passport  k_e k_m error_mac p1) | (reader k_e k_m r1))
   |
-  ((passport  k_e2 k_m2 error_mac p1) | (reader k_e2 k_m2 r1))).
+  ((passport  k_e2 k_m2 error_mac p2) | (reader k_e2 k_m2 r2))).
 
 let system2 error_mac =
   new k_e; new k_m;
-  ((passport k_e k_m error_mac p1) | (reader k_e k_m r1) | (passport k_e k_m error_mac p1) | (reader k_e k_m r1)).
+  (((passport k_e k_m error_mac p1) | (reader k_e k_m r1))
+  |
+  ((passport k_e k_m error_mac p2) | (reader k_e k_m r2))).
 
-equivalence system1 Error_6300 and system2 Error_6300.
+# equivalence system1 Error_6300 and system2 Error_6300.
 
 equivalence system1 Error_6A80 and system2 Error_6A80.
