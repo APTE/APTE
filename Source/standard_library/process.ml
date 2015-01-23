@@ -450,76 +450,115 @@ let instanciate_trace symb_proc =
   {symb_proc_1 with trace = Term.unify_and_apply message_eq symb_proc_1.trace map_subst_term}
 
 (******* Transition application ********)  
-  
-let apply_internal_transition_without_comm with_por function_next symb_proc = 
-  let has_broken_focus = ref false in
-  let was_with_focus = symb_proc.has_focus in
 
-  let rec go_through prev_proc csys = function
+(* When applying internal transitions on focused processes, we carry some flags describing
+   how the focused process ahs been splitted. *)
+type flagsGoThrough = {
+  nb_sub_proc_pos : int;	(* nb of positive processes resulting from the focused process *)
+  nb_sub_proc_non_zero : int;	(* nb of non-null processes resulting from the focused process *)
+  nb_sub_proc_to_process  : int;   (* nb of processes resulting from the focused process that we still need to simplify *)
+}  
+(* When nb_sub_proc_to_process = 0, we can inspect others flags.
+    _pos = 0 ==> we lost focus
+    _non_zero >= 2 ==> we lost focus
+    otherwise ==> we keep the focus
+ *)
+let pp = Printf.printf
+let apply_internal_transition_without_comm with_por function_next symb_proc = 
+  let was_with_focus = symb_proc.has_focus in
+  
+  let rec go_through prev_proc csys flags a = 
+    (* pp "Deb goThrough ...\n%!"; *)
+    match a with
     (* when we have gone trough all processes (no more conditionals at top level) *)
     | [] -> function_next { symb_proc with process = prev_proc;
 					   constraint_system = csys;
-					   has_focus = symb_proc.has_focus && not(!has_broken_focus);
+					   has_focus = was_with_focus && 
+							 (flags.nb_sub_proc_non_zero = 1 &&
+							    flags.nb_sub_proc_pos = 1);
 			  }
-			  
-    | (Nil,_)::q -> has_broken_focus := true;
-		    go_through prev_proc csys q 
+    | (Nil,_)::q -> if with_por && was_with_focus && flags.nb_sub_proc_non_zero = 1 && flags.nb_sub_proc_to_process = 1 && flags.nb_sub_proc_pos = 1
+		    (* if true it means that this was the last proc to process and it is a null proc and all others processes reduce to ONE In 
+                       -> we keep our focus *)
+		    then function_next { symb_proc with process = prev_proc @ q;
+							constraint_system = csys;
+							has_focus = true
+				       }
+		    else let newFlags = if with_por
+					then { flags with 
+					       nb_sub_proc_to_process = flags.nb_sub_proc_to_process - 1 }
+					else flags in
+			 go_through prev_proc csys newFlags q 
     | (Choice(p1,p2), l)::q -> 
        if with_por
        then Debug.internal_error "[process.ml >> apply_internal_transition_without_comm] Inputted processes are not action-deterministic (they use a Choice)."
        else begin
-           go_through prev_proc csys ((p1,dummy_l)::q);
-           go_through prev_proc csys ((p2,dummy_l)::q);
+           go_through prev_proc csys flags ((p1,dummy_l)::q);
+           go_through prev_proc csys flags ((p2,dummy_l)::q);
 	 end
     | (Par(p1,p2), l)::q ->
        let l' = if with_por
 		then set_to_be_labelled l (* we add a flag meaning that produced sub_processes must be relablled
 					     since we broke a parallel composition *)
 		else dummy_l in
-       has_broken_focus := true;
-       go_through prev_proc csys ((p1,l')::(p2,l')::q)
-    | (New(_,p,_), l)::q -> go_through prev_proc csys ((p,l)::q)
+       go_through prev_proc csys
+		  {flags with nb_sub_proc_to_process = flags.nb_sub_proc_to_process + 1} 
+		  ((p1,l')::(p2,l')::q)
+    | (New(_,p,_), l)::q -> go_through prev_proc csys flags ((p,l)::q)
     | (Let(pat,t,proc,_), l)::q ->
-        let eq_to_unify = formula_from_pattern t pat in
-        let proc' = Term.unify_and_apply eq_to_unify proc iter_term_process in
-        go_through prev_proc csys ((proc',l)::q)      
+       let eq_to_unify = formula_from_pattern t pat in
+       let proc' = Term.unify_and_apply eq_to_unify proc iter_term_process in
+       go_through prev_proc csys flags ((proc',l)::q)      
     | (IfThenElse(formula,proc_then,proc_else,_), l)::q ->
-        let disj_conj_then = conjunction_from_formula formula
-        and disj_conj_else = conjunction_from_formula (negation formula) in
-	(* for any way to satisfy formula or not(formula), branch and (recursive) call go_through *)
-        List.iter (fun conj_then ->
-          let new_csys = 
-            List.fold_left (fun csys_acc -> function
-              | CsysEq(t1,t2) -> Constraint_system.add_message_equation csys_acc t1 t2 
-              | CsysOrNeq (l) -> 
-                  let formula' = Term.create_disjunction_inequation l in
-                  Constraint_system.add_message_formula csys_acc formula' 
-            ) csys conj_then
-          in
-          go_through prev_proc new_csys ((proc_then,l)::q)            
-        ) disj_conj_then;
-        
-        List.iter (fun conj_else ->
-		   let new_csys = 
-		     List.fold_left (fun csys_acc -> function
-						  | CsysEq(t1,t2) -> Constraint_system.add_message_equation csys_acc t1 t2 
-						  | CsysOrNeq (l) -> 
-						     let formula = Term.create_disjunction_inequation l in
-						     Constraint_system.add_message_formula csys_acc formula 
-				    ) csys conj_else
-		   in
-		   go_through prev_proc new_csys ((proc_else,l)::q)            
-		  ) disj_conj_else
+       let disj_conj_then = conjunction_from_formula formula
+       and disj_conj_else = conjunction_from_formula (negation formula) in
+       (* for any way to satisfy formula or not(formula), branch and (recursive) call go_through *)
+       List.iter (fun conj_then ->
+		  let new_csys = 
+		    List.fold_left (fun csys_acc -> function
+						 | CsysEq(t1,t2) -> Constraint_system.add_message_equation csys_acc t1 t2 
+						 | CsysOrNeq (l) -> 
+						    let formula' = Term.create_disjunction_inequation l in
+						    Constraint_system.add_message_formula csys_acc formula' 
+				   ) csys conj_then
+		  in
+		  go_through prev_proc new_csys flags ((proc_then,l)::q)            
+		 ) disj_conj_then;
+       
+       List.iter (fun conj_else ->
+		  let new_csys = 
+		    List.fold_left (fun csys_acc -> function
+						 | CsysEq(t1,t2) -> Constraint_system.add_message_equation csys_acc t1 t2 
+						 | CsysOrNeq (l) -> 
+						    let formula = Term.create_disjunction_inequation l in
+						    Constraint_system.add_message_formula csys_acc formula 
+				   ) csys conj_else
+		  in
+		  go_through prev_proc new_csys flags ((proc_else,l)::q)            
+		 ) disj_conj_else
     (* otherwise, proc starts with an input our output -> add it to prev_proc and keep scanning
      the rest of processes *)
-    | proc::q -> if with_por && was_with_focus && not(!has_broken_focus)
-		 then function_next { symb_proc with process = proc :: q; (* in that case (has_broken_focus = false), we know that prev = [] *)
-						     constraint_system = csys;
-						     has_focus = symb_proc.has_focus && not(!has_broken_focus)
-				    }
-		 else go_through (proc::prev_proc) csys q in
+    | proc::q -> 
+       let isIn = match proc with 
+	 | (In (_,_,_,_),_) -> true
+	 | _ -> false in
+       (* If true it means that we were in focus, we have finished to process all sub processes of the focused process and we have
+          encounter no other sub_processes resulting in a non-zero process *)
+       if with_por && was_with_focus && flags.nb_sub_proc_to_process = 1 && flags.nb_sub_proc_non_zero = 0
+       then function_next { symb_proc with process = proc :: q; (* in that case (has_broken_focus = false), we know that prev = [] *)
+					   constraint_system = csys;
+					   has_focus = was_with_focus && isIn;
+			  }
+       else go_through (proc::prev_proc)
+		       csys 
+		       {nb_sub_proc_pos = flags.nb_sub_proc_pos + (if isIn then 1 else 0);
+			nb_sub_proc_non_zero = flags.nb_sub_proc_non_zero + 1;
+			nb_sub_proc_to_process = flags.nb_sub_proc_to_process - 1}
+		       q in
   
-  go_through [] symb_proc.constraint_system symb_proc.process
+  (* Initally, we only have one proc to process and we have discovered no proc *)
+  let flagsInit = {nb_sub_proc_pos = 0; nb_sub_proc_non_zero = 0; nb_sub_proc_to_process = 1;} in
+  go_through [] symb_proc.constraint_system flagsInit symb_proc.process
 	     
 (* We assume in this function that the internal transition except the communication have been applied.
  It is not executed if with_comm = true *)  
@@ -528,7 +567,7 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
   let rec go_through prev_proc_1 forbid_comm_1 = function
     | [] -> function_next { symb_proc with forbidden_comm = forbid_comm_1 }
     | ((In(ch_in,v,sub_proc_in,label_in),_) as proc_in)::q_1 -> 
-        let rec search_for_a_out prev_proc_2 forbid_comm_2 = function
+       let rec search_for_a_out prev_proc_2 forbid_comm_2 = function
           | [] -> go_through (proc_in::prev_proc_1) forbid_comm_2 q_1
           | ((Out(ch_out,t_out, sub_proc_out, label_out),_) as proc_out)::q_2 ->
               if is_comm_forbidden label_in label_out forbid_comm_2
