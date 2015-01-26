@@ -21,7 +21,7 @@ import data
 from utils import *
 
 isLoad = True
-dateMajorPatch = dateutil.parser.parse('2015-01-22 18:35:38.616735')
+dateMajorPatch = dateutil.parser.parse('2015-01-26 19:20:38.616735')
 
 # -- LOGGING --
 rootLogger = logging.getLogger()
@@ -134,7 +134,7 @@ def main():
                     isTrue = ("true" in benchTests)
                     date = benchTests.splitlines()[1].strip()
                     testKey = findTest(testFile, TestsDico)
-                    if testKey == "":
+                    if testKey == "" or testKey == None:
                         logging.critical("The tests %s cannot be found.\n" % testFile)
                         return()
                     testDico = TestsDico[testKey]

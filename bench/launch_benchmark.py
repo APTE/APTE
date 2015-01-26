@@ -81,13 +81,13 @@ def main():
             print(args.difficulty)
             # on met les easy dans tous les cas
             def test_easy(i):
-                return((("wmf" in i) or
+                return((("wmf" in i and "_1s" in i) or
                  ("Private" in i and not("_2_" in i or "_3_" in i)) or
                  ("Basic" in i) or
                  ("bench_3par" in i) or
                  ("tests_h_4par" in i)))
             def test_middle(i):
-                return((("wmf" in i) or
+                return((("wmf" in i and "_2s" in i) or
                  ("Private" in i and not("_3_" in i)) or
                  ("bench_5par" in i) or
                  ("bench_7par" in i) or
