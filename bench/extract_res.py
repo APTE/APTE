@@ -127,6 +127,8 @@ def main():
                 if not("obtained" in benchTests):
                     logging.debug("new test: " + test)
                     logging.debug("Test is not yet finished...")
+                elif "Simple_wmf" == test.strip():
+                    logging.debug("We do not consider test of Simple_wmf.txt anymore.")
                 else:
                     nbTests = nbTests + 1
                     testName = test.split(".")[0]
