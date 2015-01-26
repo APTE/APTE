@@ -68,8 +68,8 @@ val instanciate_trace : symbolic_process -> symbolic_process
 
 (** {4 Transition application} *)
 
-(** booleans: with_comm, with_por *)
-val apply_internal_transition : bool -> bool -> (symbolic_process -> unit) -> symbolic_process -> unit
+(** booleans: with_comm, with_por, with_improper *)
+val apply_internal_transition : bool -> bool -> bool -> (symbolic_process -> unit) -> symbolic_process -> unit
 
 (** boolean: with_por (if true we only consider the process under focus, ie, the first one in the list)),
     next_function takes the pair (continuation,channel of produced action) *)
