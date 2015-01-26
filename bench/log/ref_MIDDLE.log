@@ -14,6 +14,9 @@ Result obtained in 1986.112000 seconds
 
  --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_BAN_sec --- 
                                                   2015-01-12 11:21:08.531175
+Result : The trace equivalence is true
+Number of explorations: -2.
+Result obtained in 867600 seconds
 
  --- Benchmark of Protocol: Simple_Andrew_Secure_RPC_auth --- 
                                                   2015-01-12 18:28:11.675622
