@@ -247,13 +247,13 @@ let apply_strategy_one_transition next_function_output next_function_input left_
    to satisfy the  conditional's test. Thanks to our "function_next", we then pu
    all those alternatives together in left/right_internal lists. *)
   List.iter (fun symb_proc_1 ->
-    Process.apply_internal_transition !option_internal_communication !option_compr (fun symb_proc_2 -> 
+    Process.apply_internal_transition !option_internal_communication !option_compr !option_improper (fun symb_proc_2 -> 
       left_internal := symb_proc_2::!left_internal
     ) symb_proc_1
   ) left_erase_set;
   
   List.iter (fun symb_proc_1 ->
-    Process.apply_internal_transition !option_internal_communication !option_compr (fun symb_proc_2 -> 
+    Process.apply_internal_transition !option_internal_communication !option_compr !option_improper (fun symb_proc_2 -> 
       right_internal := symb_proc_2::!right_internal
     ) symb_proc_1
   ) right_erase_set;
@@ -420,6 +420,7 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
 		 Process.apply_internal_transition
 		   false	(* with comm *)
 		   true		(* with por *)
+		   !option_improper 
 		   (fun symb_proc_2 -> 
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
@@ -431,6 +432,7 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
 		 Process.apply_internal_transition
 		   false	(* with comm *)
 		   true		(* with por *)
+		   !option_improper 
 		   (fun symb_proc_2 -> 
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
@@ -505,12 +507,14 @@ let apply_strategy_one_transition_por (* given .... *)
 	Process.apply_internal_transition
 	  false			(* with_comm *)
 	  true			(* with_por *)
+	  !option_improper 
 	  (fun symb_proc_2 -> ps := symb_proc_2 :: !ps)
 	  (List.hd left_symb_proc_list);
 	let qs = ref [] in
 	Process.apply_internal_transition
 	  false			(* with_comm *)
 	  true			(* with_por *)
+	  !option_improper 
 	  (fun symb_proc_2 -> qs := symb_proc_2 :: !qs)
 	  (List.hd right_symb_proc_list);
 	if (List.length !ps != 1)|| (List.length !qs != 1)
@@ -688,6 +692,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	     Process.apply_internal_transition
 	       false
 	       true
+	       !option_improper 
 	       (fun symb_proc_2 -> 
 		let simplified_symb_proc = Process.simplify symb_proc_2 in
 		if not (Process.is_bottom simplified_symb_proc)
@@ -697,6 +702,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	     Process.apply_internal_transition
 	       false
 	       true 
+	       !option_improper 
 	       (fun symb_proc_2 -> 
 		let simplified_symb_proc = Process.simplify symb_proc_2 in
 		if not (Process.is_bottom simplified_symb_proc)
