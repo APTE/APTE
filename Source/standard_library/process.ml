@@ -466,7 +466,7 @@ let display_trace symb_proc =
 
 let display_trace_simple symb_proc = 
   let trace = symb_proc.trace in
-  let rec display_trace_label_simple = function
+  let display_trace_label_simple = function
     | Output (lab, _, _, _, _, pl) -> Printf.sprintf "Out{%d}%s" lab (display_parlab pl)
     | Input (lab, _, _, _, _, pl) -> Printf.sprintf "In{%d}%s" lab (display_parlab pl)
     | Comm _ -> "Comm" in
@@ -553,12 +553,6 @@ let apply_internal_transition_without_comm with_por with_improper function_next 
     && flags.nb_sub_proc_non_zero = 1
     && flags.nb_sub_proc_pos = 1 in
 
-  (* Are we sure the current block cannot end up with a focus *)
-  let has_broken_focus flags = 
-    with_por && (not was_with_focus || 
-		   (flags.nb_sub_proc_non_zero > 2 ||
-		      (flags.nb_sub_proc_pos <> flags.nb_sub_proc_non_zero))) in
-
   let rec go_through prev_proc csys flags = function
     (* when we have gone trough all processes (no more conditionals at top level) *)
     | [] -> function_next { symb_proc with process = prev_proc;
@@ -587,7 +581,7 @@ let apply_internal_transition_without_comm with_por with_improper function_next 
 					     }
 					else flags in
 			 go_through prev_proc csys newFlags q 
-    | (Choice(p1,p2), l)::q -> 
+    | (Choice(p1,p2), _)::q -> 
        if with_por
        then Debug.internal_error "[process.ml >> apply_internal_transition_without_comm] Inputted processes are not action-deterministic (they use a Choice)."
        else begin
@@ -882,7 +876,7 @@ let apply_output_filter ch_f function_next ch_var_r symb_proc =
   
   let rec go_through prev_proc = function
     | [] -> ()
-    | ((Out(ch,t,sub_proc,label),l) as proc)::q when Term.is_equal_term ch_f ch ->
+    | (Out(ch,t,sub_proc,label),l)::q when Term.is_equal_term ch_f ch ->
        let y = Term.fresh_variable_from_id Term.Free "y"
        and x = Term.fresh_variable_from_id Term.Free "x" in
        
@@ -1137,9 +1131,9 @@ module Skeleton =
     let compare sk1 sk2 =
       match (sk1,sk2) with
       | (InS t1, InS t2) -> compare_term t1 t2
-      | (InS t1, OutS t2) -> 1
+      | (InS _, OutS _) -> 1
       | (OutS t1, OutS t2) -> compare_term t1 t2
-      | (OutS t1, InS t2) -> -1
+      | (OutS _, InS _) -> -1
 
     let equal sk1 sk2 = (compare sk1 sk2) = 0
   end
@@ -1150,8 +1144,8 @@ struct
 end
 
 let sk = function
-  | In (ch,vx,p,l) -> Some (InS ch)
-  | Out (ch, u, p, l) -> Some (OutS ch)
+  | In (ch,_,_,_) -> Some (InS ch)
+  | Out (ch, _, _, _) -> Some (OutS ch)
   | _ -> None
 
 let equal_skeleton = Skeleton.equal
@@ -1161,7 +1155,6 @@ let display_sk = function
   | OutS t -> "Out "^(Term.display_term t)
 
 let display_map m = MapS.iter (fun sk lab -> Printf.printf "Key: %s, Lab: %s;   " (display_sk sk) (display_parlab lab)) m
-
 
 let sk_of_symp symp = 
   try
@@ -1212,7 +1205,7 @@ let labelise_consistently mapS symb_proc =
 
   (*  go trough the list of processes and labeliszs using mapS *)
   let rec labelise_procs = function
-    | ((p,l) as pl) :: q when not(need_labelise pl) ->
+    | ((p,_) as pl) :: q when not(need_labelise pl) ->
        (match sk p with
 	| None ->  Debug.internal_error "[Process.ml >> labelise] I cannot labelise non-reduced processes."
 	| Some skp ->
@@ -1267,7 +1260,7 @@ let assemble_choices_focus listChoices symP =
   (* returns a symbolic process equals to symP except that we moved a process of skeleton sk to the focus position *)
   let find_focus ske symP = 
     let rec search pre = function
-      | ((proc,pl) as p) :: tl when ((sk proc) = (Some ske)) -> p :: (pre @ tl)
+      | ((proc,_) as p) :: tl when ((sk proc) = (Some ske)) -> p :: (pre @ tl)
       | p :: tl -> search (p::pre) tl
       | [] -> raise (Not_eq_right ("Process on the right cannot answer to the left one by choosing a focused process with the same skeleton. Here is the skeleton: "^(display_sk ske)^".\n"))
     in
@@ -1323,7 +1316,7 @@ let test_dependency_constraints symP testNoUse =
   (* Scan the list of dep. csts*)
   let rec scan_dep_csts frame r_subst = function
     | [] -> true
-    | ((lr, la) as cst) :: l ->
+    | ((_, la) as cst) :: l ->
        (* We made the choice to firstly check the noUse criterion and then the closed recipe criterion.
 	 Todo: find the most efficient order. *)
        
@@ -1363,9 +1356,9 @@ let extract_common l1 l2 =
   let s = min s1 s2 in
   let l1d, l2d = listDrop l1 (s1-s), listDrop l2 (s2-s) in
   let rec aux = function
-    | (x1 :: tl1 as l1, x2 :: tl2 as l2) -> 
+    | (x1 :: tl1, x2 :: tl2) -> 
        if tl1 == tl2
-       then (x1,x2,tl1)
+       then (x1,x2)
        else aux (tl1,tl2)
     | _, _ ->   Debug.internal_error "[Process.ml >> extact_common] Should not happen!" in
 
@@ -1373,14 +1366,14 @@ let extract_common l1 l2 =
 
 (* l1 ||^s l2 *)
 let lab_inpar l1 l2 = 
-  let x1,x2,ld = extract_common l1 l2 in
+  let x1,x2 = extract_common l1 l2 in
   if x1 <> x2
   then true
   else false 
 
 (* l1 < l2 *)
 let lab_ord l1 l2 =
-  let x1,x2,ld = extract_common l1 l2 in
+  let x1,x2 = extract_common l1 l2 in
   x1 < x2
 
 exception No_pattern
@@ -1390,11 +1383,11 @@ exception No_pattern
 let rec search_pattern par_lab acc_axioms = function
   | [] -> raise No_pattern  
   (* block <|> par_lab: No_pattern *)
-  | block :: trace when not(lab_inpar block.par_lab par_lab) -> raise No_pattern
+  | block :: _ when not(lab_inpar block.par_lab par_lab) -> raise No_pattern
   (* block || par_lab and <: acc+1 and rec call *)
   | block :: trace when lab_ord block.par_lab par_lab -> search_pattern par_lab (block.out @ acc_axioms) trace
   (* block || par_lab and >: return acc+1 (DEP CST) *)
-  | block :: trace -> block.out @ acc_axioms
+  | block :: _ -> block.out @ acc_axioms
 
 
 (* ********************************************************************** *)
@@ -1448,12 +1441,12 @@ let is_subtrace traceinfo size symP =
     List.map
       (fun action ->
        match action with
-       | Output (lab, _, _, _, _, pl) -> lab
-       | Input (lab, _, _, _, _, pl) -> lab
+       | Output (lab, _, _, _, _, _) -> lab
+       | Input (lab, _, _, _, _, _) -> lab
        | Comm _ ->  Debug.internal_error "[Process.ml >> is_subtrace] Should not happen!"
       ) trace in
   let rec compare = function
-    | (0, l1, l2) -> true
+    | (0, _, _) -> true
     | (_, [], _) -> true
     | (_, _, []) -> true
     | (n, x1::tl1, x2 :: tl2) when x1=x2 -> compare (n-1, tl1, tl2)

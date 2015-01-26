@@ -44,7 +44,6 @@ let final_test_count = ref 0
 ***    Debugging tools            ***
 *************************************)
 
-let pp = Printf.printf
 (* use the following function to print all information about symP when its trace
    match the given witness. Write your witness as a list of integers (one integer
    per action accordingly to how Apte numbers/parses processes. *)
@@ -382,7 +381,7 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
       
       Process.apply_input
 	true		(* true: only the first process (that is under focus) is considered *)
-	(fun (symb_proc_2,ch) -> 
+	(fun (symb_proc_2,_) -> 
 	 (* We do not simplify symbolic processes because it will be done
 	  in the next step when performing conditionals/splittings. *)
 	 left_input_set := symb_proc_2::!left_input_set)
@@ -392,7 +391,7 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
       
       Process.apply_input
 	true             (* true: only the first process (that is under focus) is considered *)
-	(fun (symb_proc_2,ch) -> 
+	(fun (symb_proc_2,_) -> 
 	 (* same as above *)
 	 right_input_set := symb_proc_2::!right_input_set)
 	var_r_ch
@@ -551,14 +550,14 @@ let apply_strategy_one_transition_por (* given .... *)
   let proc_left_label_up =
     if Process.has_focus proc_left_label 
     then (match Process.sk_of_symp proc_left_label with
-	  | Process.OutS t -> Process.set_focus false proc_left_label
+	  | Process.OutS _ -> Process.set_focus false proc_left_label
 	  | _ -> proc_left_label)
     else proc_left_label
   (* Updating 'has_focus' on the right : set to false if focused process is negative *)
   and proc_right_label_up =
     if Process.has_focus proc_right_label 
     then (match Process.sk_of_symp proc_right_label with
-	  | Process.OutS t -> Process.set_focus false proc_right_label
+	  | Process.OutS _ -> Process.set_focus false proc_right_label
 	  | _ -> proc_right_label)
     else proc_right_label in 
 

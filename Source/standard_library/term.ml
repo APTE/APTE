@@ -238,9 +238,9 @@ let get_quantifier v = v.quantifier
  
 (********* Scanning Functions *********)
 let rec is_closed = function
-  | Func (s, tlist)  -> List.for_all is_closed tlist
+  | Func (_, tlist)  -> List.for_all is_closed tlist
   | Var _ -> false
-  | Name n -> true
+  | Name _ -> true
 
 let rec var_occurs var = function
   | Var(v) when v == var -> true

@@ -108,8 +108,8 @@ let token = ref ((!log_dir)^"/token")
 let _ = begin
     if not(Sys.file_exists !token)
     then begin
-	Sys.command (Printf.sprintf "rm -rf %s" !log_dir);
-	Sys.command (Printf.sprintf "mkdir %s" !log_dir);
+	let _ = Sys.command (Printf.sprintf "rm -rf %s" !log_dir) in
+	let _ = Sys.command (Printf.sprintf "mkdir %s" !log_dir) in
 	Sys.command (Printf.sprintf "touch %s" !token);
       end
     else begin
@@ -117,7 +117,7 @@ let _ = begin
 	let rdm = Random.int 100000000 in
 	log_dir := (!log_dir)^(Printf.sprintf "%d" rdm);
 	token := (!log_dir)^"/token";
-	Sys.command (Printf.sprintf "touch %s" !token);
+	let _ = Sys.command (Printf.sprintf "touch %s" !token) in
 	Sys.command (Printf.sprintf "mkdir %s" !log_dir);
       end;
   end

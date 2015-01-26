@@ -99,7 +99,7 @@ let rec get_variables_of_recipe = function
   | Func (_, list) -> List.concat (List.map get_variables_of_recipe list)
 
 let rec is_closed = function
-  | Var v -> false
+  | Var _ -> false
   | Axiom _ -> true
   | Func (_, list) -> List.for_all is_closed list
 
