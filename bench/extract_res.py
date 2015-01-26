@@ -177,7 +177,7 @@ def main():
                         isOverWrite = False
                         comm = ""
                         if ((dateutil.parser.parse(date) < dateMajorPatch or (dateutil.parser.parse(oldDate) <dateMajorPatch)) and
-                            versionKey[0:3] == "red"):
+                            not(versionKey[0:3] == "ref" and versionKey[0:3] == "old")):
                             comm = "Not surprising, we compare two benchs on a reduced version before and after the major patch! -- "
                         if (dateutil.parser.parse(date) > dateutil.parser.parse(oldDate)):
                             nbRewrite = nbRewrite + 1
@@ -200,7 +200,7 @@ def main():
                             logging.debug(toPrint)
                     else:
                         if ((dateutil.parser.parse(date) < dateMajorPatch) and
-                            versionKey[0:3] == "red"):
+                            not(versionKey[0:3] == "ref" and versionKey[0:3] == "old")):
                             logging.info("We do not take this test into account since it concerns an old version of red*.")
                         else:
                             nbNewTests = nbNewTests + 1
