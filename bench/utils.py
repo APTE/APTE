@@ -20,7 +20,7 @@ from texttable import *
 import data
 
 def extractBench(text):
-    lastBench = text.split("=============== STARTING A NEW BENCHMARK ===============")[1]
+    lastBench = text.split("=============== STARTING A NEW BENCHMARK ===============")[-1]
     return(lastBench)
 
 def extractVers(text):
@@ -54,6 +54,8 @@ def extractTests(text):
 def findVers(call, dicoVersions):
     res = {}
     resKey = ""
+    if "_4_" in call:
+        call = call.replace("_4_red_fix", "_1_new_all")
     for versKey in dicoVersions:
         vers = dicoVersions[versKey]
         if (vers["call"].strip() == call.strip()):
@@ -75,7 +77,7 @@ def pprintMatrix(matrix):
     lm = len(matrix[0])-1
     table = Texttable()
     firstWidth = 15
-    width = 12
+    width = 14
     # table.set_cols_align(["l", "r", "c"])
     # table.set_deco(Texttable.HEADER)
     table.set_deco(Texttable.BORDER | Texttable.HEADER)
