@@ -528,17 +528,17 @@ type flagsGoThrough = {
     otherwise ==> we keep the focus
  *)
 
-let apply_internal_transition_without_comm with_por function_next symb_proc = 
+let apply_internal_transition_without_comm with_por with_improper function_next symb_proc = 
   let was_with_focus = symb_proc.has_focus in
 
   (* Are we sure the current block is improper *)
   let check_is_improper flags =
-    with_por && was_with_focus && flags.nb_sub_proc_to_process = 0 
+    with_por && with_improper && was_with_focus && flags.nb_sub_proc_to_process = 0 
     && flags.nb_sub_proc_non_zero = 0 in
 
   (* In case we have just performed a null process, are we sure the current block is improper *)
   let check_is_improper_null flags =
-    with_por && was_with_focus && flags.nb_sub_proc_to_process = 1
+    with_por && with_improper && was_with_focus && flags.nb_sub_proc_to_process = 1
     && flags.nb_sub_proc_non_zero = 0 in
 
   (* Are we sure the current block keeps its focus *)
@@ -693,7 +693,7 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                     }
                   in
                   
-                  apply_internal_transition_without_comm false (* with_por must be false since with_comm = true *)
+                  apply_internal_transition_without_comm false false (* with_por must be false since with_comm = true *)
                     (apply_one_internal_transition_with_comm function_next) symb_proc_1;
                     
                   (* Case where the internal communication did not happen *)
@@ -730,7 +730,7 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                     }
                   in
                   
-                  apply_internal_transition_without_comm false (* with_por must be false since with_comm = true *)
+                  apply_internal_transition_without_comm false false (* with_por must be false since with_comm = true *)
                     (apply_one_internal_transition_with_comm function_next) symb_proc_1;
                     
                   (* Case where the internal communication did not happen *)
@@ -747,16 +747,17 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
   in
   go_through [] symb_proc.forbidden_comm symb_proc.process
   
-let apply_internal_transition with_comm with_por function_next symb_proc = 
+let apply_internal_transition with_comm with_por with_improper function_next symb_proc = 
   if with_comm
   then 
     if with_por
     then Debug.internal_error "[process.ml >> appply_one_internal_transition] The flags with_comm and with_por cannot be both true."
     else  apply_internal_transition_without_comm
 	    with_por
+	    with_improper
 	    (apply_one_internal_transition_with_comm function_next)
 	    symb_proc
-  else apply_internal_transition_without_comm with_por function_next symb_proc
+  else apply_internal_transition_without_comm with_por with_improper function_next symb_proc
   
 (*************************************
 	   External Transition
