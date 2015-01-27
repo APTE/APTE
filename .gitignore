@@ -21,3 +21,6 @@ bench/log/*
 .Trashes
 ehthumbs.db
 Thumbs.db
+log*
+*cmt
+*cmti
