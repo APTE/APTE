@@ -23,8 +23,10 @@ val option_erase_double : bool ref
 
 val option_alternating_strategy : bool ref
 
+(** true if we want to display all explored symbolic traces *)
 val display_traces : bool ref
 
+(** count the number of explored symbolic traces *)
 val final_test_count : int ref
 
 (** Functions for the strategy *)
