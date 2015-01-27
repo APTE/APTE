@@ -100,11 +100,6 @@ TESTS = {
         'name' : 'Many parallels, complex tests - 7',
         'file' : 'Simple_tests_h_7par.txt',
     },
-    'WMF' : {
-        'res' : True,
-        'name' : 'Wide Mouth Frog - Strong secrecy',
-        'file' : 'Simple_wmf.txt',
-    },
 }
 
 DICO = {

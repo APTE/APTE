@@ -127,6 +127,8 @@ def main():
                 if not("obtained" in benchTests):
                     logging.debug("new test: " + test)
                     logging.debug("Test is not yet finished...")
+                elif "Simple_wmf" == test.strip():
+                    logging.debug("We do not consider test of Simple_wmf.txt anymore.")
                 else:
                     nbTests = nbTests + 1
                     testName = test.split(".")[0]
@@ -140,7 +142,7 @@ def main():
                     testDico = TestsDico[testKey]
                     if testDico['res'] != isTrue:
                         if ((dateutil.parser.parse(date) < dateutil.parser.parse('2015-01-21 14:13:38.616735')) and
-                            versionKey[0:3] == "red"):
+                            not(versionKey[0:3] == "ref" or versionKey[0:3] == "old")):
                             logging.info("NOT EXPECTED RESULT. But this is normal since this version was before the major patch."
                                          "The version %s on test %s answerd %s."
                                          % (versionName, testName, str(isTrue)))
@@ -177,7 +179,7 @@ def main():
                         isOverWrite = False
                         comm = ""
                         if ((dateutil.parser.parse(date) < dateMajorPatch or (dateutil.parser.parse(oldDate) <dateMajorPatch)) and
-                            not(versionKey[0:3] == "ref" and versionKey[0:3] == "old")):
+                            not(versionKey[0:3] == "ref" or versionKey[0:3] == "old")):
                             comm = "Not surprising, we compare two benchs on a reduced version before and after the major patch! -- "
                         if (dateutil.parser.parse(date) > dateutil.parser.parse(oldDate)):
                             nbRewrite = nbRewrite + 1
@@ -200,7 +202,7 @@ def main():
                             logging.debug(toPrint)
                     else:
                         if ((dateutil.parser.parse(date) < dateMajorPatch) and
-                            not(versionKey[0:3] == "ref" and versionKey[0:3] == "old")):
+                            not(versionKey[0:3] == "ref" or versionKey[0:3] == "old")):
                             logging.info("We do not take this test into account since it concerns an old version of red*.")
                         else:
                             nbNewTests = nbNewTests + 1

@@ -1,14 +1,25 @@
 # Passive access control
-# We define a generic P|R for PA and test a trivial equivalence (itself)
+# We define a generic P|R for PA and test the anonymat of the passport.
 # SHOULD BE TRUE
+
+fun dg1/0.
+fun dg2/0.
+fun dg3/0.
+fun dgA/0.
 
 free c.
 free cp1.
-free cp2.
-free cp3.
 free cr1.
 free cr2.
+free cp2.
 free cr3.
+free cp3.
+free cp4.
+free cr4.
+free cr5.
+free cp5.
+free cr6.
+free cp6.
 
 fun h/1.
 fun mac/2.
@@ -43,7 +54,7 @@ let PAreader KPrDS ksenc ksmac c =
        let (xhdg, xshdg) = xsod in
        if xmac = xmac
 # Problem: The function check is not declared'  -> ??
-#xhsdg = check(xshdg, (pk(KPrDS)))
+# xhsdg = check(xshdg, (pk(KPrDS)))
        then (if xhdg = h(xdg)
              then out(c, ok)
              else 0)
@@ -51,10 +62,9 @@ let PAreader KPrDS ksenc ksmac c =
   else 0.
   
 
-let ePassport KPrDS cp cr =
+let ePassport KPrDS dg cp cr =
   new ksenc;
   new ksmac;
-  new dg;
   let sod = (h(dg), sign(h(dg),KPrDS)) in
   (PAreader KPrDS ksenc ksmac cr | PApassport ksenc ksmac dg sod cp).
     
@@ -64,6 +74,20 @@ let wholeSystem =
   let KPuDS = pk(KPrDS) in
   in(c,zz);
   out(c,KPuDS);
-  ((ePassport KPrDS cp1 cr1)).
+  ((ePassport KPrDS dg1 cp1 cr1) |
+   (ePassport KPrDS dg2 cp2 cr2) |
+   (ePassport KPrDS dg3 cp3 cr3) |
+   (ePassport KPrDS dg4 cp4 cr4)).
 
-equivalence wholeSystem and wholeSystem.
+let wholeSystem_Rev = 
+  new KPrDS;
+  let KPuDS = pk(KPrDS) in
+  in(c,zz);
+  out(c,KPuDS);
+  ((ePassport KPrDS dg1 cp1 cr1) |
+   (ePassport KPrDS dgA cp2 cr2) |
+   (ePassport KPrDS dg3 cp3 cr3) |
+   (ePassport KPrDS dg4 cp4 cr4)).
+
+
+equivalence wholeSystem and wholeSystem_Rev.

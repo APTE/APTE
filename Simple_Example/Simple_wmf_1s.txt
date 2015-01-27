@@ -111,4 +111,4 @@ let Auth2_3s =
 (Inst_Spec x c_a3 c_s3 c_b3)).
 
 
-equivalence Auth1_1s and Auth2_1s.
+equivalence Auth1 and Auth2.

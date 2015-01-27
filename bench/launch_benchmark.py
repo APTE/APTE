@@ -22,6 +22,9 @@ def main():
                         help='you can choose a name for the results file')
     parser.add_argument('-v', '--version', nargs='*',
                         help='you can choose the version beteween [ref,old_comp,comp,comp_no_impro,old_red,red,red_no_impro,red_no_nouse,red_no_2_nouse_improper]')
+    parser.add_argument('-ft', '--filter_tests',
+                        help='you can choose tests by giving a substrings')
+
     args = parser.parse_args()
 
     nameFile = "results"
@@ -105,6 +108,9 @@ def main():
         parser.print_help()
         list_tests = list_tests_tout
         list_binaries = list_binaries_tout
+
+    if args.filter_tests:
+        list_tests = filter(lambda s: args.filter_tests in s, list_tests_tout)
 
     pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
     pprint_all("Date: " + str(datetime.now()) + "\n")

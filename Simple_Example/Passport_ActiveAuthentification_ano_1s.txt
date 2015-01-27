@@ -1,5 +1,5 @@
 # Passive access control
-# We define a generic P|R for PA and test a trivial equivalence (itself)
+# We define a generic P|R for PA and test anonymity of Passport
 # SHOULD BE TRUE
 
 free c.
@@ -15,8 +15,12 @@ fun mac/2.
 fun init/0.
 fun ok/0.
 
-fun dg_1/0.
-fun dg_2/0.
+fun skP1/0.
+fun skP2/0.
+fun skP3/0.
+fun skP4/0.
+fun skPA/0.
+
 
 # Description of the different roles.
 
@@ -52,10 +56,9 @@ let AAreader ksenc ksmac pkP c =
     else 0
   else 0.
 
-let ePassportAA KPrDS cp cr =
+let ePassportAA KPrDS skP cp cr =
   new ksenc;
   new ksmac;
-  new skP;
   new dg;
   let sod = (h(dg), sign(h(dg),KPrDS)) in
   (AAreader ksenc ksmac pk(skP) cr | AApassport ksenc ksmac skP cp).
@@ -66,6 +69,15 @@ let wholeSystem =
   let KPuDS = pk(KPrDS) in
   in(c,zz);
   out(c,KPuDS);
-  ((ePassportAA KPrDS cp1 cr1)).
+  ((ePassportAA KPrDS skP1 cp1 cr1) |
+   (ePassportAA KPrDS skP2 cp2 cr2) ).
 
-equivalence wholeSystem and wholeSystem.
+let wholeSystem_A = 
+  new KPrDS;
+  let KPuDS = pk(KPrDS) in
+  in(c,zz);
+  out(c,KPuDS);
+  ((ePassportAA KPrDS skP1 cp1 cr1) |
+   (ePassportAA KPrDS skPA cp2 cr2) ).
+
+equivalence wholeSystem and wholeSystem_A.
