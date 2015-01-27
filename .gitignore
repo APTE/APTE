@@ -22,3 +22,6 @@ bench/log/*
 ehthumbs.db
 Thumbs.db
 log*
+*.cmt
+*.cmi
+*.swp
