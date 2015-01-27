@@ -9,8 +9,8 @@ OCAMLDOC= ocamldoc
 
 INCLUDES = -I standard_library -I parser -I trace_equivalence -I length_equivalence
 
-OCAMLFLAGS = $(INCLUDES) $(INCLUDES_MOD) -w Ae # add other options for ocamlc here
-OCAMLOPTFLAGS = $(INCLUDES) $(INCLUDES_MOD) -w Ae # add other options for ocamlopt here
+OCAMLFLAGS = $(INCLUDES) $(INCLUDES_MOD) -bin-annot -w Ae # add other options for ocamlc here
+OCAMLOPTFLAGS = $(INCLUDES) $(INCLUDES_MOD) -bin-annot -w Ae # add other options for ocamlopt here
 
 
 GENERATED_SOURCES = parser/grammar.ml parser/lexer.ml parser/grammar.mli
@@ -46,11 +46,11 @@ OBJ = $(ML:.ml=.cmx)
 clean:
 	@echo ----- Clean $(NAME_PROGRAMME) -----
 	rm -f $(EXECUTABLE) $(EXECUTABLE)_debug
-	rm -rf ../log
-	rm -f *~ *.cm[iox] *.o
-	rm -f */*~ */*.cm[iox] */*.o
+	rm -f *~ *.cm[ioxt] *.o
+	rm -f */*~ */*.cm[ioxt] */*.o
 	rm -f $(GENERATED_SOURCES)
 	rm -f .depend
+	rm -rf ../log
 
 # Display
 
