@@ -1,0 +1,89 @@
+# Passive access control
+# We define a generic P|R for PA and test the anonymat of the passport.
+# SHOULD BE TRUE
+
+fun dg1/0.
+fun dg2/0.
+fun dg3/0.
+fun dgA/0.
+
+free c.
+free cp1.
+free cr1.
+free cr2.
+free cp2.
+free cr3.
+free cp3.
+free cp4.
+free cr4.
+free cr5.
+free cp5.
+free cr6.
+free cp6.
+
+fun h/1.
+fun mac/2.
+fun read/0.
+fun ok/0.
+
+# Description of the different roles.
+
+let PApassport ksenc ksmac dg sod c = 
+  in(c, x);
+  let (xenc, xmac) = x in 
+  if xmac = mac(xenc, ksmac) 
+  then
+    let xread = sdec(xenc,ksenc) in
+    if xread = read
+    then
+      let menc = senc((dg, sod),ksenc) in
+      let mmac = mac(menc,ksmac) in
+      out(c, (menc,mmac))
+    else 0
+  else 0.
+
+let PAreader KPrDS ksenc ksmac c =
+  let menc = senc(read,ksenc) in
+  let mmac = mac(menc,ksmac) in
+  in(c,zz);
+  out(c, (menc, mmac));
+  in(c,x);
+  let (xenc, xmac) = x in 
+  if xmac = mac(xenc, ksmac) 
+  then(let (xdg,xsod) = sdec(xenc,ksenc) in
+       let (xhdg, xshdg) = xsod in
+       if xmac = xmac
+# Problem: The function check is not declared'  -> ??
+# xhsdg = check(xshdg, (pk(KPrDS)))
+       then (if xhdg = h(xdg)
+             then out(c, ok)
+             else 0)
+       else 0)
+  else 0.
+  
+
+let ePassport KPrDS dg cp cr =
+  new ksenc;
+  new ksmac;
+  let sod = (h(dg), sign(h(dg),KPrDS)) in
+  (PAreader KPrDS ksenc ksmac cr | PApassport ksenc ksmac dg sod cp).
+    
+# Main systems.
+let wholeSystem = 
+  new KPrDS;
+  let KPuDS = pk(KPrDS) in
+  in(c,zz);
+  out(c,KPuDS);
+  ((ePassport KPrDS dg1 cp1 cr1) |
+   (ePassport KPrDS dg2 cp2 cr2)).
+
+let wholeSystem_Rev = 
+  new KPrDS;
+  let KPuDS = pk(KPrDS) in
+  in(c,zz);
+  out(c,KPuDS);
+  ((ePassport KPrDS dg1 cp1 cr1) |
+   (ePassport KPrDS dgA cp2 cr2)).
+
+
+equivalence wholeSystem and wholeSystem_Rev.
