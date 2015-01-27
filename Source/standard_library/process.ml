@@ -1415,7 +1415,7 @@ let generate_dependency_constraints symP =
 		  pp "We are going to generate some dep. csts. on: ";
 		  Printf.printf "%s\n" (display_trace_blocks symP);
 		end;
-  if List.length symP.trace_blocks < 2
+  if (match symP.trace_blocks with | [] | [_] -> true |_ -> false)
   (* then only one block has been performed -> no constraint is added *)
   then symP
   else begin

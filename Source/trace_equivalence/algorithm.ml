@@ -355,6 +355,10 @@ let try_P symproc_left symproc_right expr =
      end
   | _ -> Debug.internal_error "[algorithm.ml >> tryP] We failed to handle an error in process.ml."
 			      
+(* Helping functions *)
+let isNotSingleton = function
+  | [x] -> false
+  | _ -> true
 
 let apply_input_on_focused next_function_input proc_left_label proc_right_label = 
   (* The first process of proc_left/right_label is under focus. We perform
@@ -401,7 +405,7 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
 		      (List.length !right_input_set);
 
       (* We check that sets of processes are singletons *)
-      if List.length !left_input_set != 1 || List.length !right_input_set != 1
+      if  isNotSingleton !left_input_set || isNotSingleton !right_input_set
       then Debug.internal_error "[algorithm.ml >> apply_input_on_focused] The sets of pocesses are not singletons. Should not happen since we have already check that skeletons match.";
 
       (* ** Apply the internal transitions (including conditionals) *)  
@@ -490,7 +494,7 @@ let apply_strategy_one_transition_por (* given .... *)
     end;
   
   (* We check that sets of processes are singletons *)
-  if List.length left_symb_proc_list != 1 || List.length right_symb_proc_list != 1
+  if isNotSingleton left_symb_proc_list || isNotSingleton right_symb_proc_list
   then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] The sets of pocesses are not singletons. It may be the case that inputted processes are not action-deterministic.";
   
   (** [PHASE 0] only executed ONCE. *)
@@ -516,7 +520,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	  !option_improper 
 	  (fun symb_proc_2 -> qs := symb_proc_2 :: !qs)
 	  (List.hd right_symb_proc_list);
-	if (List.length !ps != 1)|| (List.length !qs != 1)
+	if (isNotSingleton !ps)|| (isNotSingleton !qs)
 	then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] The sets of pocesses after reducing conditionals are not singletons. It may be the case that inputted processes start with conditionals at top level (which is forbidden)."
 	else (List.hd !ps, List.hd !qs)
       end;
@@ -638,7 +642,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	       var_r_ch
 	       proc_left_label_red_up;
 	     
-	     if List.length !left_output_set = 0
+	     if !left_output_set = []
 	     then begin
 		 (** ******* START A NEW POSITIVE PHASE *****)
 		 (* we must choose any process, put it at the begining of the list, set has_focus
@@ -656,7 +660,7 @@ let apply_strategy_one_transition_por (* given .... *)
 			    apply_input_on_focused next_function_input p_left p_right)
 			   listPairProc;
 	       end
-	     else if List.length !left_output_set != 1
+	     else if isNotSingleton !left_output_set
 	     then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen."
 	     else begin
 		 (** ****** NEGATIVE PHASE ***********)
@@ -676,14 +680,14 @@ let apply_strategy_one_transition_por (* given .... *)
     				 (List.length !left_output_set)
     				 (List.length !right_output_set);
 
-		 if List.length !right_output_set = 0
+		 if !right_output_set = []
 		 then begin
 		     Printf.printf "Witness' type: right process cannot execute an output that the left one can perform.";
 		     Printf.printf "%s" (" Here is the channel of this output: "^(Term.display_term ch)^".\n");
 		     Printf.printf "%s\n" (Process.display_trace_no_unif proc_left_out);
 		     raise (Not_equivalent_left proc_left_label_red_up);
 		   end
-		 else if List.length !right_output_set != 1
+		 else if isNotSingleton !right_output_set
 		 then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen.";
 		 
 		 (** [PHASE 5/NEG] Apply the internal transitions (including conditionals) *)  
