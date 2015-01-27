@@ -369,7 +369,7 @@ sig
   val display : elt -> string
 end
 
-  (** {3 Helping functions for reduced semantics *)
+  (** {3 Helping functions for reduced semantics} *)
 
 (** [is_subset_noUse listAxioms frame] returns true if all axioms in [listAxioms]
  occurs in [frame] labelled with noUse *)

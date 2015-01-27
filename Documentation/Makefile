@@ -3,13 +3,13 @@ NAME_PROGRAMME = APTE
 
 PATH_SOURCE = ../Source/
 
-NAME_STANDARD = Standard_library
+NAME_STANDARD = standard_library
 FILE_STANDARD = term.mli recipe.mli constraint.mli constraint_system.mli process.mli
-PATH_STANDARD = $(FILE_STANDARD:%.mli= $(PATH_SOURCE)Standard_library/%.mli)
+PATH_STANDARD = $(FILE_STANDARD:%.mli= $(PATH_SOURCE)standard_library/%.mli)
 
-NAME_TRACE = Trace_equivalence
+NAME_TRACE = trace_equivalence
 FILE_TRACE = rules.mli strategy.mli algorithm.mli
-PATH_TRACE = $(FILE_TRACE:%.mli= $(PATH_SOURCE)Trace_equivalence/%.mli)
+PATH_TRACE = $(FILE_TRACE:%.mli= $(PATH_SOURCE)trace_equivalence/%.mli)
 
 # Starting Point
 
@@ -22,7 +22,7 @@ main: tool display standard trace
 	latex main
 	dvipdf -dPDFSETTINGS=/prepress -dEmbedAllFonts=true main
 		
-# Module Standard Library
+# Module Stan<dard Library
 
 standard:
 	@echo
