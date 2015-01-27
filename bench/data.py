@@ -2,6 +2,24 @@
 # -*- coding: iso-8859-1 -*-
 
 TESTS = {
+    'WMF_1s' : {
+        'res' : True,
+        'name' : 'Wide Mouth Frog - 1 session - authentfication',
+        'file' : 'Simple_wmf_1s.txt',
+        'cat' : 1,
+    },
+    'WMF_2s' : {
+        'res' : True,
+        'name' : 'Wide Mouth Frog - 2 sessions - authentfication',
+        'file' : 'Simple_wmf_2s.txt',
+        'cat' : 1,
+    },
+    'WMF_3s' : {
+        'res' : True,
+        'name' : 'Wide Mouth Frog - 3 sessions - authentfication',
+        'file' : 'Simple_wmf_3s.txt',
+        'cat' : 1,
+    },
     'AS_RPC_a' : {
         'res' : False,
         'name' : 'Andrew Secure RPC - auth',
