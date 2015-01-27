@@ -9,7 +9,8 @@ from datetime import datetime
 import shlex
 import argparse
 
-
+import data
+import utils
 ## I reuse an old script (for SPEC)
 
 
@@ -40,7 +41,10 @@ def main():
         log_all.write(s)
         log_all.flush()
 
-    list_tests_tout = glob.glob('../Simple_Example/Simple_*.txt')
+    list_tests_tout = (glob.glob('../Simple_Example/Simple_*.txt') +
+                       glob.glob('../Simple_Example/Passport_*.txt'))
+    list_tests_tout = filter(lambda s : utils.filterData(s,data.TESTS), list_tests_tout)
+
     list_binaries_tout = glob.glob('../apte_*')
     list_tests = list_tests_tout
     if args.version or args.difficulty:
@@ -85,10 +89,11 @@ def main():
             # on met les easy dans tous les cas
             def test_easy(i):
                 return((("wmf" in i and "_1s" in i) or
-                 ("Private" in i and not("_2_" in i or "_3_" in i)) or
-                 ("Basic" in i) or
-                 ("bench_3par" in i) or
-                 ("tests_h_4par" in i)))
+                        ("Private" in i and not("_2_" in i or "_3_" in i)) or
+                        ("Basic" in i) or
+                        ("PassiveAuthentification_ano_1s" in i) or
+                        ("bench_3par" in i) or
+                        ("tests_h_4par" in i)))
             def test_middle(i):
                 return((("wmf" in i and "_2s" in i) or
                  ("Private" in i and not("_3_" in i)) or

@@ -19,6 +19,7 @@ from texttable import *
 
 import data
 
+
 def extractBench(text):
     lastBench = text.split("=============== STARTING A NEW BENCHMARK ===============")[-1]
     return(lastBench)
@@ -132,3 +133,11 @@ def setNoNew(dico):
         for testKey in dico[versKey]["benchs"]:
             dico[versKey]["benchs"][testKey]["new"] = False
     return(dico)
+
+def filterData(path, dico):
+    fileName = path.split("/")[-1]
+    resKey = findTest(fileName, dico)
+    if resKey == None or resKey == "":
+        return(False)
+    else:
+        return(True)
