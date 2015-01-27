@@ -2,6 +2,48 @@
 # -*- coding: iso-8859-1 -*-
 
 TESTS = {
+    'Pass_AA_ano_1' : {
+        'res' : True,
+        'name' : 'Passport: Active Authentification - 1 session - Anonymity',
+        'file' : 'Passport_ActiveAuthentification_ano_1s.txt',
+        'cat' : 2,
+    },
+    'Pass_AA_ano_2' : {
+        'res' : True,
+        'name' : 'Passport: Active Authentification - 2 session - Anonymity',
+        'file' : 'Passport_ActiveAuthentification_ano_2s.txt',
+        'cat' : 2,
+    },
+    'Pass_AA_ano_3' : {
+        'res' : True,
+        'name' : 'Passport: Active Authentification - 3 session - Anonymity',
+        'file' : 'Passport_ActiveAuthentification_ano_3s.txt',
+        'cat' : 2,
+    },
+    'Pass_PA_ano_1' : {
+        'res' : True,
+        'name' : 'Passport: Passive Authentification - 1 session - Anonymity',
+        'file' : 'Passport_PassiveAuthentification_ano_1s.txt',
+        'cat' : 2,
+    },
+    'Pass_PA_ano_2' : {
+        'res' : True,
+        'name' : 'Passport: Passive Authentification - 2 session - Anonymity',
+        'file' : 'Passport_PassiveAuthentification_ano_2s.txt',
+        'cat' : 2,
+    },
+    'Pass_PA_ano_3' : {
+        'res' : True,
+        'name' : 'Passport: Passive Authentification - 3 session - Anonymity',
+        'file' : 'Passport_PassiveAuthentification_ano_3s.txt',
+        'cat' : 2,
+    },
+    'Pass_PA+AA_ano' : {
+        'res' : True,
+        'name' : 'Passport: Passive|Active Authentification - 1 session - Anonymity',
+        'file' : 'Passport_PA+AA.txt',
+        'cat' : 2,
+    },
     'WMF_1s' : {
         'res' : True,
         'name' : 'Wide Mouth Frog - 1 session - authentfication',
