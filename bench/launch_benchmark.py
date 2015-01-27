@@ -44,7 +44,6 @@ def main():
     list_tests_tout = (glob.glob('../Simple_Example/Simple_*.txt') +
                        glob.glob('../Simple_Example/Passport_*.txt'))
     list_tests_tout = filter(lambda s : utils.filterData(s,data.TESTS), list_tests_tout)
-    print(list_tests_tout)
 
     list_binaries_tout = glob.glob('../apte_*')
     list_tests = list_tests_tout
