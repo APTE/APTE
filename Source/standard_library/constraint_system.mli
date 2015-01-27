@@ -39,8 +39,7 @@ val add_new_deducibility_constraint : constraint_system -> Recipe.variable -> Te
 
 val add_deducibility_constraint : constraint_system -> Constraint.Deducibility.elt list -> constraint_system
 
-(** [add_new_dependency_constraint csys dep] add the constraint [dep] to the dependency
-constraints of [csys]. *)
+(** [add_new_dependency_constraint csys dep] add the constraint [dep] to the dependency constraints of [csys]. *)
 val add_new_dependency_constraint : constraint_system -> Recipe.recipe list -> Recipe.axiom list -> constraint_system
 
 (** [add_new_axiom csys t] returns the constraint system [csys] with the frame {% $\Phi \cup \\{ \ax_i, i \ded t\\}$ %}

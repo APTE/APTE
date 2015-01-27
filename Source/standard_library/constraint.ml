@@ -876,7 +876,7 @@ let is_subset_noUse la frame =
     | [] -> true
     | ax :: la' ->
        begin
-	 try let elt,_ = search SAll (test_one ax) frame (* SAll: tous les éléments *)
+	 try let elt,_ = search SAll (test_one ax) frame (* SAll: all elements in frame *)
 	     in if Frame.is_noUse elt
 		then aux_scan la'
 		else false

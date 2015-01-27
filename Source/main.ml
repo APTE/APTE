@@ -170,6 +170,7 @@ let _ =
   while !i < Array.length Sys.argv && not !arret do
     match (Sys.argv).(!i) with
       | "-with_por" -> 
+	 (* Recall the usage: -with_por [compr|red] [improper] [nouse] *)
 	 Trace_equivalence.Algorithm.option_compr := true;
 	 if not(!i+1 = (Array.length Sys.argv))
 	 then begin

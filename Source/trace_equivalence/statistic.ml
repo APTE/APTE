@@ -103,6 +103,7 @@ let log_dir = ref (
   let main_dir = String.sub executable_name 0 (index_slash+1) in
   (main_dir^"log"))
 
+(* We use the file token to detect if the log-folder is currently used *)
 let token = ref ((!log_dir)^"/token")
 
 let _ = begin
@@ -113,6 +114,8 @@ let _ = begin
 	Sys.command (Printf.sprintf "touch %s" !token);
       end
     else begin
+	(* In that case, we choose another log folder to avoid removing
+           important files *)
 	Random.self_init ();
 	let rdm = Random.int 100000000 in
 	log_dir := (!log_dir)^(Printf.sprintf "%d" rdm);

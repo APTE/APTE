@@ -282,44 +282,43 @@ let refresh_label proc =
 
 (* par_label denotes the position of a sub-process in the 'tree of parallel compositions' *)
 type par_label = int list
-(* flag_label describes the state of the labelling process (to be labelled or have been labelled (OK)) *)
+(* flag_label describes the state of the labelling process (to be labelled or have been labelled (OK)). *)
 type flag_label = ToLabel | OkLabel | Dummy
 (* a proc_label will be associated to any process in the multiset *)
 type proc_label = (par_label * flag_label)
 
 let dummy_l = ([], Dummy)
 let init_par_label = [0]
+(* This par_label will be associated to initial processes. *)
 let init_proc_label =(init_par_label, OkLabel) 
 
 let set_to_be_labelled = function
   | (parLab,_) -> (parLab, ToLabel)
 
-(* TODO: par_label are not used yet -> to remove if not needed *)
 type trace_label =
   | Output of label * Recipe.recipe * Term.term * Recipe.axiom * Term.term * par_label
   | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term * par_label
   | Comm of internal_communication  (* won't be produced when with_por = true*)
-  
-type blocks = {
-  par_lab : par_label;
-  inp : Recipe.recipe list;
-  out : Recipe.axiom list;
-  complete_inp : bool;	(* is set to true when performing a release of focus *)
+
+(* blocks contain recipes and handles plus some flags corresponding to a block of actions of the form [In*.Rel.Neg*] *)
+type block = {
+  par_lab : par_label;		(* label of the block *)
+  inp : Recipe.recipe list;	(* list of recipes (of inputs) *)
+  out : Recipe.axiom list;	(* list of handles (of outputs) *)
+  complete_inp : bool;        	(* is set to true when performing a release of focus *)
   has_generate_dep_csts : bool;	(* is set to true when we add the corresponding dependency constraints (for the inputs) *)
-(* TODO: is mutable dangerous here? when backtracking???????? CHECK THIS OUT *)
-(* POSE UN GROS PROBLEME DONC CORRIGE: si on backtrack un peu et on se retrouve avec un block partiel pas terminé !!! *)
 }
 
 type symbolic_process = 
   {
     axiom_name_assoc : (Recipe.recipe * Term.term) list;
     process : (process*proc_label) list; (* Represent a multiset of labelled processes *)
-    has_focus : bool;	    (* if true: process[0] is under focus, otherwise: no focus *)
-    is_improper : bool;	    (* if true, last block is improper -> cannot be executed any more *)
+    has_focus : bool;	                 (* if true: process[0] is under focus, otherwise: no focus *)
+    is_improper : bool;	                 (* if true, last block is improper -> cannot be executed any more *)
     constraint_system : Constraint_system.constraint_system;
     forbidden_comm : internal_communication list;
     trace : trace_label list;
-    trace_blocks : blocks list;
+    trace_blocks : block list;
     marked : bool
   }
 
@@ -363,7 +362,7 @@ let create_symbolic axiom_name_assoc proc csys =
 let ps = Printf.sprintf
 
 (* Warning: I use list.rev here to pretty print par_labs. par_labs should be small
-   but it still can slow down the program. *)
+   but it still can slow down the program. However, we only call this function when debugging. *)
 let display_parlab pl = 
   if pl <> []
   then let pl_rev = List.tl (List.rev pl) in (* we do not display the first '0' *)
@@ -560,7 +559,7 @@ let apply_internal_transition_without_comm with_por with_improper function_next 
 					   is_improper = check_is_improper flags;
 					   has_focus = check_has_focus flags }
     | (Nil,_)::q -> if with_por && check_has_focus_null flags
-		    (* CASE I : this null proc was the last one of the Par and this Par had only one In
+		    (* CASE I : this null proc was the last one of the Par and this Par had only one Input
                                  -> stop and keep focus *)
 		    then function_next { symb_proc with process = prev_proc @ q;
 							constraint_system = csys;
@@ -574,7 +573,7 @@ let apply_internal_transition_without_comm with_por with_improper function_next 
 							is_improper = true;
 							has_focus = false
 				       }
-		    (* OTEHR CASES: we keep applying go_through after updating flags *)
+		    (* OTHER CASES: we keep applying go_through after updating flags *)
 		    else let newFlags = if with_por && not(flags.nb_sub_proc_to_process = 0)
 					then { flags with 
 					       nb_sub_proc_to_process = flags.nb_sub_proc_to_process - 1;
@@ -590,7 +589,7 @@ let apply_internal_transition_without_comm with_por with_improper function_next 
 	 end
     | (Par(p1,p2), l)::q ->
        let l' = if with_por
-		then set_to_be_labelled l (* we add a flag meaning that produced sub_processes must be relablled
+		then set_to_be_labelled l (* we add a flag meaning that produced sub_processes must be relabelled
 					     since we broke a parallel composition *)
 		else dummy_l in
        go_through prev_proc
@@ -629,8 +628,7 @@ let apply_internal_transition_without_comm with_por with_improper function_next 
 		  in
 		  go_through prev_proc new_csys flags ((proc_else,l)::q)            
 		 ) disj_conj_else
-    (* otherwise, proc starts with an input our output -> add it to prev_proc and keep scanning
-     the rest of processes *)
+    (* otherwise, proc starts with an input our output -> add it to prev_proc and keep scanning the rest of processes *)
     | proc::q -> 
        let isIn = match proc with 
 	 | (In (_,_,_,_),_) -> true
@@ -648,7 +646,7 @@ let apply_internal_transition_without_comm with_por with_improper function_next 
 			     nb_sub_proc_pos = flags.nb_sub_proc_pos + (if isIn then 1 else 0);
 			     nb_sub_proc_non_zero = flags.nb_sub_proc_non_zero + 1;
 			     nb_sub_proc_to_process = flags.nb_sub_proc_to_process - 1;
-			     flag_improper = flags.flag_improper; (* useless... *)
+			     flag_improper = false;
 			   } 
 			   else flags in
 	    go_through (proc::prev_proc) csys newFlags q in
@@ -1070,10 +1068,6 @@ let display_trace_no_unif_no_csts symb_proc =
     ) "" (List.rev symb_proc.trace) in
   Printf.sprintf "%s" trace
 
-let add_dependency_constraint sys variables axioms =
-  let old = sys.constraint_system in
-  let new_cst_system = Constraint_system.add_new_dependency_constraint old variables axioms in
-  { sys with  constraint_system = new_cst_system }
 
 (*************************************
 	     Optimisation
@@ -1114,6 +1108,7 @@ let is_same_input_output symb_proc1 symb_proc2 =
       Annotated Semantics
 **************************************)
 
+(*********** Skeletons ***************)
 (* Helping function for SSkeleton *)
 let compare_term t1 t2 =
   try
@@ -1138,17 +1133,18 @@ module Skeleton =
     let equal sk1 sk2 = (compare sk1 sk2) = 0
   end
 
+(* A map skeleton -> 'a *)
 module MapS =
 struct
   include Map.Make(Skeleton)
 end
 
+let equal_skeleton = Skeleton.equal
+
 let sk = function
   | In (ch,_,_,_) -> Some (InS ch)
   | Out (ch, _, _, _) -> Some (OutS ch)
   | _ -> None
-
-let equal_skeleton = Skeleton.equal
 
 let display_sk = function
   | InS t -> "In_"^(Term.display_term t)
@@ -1165,6 +1161,8 @@ let sk_of_symp symp =
   | _ ->  (* Printf.printf "%s" (display_process (fst(List.hd symp.process))); *)
      Debug.internal_error "[process.ml >> sk_of_symp] A bad call to sk_of_symbp occurs. Should not be applied to non-reduced processes or empty process."
 
+
+(*********** Labelling ***************)
 let need_labelise = function
   | (_,(_,(ToLabel))) -> true
   | _ -> false
@@ -1172,19 +1170,20 @@ let need_labelise = function
 let labelise symb_proc =
   let mapS = ref MapS.empty in
   (* go trough the list of processes and accumulate association sk -> l in mapS *)
-  let rec labelise_procs n = function
-    | pl :: q when not(need_labelise pl) -> pl :: (labelise_procs n q)
+  let rec labelise_procs number= function
+    | pl :: q when not(need_labelise pl) -> pl :: (labelise_procs number q)
     | (p, l) :: q ->
        (match l with
        | (oldL, ToLabel) ->
-	  let newL = n :: oldL in
+	  (* In that case, we must labelise this process (it was in a par that have been splitted just before in apply_internal) *)
+	  let newL = number :: oldL in
 	  let newLp = (newL, OkLabel) in
 	  (match sk p with
 	  | None ->  Debug.internal_error "[Process.ml >> labelise] I cannot labelise non-reduced processes."
 	  | Some sk ->
 	     begin
 	       mapS := MapS.add sk newL !mapS;
-	       (p, newLp) :: labelise_procs (n+1) q;
+	       (p, newLp) :: labelise_procs (number+1) q;
 	     end)
        | _ ->   Debug.internal_error "[Process.ml >> labelise] I cannot labelise processes labelled with 'Dummy'.")
     | [] -> [] in
@@ -1193,6 +1192,7 @@ let labelise symb_proc =
   ({symb_proc with
      process = new_list_procs;
      (* the 'new' process has a focus only if it had a focus and mapS is empty (no new parallel compositions) *)
+     (* TODO: consider removing this: *)
      has_focus = symb_proc.has_focus && MapS.is_empty !mapS;
    },
    !mapS)
@@ -1215,6 +1215,7 @@ let labelise_consistently mapS symb_proc =
     | (p, l) :: q ->
        (match l with
 	| (oldL, ToLabel) ->
+	  (* In that case, we must labelise this process (it was in a par that have been splitted just before in apply_internal) *)
 	   (match sk p with
 	    | None ->  Debug.internal_error "[Process.ml >> labelise] I cannot labelise non-reduced processes."
 	    | Some skp ->
@@ -1237,6 +1238,7 @@ let labelise_consistently mapS symb_proc =
   then raise (Not_eq_right "Process on the left has a parallel composition with more processes that the one on the right. (4)")
   else {symb_proc with
 	 process = new_list_procs;
+     (* TODO: consider removing this: *)
 	 has_focus = symb_proc.has_focus && was_empty; (* remain with focus only if it had a focus and no skeletons to labelise *)
        }
     
@@ -1292,7 +1294,8 @@ let display_symb_process symP =
 	    symP.process;
   Printf.printf "%s" (display_trace_blocks symP)
 
-let debug_f = ref false          (* Do we print debugging information ?  *)
+
+let debug_f = ref false          (* Do we print debugging information for the 'reduced' work  *)
 
 (* ********************************************************************** *)
 (*                 Test whether dependency constraints hold               *)
@@ -1310,7 +1313,7 @@ let test_dependency_constraints symP testNoUse =
        then true                         (* cst is not ground *)
        else (
          if List.exists (fun ax -> Recipe.ax_occurs ax r_t') la
-         then true                     (* cst hold thanks to r *)
+         then true                       (* cst hold thanks to r *)
          else test_cst frame r_subst (lr, la))
   in
   (* Scan the list of dep. csts*)
@@ -1319,7 +1322,6 @@ let test_dependency_constraints symP testNoUse =
     | ((_, la) as cst) :: l ->
        (* We made the choice to firstly check the noUse criterion and then the closed recipe criterion.
 	 Todo: find the most efficient order. *)
-       
        if testNoUse && (la <> [] && (Constraint.is_subset_noUse la frame))    (* = la \susbseteq NoUse *)
        then false
        else (if test_cst frame r_subst cst
@@ -1346,11 +1348,21 @@ let test_dependency_constraints symP testNoUse =
 
   scan_dep_csts frame r_subst (Constraint_system.get_dependency_constraints csys)
 
-(* Helping functions dealing with par_label *)
+
+(* ********************************************************************** *)
+(*                 Build dependency constraints given a symbolic process  *)
+(* ********************************************************************** *)
+
+(********** Dealing with par_labels *************)
 let rec listDrop l = function
   | 0 -> l
   | n -> listDrop (List.tl l) (n-1)
 
+(* Find the point where l1 l2 share a common prefix and returns the l1/l2-element just after
+   this common prefix.
+   Note that we can safely use the structural equality (==) before par_lab are always created
+   by iteratively extending existing ones.
+   Examples of input -> output: (211,311) -> (2,3); (231,231) -> (2,2); (41332,42) -> (3,4). *)
 let extract_common l1 l2 =  
   let s1,s2 = List.length l1, List.length l2 in
   let s = min s1 s2 in
@@ -1361,21 +1373,24 @@ let extract_common l1 l2 =
        then (x1,x2)
        else aux (tl1,tl2)
     | _, _ ->   Debug.internal_error "[Process.ml >> extact_common] Should not happen!" in
-
   aux (l1d,l2d)
 
-(* l1 ||^s l2 *)
+(* test l1 ||^s l2 (i.e., if l1 and l2 are sequentially independent) *)
 let lab_inpar l1 l2 = 
   let x1,x2 = extract_common l1 l2 in
   if x1 <> x2
   then true
   else false 
 
-(* l1 < l2 *)
+(* test if l1 < l2 (i.e., l1 has priority over l2).
+   Note that we implictly assume that l1 ||^s l2. *)
 let lab_ord l1 l2 =
   let x1,x2 = extract_common l1 l2 in
   x1 < x2
 
+
+(********** Looking for 'dependency-patterns'  *************)
+(* We raise the following exception when we are sure that no 'dependency-pattern' can be found *)
 exception No_pattern
 
 (* Recusrive functions that looks for a pattern given the par_label [par_lab] of the last block
@@ -1388,11 +1403,13 @@ let rec search_pattern par_lab acc_axioms = function
   | block :: trace when lab_ord block.par_lab par_lab -> search_pattern par_lab (block.out @ acc_axioms) trace
   (* block || par_lab and >: return acc+1 (DEP CST) *)
   | block :: _ -> block.out @ acc_axioms
+(* TODO: make the previous function more efficient (avoid redundancy with extract_common) *)
 
+let add_dependency_constraint sys variables axioms =
+  let old = sys.constraint_system in
+  let new_cst_system = Constraint_system.add_new_dependency_constraint old variables axioms in
+  { sys with  constraint_system = new_cst_system }
 
-(* ********************************************************************** *)
-(*                 Build dependency constraints given a symbolic process  *)
-(* ********************************************************************** *)
 let generate_dependency_constraints symP =
   if !debug_f then begin
 		  pp "We are going to generate some dep. csts. on: ";
@@ -1406,6 +1423,7 @@ let generate_dependency_constraints symP =
       and trace = List.tl symP.trace_blocks in
       let list_recipes = block.inp in
       try 
+	(* we try to find a pattern if it does not fail, it returns the list of axioms of the corresponding dep. cst *)
 	let list_axioms = search_pattern block.par_lab [] trace in
 	let new_sys  = add_dependency_constraint symP list_recipes list_axioms in
 	
@@ -1435,6 +1453,7 @@ let must_generate_dep_csts symP =
   && (List.hd (symP.trace_blocks)).out <> []
 
 
+(************************* Debugging tools *************************)
 let is_subtrace traceinfo size symP =
   let trace = symP.trace in
   let extractinfo =

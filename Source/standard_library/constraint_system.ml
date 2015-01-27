@@ -93,7 +93,6 @@ let display = function
       (* Do More *)
       let endline = ")\n" in
       
-      (* CHECK *)
       Printf.sprintf "%s%s\n%s\n%s\n%s\n%s\n%s\n" line1 frame cons_set dep_cst formula conj_mess_eq endline
 
 let display_dependency_constraints = function
@@ -102,7 +101,6 @@ let display_dependency_constraints = function
     (display_dependency_cst sub_csys.dependency_constraints)
 
 
-(* CHECK FIN *)
 
 (******** Addition functions ********)
 
@@ -485,12 +483,13 @@ struct
           (***[END DEBUG]***)
     
           let equations = Recipe.equations_from_substitution subst in
+	  (* We must apply substitutions to recipes of dependency constraints *)
           let rec apply_to_dep_csts = function
             | [] -> []
             | (lr, la) :: tl -> 
-              ((Recipe.apply_substitution subst lr (fun l f -> List.map f l)), la)
-                 :: (apply_to_dep_csts tl)  in
-
+               ((Recipe.apply_substitution subst lr (fun l f -> List.map f l)), la)
+               :: (apply_to_dep_csts tl)  in
+	  
           Csys({ sub_csys with
             frame = Recipe.apply_substitution subst sub_csys.frame map_frame;
             dependency_constraints = apply_to_dep_csts sub_csys.dependency_constraints;
