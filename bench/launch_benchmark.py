@@ -51,6 +51,8 @@ def main():
         list_binaries_tout = glob.glob('../apte*')
         onlyNew = True
     list_tests = list_tests_tout
+    if not(args.version):
+        args.version = ["ref","old_comp","comp","comp_no_impro","old_red","red","red_no_impro","red_no_nouse","red_no_2_nouse_improper"]
     if args.version or args.difficulty:
         if args.version:
             print(args.version)
