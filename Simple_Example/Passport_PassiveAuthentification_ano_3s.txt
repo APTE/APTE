@@ -52,9 +52,7 @@ let PAreader KPrDS ksenc ksmac c =
   if xmac = mac(xenc, ksmac) 
   then(let (xdg,xsod) = sdec(xenc,ksenc) in
        let (xhdg, xshdg) = xsod in
-       if xmac = xmac
-# Problem: The function check is not declared'  -> ??
-# xhsdg = check(xshdg, (pk(KPrDS)))
+       if xshdg = checksign(xshdg, (pk(KPrDS)))
        then (if xhdg = h(xdg)
              then out(c, ok)
              else 0)
