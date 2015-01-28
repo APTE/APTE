@@ -75,7 +75,9 @@ val instanciate_trace : symbolic_process -> symbolic_process
 (** This function recursively apply all available internal transitions. In case with_por is enabled, it updates
     has_focus and improper accordingly. Note that, it also stores the fact that processes coming from parallel compositions
     must be labelled into the 'toLabel' flag. Flags: booleans: with_comm, with_por, with_improper. *)
-val apply_internal_transition : bool -> bool -> bool -> (symbolic_process -> unit) -> symbolic_process -> unit
+val apply_internal_transition :
+  with_comm:bool -> with_por:bool -> with_improper:bool ->
+  (symbolic_process -> unit) -> symbolic_process -> unit
 
 (** boolean: with_por (if true we only consider the process under focus, ie, the first one in the list)),
     next_function takes the pair (continuation,channel of produced action) *)

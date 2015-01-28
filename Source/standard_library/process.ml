@@ -739,7 +739,7 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
   in
   go_through [] symb_proc.forbidden_comm symb_proc.process
   
-let apply_internal_transition with_comm with_por with_improper function_next symb_proc = 
+let apply_internal_transition ~with_comm ~with_por ~with_improper function_next symb_proc = 
   if with_comm
   then 
     if with_por

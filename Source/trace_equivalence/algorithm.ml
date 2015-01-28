@@ -245,17 +245,21 @@ let apply_strategy_one_transition next_function_output next_function_input left_
    to satisfy the conditional's test. Thanks to our "function_next", we then put
    all those alternatives together in left/right_internal lists. *)
   List.iter (fun symb_proc_1 ->
-    Process.apply_internal_transition !option_internal_communication !option_compr !option_improper (fun symb_proc_2 -> 
+    Process.apply_internal_transition
+      ~with_comm:!option_internal_communication ~with_por:!option_compr ~with_improper:!option_improper (fun symb_proc_2 -> 
       left_internal := symb_proc_2::!left_internal
     ) symb_proc_1
   ) left_erase_set;
-  
+
   List.iter (fun symb_proc_1 ->
-    Process.apply_internal_transition !option_internal_communication !option_compr !option_improper (fun symb_proc_2 -> 
-      right_internal := symb_proc_2::!right_internal
-    ) symb_proc_1
+    Process.apply_internal_transition
+      ~with_comm:!option_internal_communication
+      ~with_por:!option_compr
+      ~with_improper:!option_improper
+      (fun symb_proc_2 -> right_internal := symb_proc_2::!right_internal)
+      symb_proc_1
   ) right_erase_set;
-  
+
 
   (* ** Second step : apply the output transitions *)  
   let support = 
@@ -357,7 +361,7 @@ let try_P symproc_left symproc_right expr =
 			      
 (* Helping functions *)
 let isNotSingleton = function
-  | [x] -> false
+  | [_] -> false
   | _ -> true
 
 let apply_input_on_focused next_function_input proc_left_label proc_right_label = 
@@ -418,9 +422,9 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
          all those alternatives together in left/right_internal lists. *)
       List.iter (fun symb_proc_1 ->
 		 Process.apply_internal_transition
-		   false	(* with comm *)
-		   true		(* with por *)
-		   !option_improper 
+		   ~with_comm:false
+		   ~with_por:true
+		   ~with_improper:!option_improper 
 		   (fun symb_proc_2 -> 
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
@@ -430,9 +434,9 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
       
       List.iter (fun symb_proc_1 ->
 		 Process.apply_internal_transition
-		   false	(* with comm *)
-		   true		(* with por *)
-		   !option_improper 
+		   ~with_comm:false
+		   ~with_por:true
+		   ~with_improper:!option_improper 
 		   (fun symb_proc_2 -> 
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
@@ -508,16 +512,16 @@ let apply_strategy_one_transition_por (* given .... *)
 	if !print_debug_por then Printf.printf "Trace is empty, we thus apply internal_transition before starting.\n";
 	let ps = ref [] in
 	Process.apply_internal_transition
-	  false			(* with_comm *)
-	  true			(* with_por *)
-	  !option_improper 
+	  ~with_comm:false
+	  ~with_por:true
+	  ~with_improper:!option_improper 
 	  (fun symb_proc_2 -> ps := symb_proc_2 :: !ps)
 	  (List.hd left_symb_proc_list);
 	let qs = ref [] in
 	Process.apply_internal_transition
-	  false			(* with_comm *)
-	  true			(* with_por *)
-	  !option_improper 
+	  ~with_comm:false
+	  ~with_por:true
+	  ~with_improper:!option_improper 
 	  (fun symb_proc_2 -> qs := symb_proc_2 :: !qs)
 	  (List.hd right_symb_proc_list);
 	if (isNotSingleton !ps)|| (isNotSingleton !qs)
@@ -700,9 +704,9 @@ let apply_strategy_one_transition_por (* given .... *)
                     to satisfy the  conditional's test. Thanks to our "function_next", we then pu
                     all those alternatives together in left/right_internal lists. *)
 		 Process.apply_internal_transition
-		   false
-		   true
-		   !option_improper 
+		   ~with_comm:false
+		   ~with_por:true
+		   ~with_improper:!option_improper 
 		   (fun symb_proc_2 -> 
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
@@ -710,9 +714,9 @@ let apply_strategy_one_transition_por (* given .... *)
 		   ) proc_left_out;
 		 
 		 Process.apply_internal_transition
-		   false
-		   true 
-		   !option_improper 
+		   ~with_comm:false
+		   ~with_por:true 
+		   ~with_improper:!option_improper 
 		   (fun symb_proc_2 -> 
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
