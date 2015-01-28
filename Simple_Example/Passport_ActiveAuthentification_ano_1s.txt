@@ -56,11 +56,7 @@ let AAreader ksenc ksmac pkP c =
     else 0
   else 0.
 
-let ePassportAA KPrDS skP cp cr =
-  new ksenc;
-  new ksmac;
-  new dg;
-  let sod = (h(dg), sign(h(dg),KPrDS)) in
+let ePassportAA KPrDS skP cp cr ksenc ksmac =
   (AAreader ksenc ksmac pk(skP) cr | AApassport ksenc ksmac skP cp).
     
 # Main systems.
@@ -69,15 +65,17 @@ let wholeSystem =
   let KPuDS = pk(KPrDS) in
   in(c,zz);
   out(c,KPuDS);
-  ((ePassportAA KPrDS skP1 cp1 cr1) |
-   (ePassportAA KPrDS skP2 cp2 cr2) ).
+  new ksenc; new ksmac;
+  ((ePassportAA KPrDS skP1 cp1 cr1 ksenc ksmac) |
+   (ePassportAA KPrDS skP2 cp2 cr2 ksenc ksmac)).
 
-let wholeSystem_A = 
+let wholeSystem_A =   
   new KPrDS;
   let KPuDS = pk(KPrDS) in
   in(c,zz);
   out(c,KPuDS);
-  ((ePassportAA KPrDS skP1 cp1 cr1) |
-   (ePassportAA KPrDS skPA cp2 cr2) ).
+  new ksenc; new ksmac;
+  ((ePassportAA KPrDS skP1 cp1 cr1 ksenc ksmac) |
+   (ePassportAA KPrDS skPA cp2 cr2 ksenc ksmac)).
 
 equivalence wholeSystem and wholeSystem_A.

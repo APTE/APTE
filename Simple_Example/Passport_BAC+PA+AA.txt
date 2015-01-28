@@ -1,5 +1,5 @@
 # Passive and Active Authentification
-# We test the anonimity of PA|AA for one session (one session with a compromised passport + one normal session)
+# We test the anonimity of PA|AA for one session (one session with a compromised passport + 1 normal session)
 # SHOULD BE TRUE
 
 
@@ -48,10 +48,8 @@ let PAreader KPrDS ksenc ksmac c =
   let (xenc, xmac) = x in 
   if xmac = mac(xenc, ksmac) 
   then(let (xdg,xsod) = sdec(xenc,ksenc) in
-       let (xhdg, xshdg) = xsod in
-       if xmac = xmac
-# Problem: The function check is not declared'  -> ??
-#xhsdg = check(xshdg, (pk(KPrDS)))
+       let (xhdg, xshdg) = xsod i
+       if xshdg = checksign(xshdg, (pk(KPrDS)))
        then (if xhdg = h(xdg)
              then out(c, ok)
              else 0)
