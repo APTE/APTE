@@ -11,7 +11,7 @@ NATIVECODE=yes
 OCAMLC=$(if $(NATIVECODE),ocamlopt,ocamlc)
 OCAMLC_UC=$(shell echo $(OCAMLC) | tr a-z A-Z)
 CMO=$(if $(NATIVECODE),cmx,cmo)
-OCAMLDEP=ocamldep
+OCAMLDEP=ocamldep $(if $(NATIVECODE),-native)
 OCAMLDOC=ocamldoc
 
 
