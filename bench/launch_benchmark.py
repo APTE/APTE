@@ -46,42 +46,46 @@ def main():
     list_tests_tout = filter(lambda s : utils.filterData(s,data.TESTS), list_tests_tout)
 
     list_binaries_tout = glob.glob('../apte_*')
+    onlyNew = False
+    if list_binaries_tout == []:
+        list_binaries_tout = glob.glob('../apte*')
+        onlyNew = True
     list_tests = list_tests_tout
     if args.version or args.difficulty:
         if args.version:
             print(args.version)
             list_binaries = []
             if "ref" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
+                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
                 list_binaries.append(bina)
             if "comp" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
+                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
                 bina = bina + " -with_por compr improper"
                 list_binaries.append(bina)
             if "old_comp" in args.version:
-                bina = [i for i in list_binaries_tout if ("_2_" in i)][0]
+                bina = [i for i in list_binaries_tout if ("_2_" in i or onlyNew)][0]
                 list_binaries.append(bina)
             if "comp_no_impro" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
+                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
                 bina = bina + " -with_por compr"
                 list_binaries.append(bina)
             if "old_red" in args.version:
-                bina = [i for i in list_binaries_tout if ("_3_" in i)][0]
+                bina = [i for i in list_binaries_tout if ("_3_" in i or onlyNew)][0]
                 list_binaries.append(bina)
             if "red" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
+                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
                 bina = bina + " -with_por red improper nouse"
                 list_binaries.append(bina)
             if "red_no_impro" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
+                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
                 bina = bina + " -with_por red nouse"
                 list_binaries.append(bina)
             if "red_no_nouse" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
+                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
                 bina = bina + " -with_por red improper"
                 list_binaries.append(bina)
             if "red_no_2_nouse_improper" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i)][0]
+                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
                 bina = bina + " -with_por red"
                 list_binaries.append(bina)
         if args.difficulty:
