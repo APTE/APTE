@@ -19,6 +19,12 @@ from texttable import *
 
 import data
 
+# SETTINGS FOR PRETTY PRINTINGS
+# First Column' width
+firstWidth = 17
+# Others Columns' width
+width = 10
+
 
 def extractBench(text):
     lastBench = text.split("=============== STARTING A NEW BENCHMARK ===============")[-1]
@@ -77,8 +83,6 @@ def findTest(fileName, dicoTests):
 def pprintMatrix(matrix):
     lm = len(matrix[0])-1
     table = Texttable()
-    firstWidth = 15
-    width = 14
     # table.set_cols_align(["l", "r", "c"])
     # table.set_deco(Texttable.HEADER)
     table.set_deco(Texttable.BORDER | Texttable.HEADER)
