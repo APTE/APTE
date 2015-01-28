@@ -129,8 +129,8 @@ let () = begin
 	let rdm = Random.int 100000000 in
 	log_dir := (!log_dir)^(Printf.sprintf "%d" rdm);
 	token := (!log_dir)^"/token";
-	sys_command "touch %s" !token;
 	sys_command "mkdir %s" !log_dir;
+	sys_command "touch %s" !token;
     end;
   end
 	  
