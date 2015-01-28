@@ -106,13 +106,22 @@ let log_dir = ref (
 (* We use the file token to detect if the log-folder is currently used *)
 let token = ref ((!log_dir)^"/token")
 
-let _ = begin
+let sys_command =
+  Printf.ksprintf
+    (fun s ->
+       let ret = Sys.command s in
+         if ret <> 0 then begin
+           Printf.eprintf "Command %S returned %d. Exiting...\n" s ret ;
+           exit ret
+         end)
+
+let () = begin
     if not(Sys.file_exists !token)
     then begin
-	let _ = Sys.command (Printf.sprintf "rm -rf %s" !log_dir) in
-	let _ = Sys.command (Printf.sprintf "mkdir %s" !log_dir) in
-	Sys.command (Printf.sprintf "touch %s" !token);
-      end
+	sys_command "rm -rf %s" !log_dir;
+	sys_command "mkdir %s" !log_dir;
+	sys_command "touch %s" !token;
+    end
     else begin
 	(* In that case, we choose another log folder to avoid removing
            important files *)
@@ -120,9 +129,9 @@ let _ = begin
 	let rdm = Random.int 100000000 in
 	log_dir := (!log_dir)^(Printf.sprintf "%d" rdm);
 	token := (!log_dir)^"/token";
-	let _ = Sys.command (Printf.sprintf "touch %s" !token) in
-	Sys.command (Printf.sprintf "mkdir %s" !log_dir);
-      end;
+	sys_command "touch %s" !token;
+	sys_command "mkdir %s" !log_dir;
+    end;
   end
 	  
 let reset_statistic () =
@@ -131,7 +140,7 @@ let reset_statistic () =
   
   let main_out_channel = open_out (Printf.sprintf "%s/input_%d.log" !log_dir !number_of_input) in
   let dir_for_matrix = Printf.sprintf "%s/input_%d_matrices" !log_dir !number_of_input in
-  let _ = Sys.command ("mkdir "^dir_for_matrix) in
+  let () = sys_command "mkdir %s" dir_for_matrix in
   let initial = 
     {
       channel = main_out_channel;
@@ -423,7 +432,7 @@ let sub_start_transition list1 list2 =
     let temp_stat = List.hd !temporary_buffer in
     temp_stat.nb_sons <- temp_stat.nb_sons + 1;
     let new_dir = Printf.sprintf "%s/Nb_%d_[size_%d]" temp_stat.dir_for_sons temp_stat.nb_sons size in
-    let _ = Sys.command ("mkdir "^new_dir) in
+    let () = sys_command "mkdir %s" new_dir in
     let main_out_channel = open_out (Printf.sprintf "%s/matrices.log" new_dir) in
   
     Printf.fprintf main_out_channel "Left set of symbolic process (number: %d):\n\n" (List.length list1);
