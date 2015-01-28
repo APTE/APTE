@@ -2,16 +2,42 @@ EXECUTABLE = ../apte
 NAME_PROGRAMME = APTE
 VERSION = 0.4beta
 
-OCAMLC= ocamlc
-OCAMLOPT= ocamlopt
-OCAMLDEP= ocamldep
-OCAMLDOC= ocamldoc
+### Compiler
+
+# For bytecode compilation, unset NATIVECODE below or run:
+#  make NATIVECODE="" <target>
+NATIVECODE=yes
+
+OCAMLC=$(if $(NATIVECODE),ocamlopt,ocamlc)
+OCAMLC_UC=$(shell echo $(OCAMLC) | tr a-z A-Z)
+CMO=$(if $(NATIVECODE),cmx,cmo)
+OCAMLDEP=ocamldep
+OCAMLDOC=ocamldoc
+
+
+### Compiler options
 
 INCLUDES = -I standard_library -I parser -I trace_equivalence -I length_equivalence
+# Compiler options specific to OCaml version >= 4
+V4OPTIONS=$(if $(shell $(OCAMLC) -version | grep '^4'),-bin-annot)
+OCAMLFLAGS = $(INCLUDES) $(INCLUDES_MOD) $(V4OPTIONS) -w Ae
 
-OCAMLFLAGS = $(INCLUDES) $(INCLUDES_MOD) -bin-annot -w Ae # add other options for ocamlc here
-OCAMLOPTFLAGS = $(INCLUDES) $(INCLUDES_MOD) -bin-annot -w Ae # add other options for ocamlopt here
 
+### Makefile verbosity
+
+# When V=@, full commands are not shown, e.g.,
+#  ocamlc <plenty of options> -c <file>"
+# is replaced by the summary
+#  OCAMLC -c <file>
+# To disable this feature (e.g. to debug compiler flags) use
+#  make V="" <target>
+# Variable V should only be set to "@" or "".
+V=@
+# Variable NV is used to disable summaries when V is not set.
+NV=$(if $(V),@,@\#)
+
+
+### Sources
 
 GENERATED_SOURCES = parser/grammar.ml parser/lexer.ml parser/grammar.mli
 STD_ML = standard_library/term.ml standard_library/recipe.ml standard_library/constraint.ml \
@@ -25,23 +51,22 @@ LENGTH_ML = length_equivalence/length.ml length_equivalence/length_algorithm.ml 
 PARSER_ML = parser/parser_function.ml parser/grammar.ml parser/lexer.ml \
 			parser/parser.ml
 ML = debug.ml $(STD_ML) $(TRACE_ML) $(LENGTH_ML) $(PARSER_ML) main.ml
-OBJ = $(ML:.ml=.cmx)
+OBJ = $(ML:.ml=.$(CMO))
 
 
-# Starting Point
+### Targets
 
 ../apte: .depend .display $(OBJ)
 	@echo
 	@echo The executable :
 	@echo
-	$(OCAMLOPT) -o $(EXECUTABLE) $(OCAMLFLAGS) $(OBJ)
+	$(NV)echo $(OCAMLC_UC) -o $(EXECUTABLE)
+	$(V)$(OCAMLC) -o $(EXECUTABLE) $(OCAMLFLAGS) $(OBJ)
 	@echo
 	@echo ----- Some Statistics -----
 	@echo
 	@echo Number of line of the program :
 	@find . -name "*.ml" -or -name "*.mli" -or -name "*.mly" -or -name "*.mll" | xargs cat | wc -l
-
-# Clean up
 
 clean:
 	@echo ----- Clean $(NAME_PROGRAMME) -----
@@ -52,29 +77,24 @@ clean:
 	rm -f .depend
 	rm -rf ../log
 
-# Display
-
 .display: $(ML)
 	@echo ----------------------------------------------
 	@echo          Compilation of $(NAME_PROGRAMME) $(VERSION)
 	@echo ----------------------------------------------
 	@touch .display
 
-# Common rules
 
-.SUFFIXES: .ml .mli .cmo .cmi .cmx .mll .mly
+### Common rules
 
-.ml.cmo:
-	@echo OCAMLC -c $<
-	@$(OCAMLC) $(OCAMLFLAGS) -c $<
+.SUFFIXES: .ml .mli .$(CMO) .cmi .mll .mly
+
+.ml.$(CMO):
+	$(NV)echo $(OCAMLC_UC) -c $<
+	$(V)$(OCAMLC) $(OCAMLFLAGS) -c $<
 
 .mli.cmi:
-	@echo OCAMLOPT -c $<
-	@$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
-
-.ml.cmx:
-	@echo OCAMLOPT -c $<
-	@$(OCAMLOPT) $(OCAMLOPTFLAGS) -c $<
+	$(NV)echo $(OCAMLC_UC) -c $<
+	$(V)$(OCAMLC) $(OCAMLFLAGS) -c $<
 
 .mll.ml:
 	ocamllex $<
@@ -82,11 +102,13 @@ clean:
 .mly.ml:
 	ocamlyacc -v $<
 
-# Dependencies
+
+### Dependencies
 
 SOURCES = $(wildcard *.ml) $(wildcard *.mli) \
           $(wildcard */*.ml) $(wildcard */*.mli)
-.depend: $(SOURCES) $(GENERATED_SOURCES)
-	$(OCAMLDEP) $(INCLUDES) $(SOURCES) $(GENERATED_SOURCES) > .depend
+.depend: $(SOURCES) $(GENERATED_SOURCES) Makefile
+	$(NV)echo OCAMLDEP
+	$(V)$(OCAMLDEP) $(INCLUDES) $(SOURCES) $(GENERATED_SOURCES) > .depend
 
 -include .depend
