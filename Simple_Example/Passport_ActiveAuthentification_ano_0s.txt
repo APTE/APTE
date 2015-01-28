@@ -6,11 +6,9 @@ free c.
 free cp1.
 free cp2.
 free cp3.
-free cp4.
 free cr1.
 free cr2.
 free cr3.
-free cr4.
 
 fun h/1.
 fun mac/2.
@@ -22,6 +20,7 @@ fun skP2/0.
 fun skP3/0.
 fun skP4/0.
 fun skPA/0.
+
 
 # Description of the different roles.
 
@@ -67,20 +66,14 @@ let wholeSystem =
   in(c,zz);
   out(c,KPuDS);
   new ksenc; new ksmac;
-  ((ePassportAA KPrDS skP1 cp1 cr1 ksenc ksmac) |
-   (ePassportAA KPrDS skPA cp2 cr2 ksenc ksmac) |
-   (ePassportAA KPrDS skP3 cp3 cr3 ksenc ksmac) |
-   (ePassportAA KPrDS skP4 cp4 cr4 ksenc ksmac) ).
+  ((ePassportAA KPrDS skP1 cp1 cr1 ksenc ksmac)).
 
-let wholeSystem_A = 
+let wholeSystem_A =   
   new KPrDS;
   let KPuDS = pk(KPrDS) in
   in(c,zz);
   out(c,KPuDS);
   new ksenc; new ksmac;
-  ((ePassportAA KPrDS skP1 cp1 cr1 ksenc ksmac) |
-   (ePassportAA KPrDS skP2 cp2 cr2 ksenc ksmac) |
-   (ePassportAA KPrDS skP3 cp3 cr3 ksenc ksmac) |
-   (ePassportAA KPrDS skP4 cp4 cr4 ksenc ksmac) ).
+  ((ePassportAA KPrDS skPA cp1 cr1 ksenc ksmac)).
 
 equivalence wholeSystem and wholeSystem_A.
