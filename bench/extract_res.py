@@ -153,7 +153,12 @@ def main():
                         nbExplo = int(benchTests.split("explorations:")[1].split(".")[0])
                     else:
                         nbExplo = -1
-                    time = float(benchTests.split("obtained in")[1].split(" seconds")[0])
+                    if "KILLED" in benchTests:
+                        time = 3600*float(benchTests.split("[>")[1].split("h]")[0])
+                        killed = True
+                    else:
+                        time = float(benchTests.split("obtained in")[1].split(" seconds")[0])
+                        killed = False
                     logging.debug("New test: " + testName + "|: True? " + str(isTrue) + ", nbExplo: " + str(nbExplo) +
                                  ", date: " + date + ", time: " + str(time) + "  |  ")
                     testDico = {
@@ -162,6 +167,7 @@ def main():
                         "res" : isTrue,      # bool
                         "date" : date,       # string
                         "time" : time,       # float
+                        "killed" : killed,   # bool
                         "nbExplo" : nbExplo, # int
                         "fileFrom": log,     # string
                     }
