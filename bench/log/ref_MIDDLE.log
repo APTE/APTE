@@ -56,6 +56,9 @@ Result obtained in 10558.892000 seconds
 
  --- Benchmark of Protocol: Simple_bench_10par --- 
                                                   2015-01-13 12:02:51.576136
+KILLED
+Result obtained in [> 65h]
+
 
  --- Benchmark of Protocol: Simple_bench_3par --- 
                                                   2015-01-14 12:14:47.807771
