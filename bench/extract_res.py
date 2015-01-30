@@ -12,6 +12,7 @@ import pprint
 import logging
 import math
 import marshal
+import argparse
 
 import dateutil.parser
 from rainbow_logging_handler import RainbowLoggingHandler
@@ -20,6 +21,14 @@ from texttable import *
 import data
 from utils import *
 
+parser = argparse.ArgumentParser(description='Extract results of benchmarks from log files.')
+parser.add_argument('--latex',
+                    help='you can choose to write all extracted results in a Latex file')
+
+parser.add_argument('--vers',
+                    help='you can choose to only extacts results for ref/comp/red using --vers paper')
+
+args = parser.parse_args()
 isLoad = True
 dateMajorPatch = dateutil.parser.parse('2015-01-26 19:20:38.616735')
 
@@ -223,7 +232,11 @@ def main():
           "Nb. of Tests: %d. Number of versions: %d. Number of new tests: %d. Number of rewrites: %d." % (nbTests, nbVers, nbNewTests, nbRewrite))
 
     print2("\n~~~~~~~~~ Results ~~~~~~~~~")
-    toPrint = fromVersToTests(VersionsDico, TestsDico)
+    if args.vers:
+        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="paper")
+    else:
+        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="all")
+
     logging.debug(toPrint)
     toPrintColor = toPrint
     toPrintColor = toPrintColor.replace(">(", bcolors.HEADER + "> ")
@@ -238,11 +251,16 @@ def main():
 
 
     print(toPrintColor)
-    print2("Captions: [> X <] if the returned result is false, [.] if is there is no benchmark, [--> t <--] for new tests and [[t]] if test performed in the last 2 hours.")
+    print2("Captions: [> X <] if the returned result is false, [.] if is there is no benchmark, [-> t <-] for new tests and [[t]] if test performed in the last 2 hours.")
     logging.error("#" * 80 + "\n")
 
     dicoFile = open(dicoPath, 'wb')
     marshal.dump(VersionsDico, dicoFile)
     dicoFile.close()
+
+    if args.latex:
+        fileLatex = open(args.latex, 'w')
+        fileLatex.write(str(fromVersToTests(VersionsDico, TestsDico, toLatex=True)))
+        fileLatex.close()
 
 main()

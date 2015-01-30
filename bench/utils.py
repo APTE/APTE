@@ -16,6 +16,7 @@ import marshal
 import dateutil.parser
 from rainbow_logging_handler import RainbowLoggingHandler
 from texttable import *
+from tabulate import tabulate
 
 import data
 
@@ -80,6 +81,9 @@ def findTest(fileName, dicoTests):
             resKey = testKey
             return(resKey)
 
+def printLatexMatrix(matrix):
+    return(tabulate(matrix[1:], matrix[0], tablefmt="latex"))
+
 def pprintMatrix(matrix):
     lm = len(matrix[0])-1
     table = Texttable()
@@ -107,7 +111,7 @@ def extractResults(dicoV, sortedV, dicoT, keyT):
         found = False
         for bench in versionBenchs:
             if (not(found) and
-                 versionBenchs[bench]["file"].strip() == dicoT[keyT]["file"].strip()):
+                versionBenchs[bench]["file"].strip() == dicoT[keyT]["file"].strip()):
                 #res.append((versionBenchs[bench]["time"], versionBenchs[bench]["nbExplo"]))
                 if versionBenchs[bench]["res"] != dicoT[keyT]["res"]:
                     res.append("> X <")
@@ -124,18 +128,27 @@ def extractResults(dicoV, sortedV, dicoT, keyT):
             res.append(".")
     return(res)
 
-def fromVersToTests(dicoVersions, dicoTests):
+def fromVersToTests(dicoVersions, dicoTests, toLatex=False, vers="all"):
     sortedVersions = ['ref', 'old_comp', 'comp_no_impr', 'comp',  'old_red',  'red_no_2', 'red_no_impr', 'red_no_nouse', 'red']
     listTestsKey = sorted(dicoTests.keys())
     listTestsFile = map(lambda x: dicoTests[x]['file'], listTestsKey)
     # first line of the matrix:
-    matrix = [[" / "] + sortedVersions]
+    fstLine = [" / "] + sortedVersions
+    if vers != "all":
+        fstLine = [fstLine[0], fstLine[1], fstLine[4], fstLine[9]]
+    matrix = [fstLine]
     for i in range(len(listTestsFile)):
         keyTest = listTestsKey[i]
         fileName = listTestsFile[i]
         listResults = extractResults(dicoVersions, sortedVersions, dicoTests, keyTest)
-        matrix.append(listResults)
-    return(pprintMatrix(matrix))
+        if vers=="all":
+            matrix.append(listResults)
+        else:
+            matrix.append([listResults[0], listResults[1], listResults[4], listResults[9]])                      
+    if toLatex:
+        return(printLatexMatrix(matrix))
+    else:
+        return(pprintMatrix(matrix))
 
 def setNoNew(dico):
     for versKey in dico:
