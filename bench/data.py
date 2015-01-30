@@ -5,13 +5,13 @@ TESTS = {
     'NSL_L_1' : {
         'res' : True,
         'name' : "Needham Shroeder Love Public Key: Strong secrecy of the nonce N_b (Bob's nonce) - 1 session of (Alice | Server | Bob)",
-        'file' : 'Simple_Example/Auth_Needham_Schroeder_Love_strongSec_1s.txt',
+        'file' : 'Auth_Needham_Schroeder_Love_strongSec_1s.txt',
         'cat' : 3,
     },
     'NSL_L_2' : {
         'res' : True,
         'name' : "Needham Shroeder Love Public Key: Strong secrecy of the nonce N_b (Bob's nonce) - 2 sessions of (Alice | Server | Bob)",
-        'file' : 'Simple_Example/Auth_Needham_Schroeder_Love_strongSec_2s.txt',
+        'file' : 'Auth_Needham_Schroeder_Love_strongSec_2s.txt',
         'cat' : 3,
     },
     'Pass_PA+AA_ano_0' : {

@@ -42,9 +42,9 @@ def main():
         log_all.flush()
 
     list_tests_tout = (glob.glob('../Simple_Example/Simple_*.txt') +
-                       glob.glob('../Simple_Example/Passport_*.txt'))
+                       glob.glob('../Simple_Example/Passport_*.txt') +
+                       glob.glob('../Simple_Example/Auth_*.txt'))
     list_tests_tout = filter(lambda s : utils.filterData(s,data.TESTS), list_tests_tout)
-
     list_binaries_tout = glob.glob('../apte_*')
     onlyNew = False
     if list_binaries_tout == []:
