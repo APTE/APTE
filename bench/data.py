@@ -4,19 +4,19 @@
 TESTS = {
     'AKA_3G_1s' : {
         'res' : True,
-        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 1 session of (Mobile Station | Network)"
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 1 session of (Mobile Station | Network)",
         'file' : '3G_PPAuthentication_sec_1s.txt',
         'cat' : 3,
     },
     'AKA_3G_2s' : {
         'res' : True,
-        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 2 sessions of (Mobile Station | Network)"
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 2 sessions of (Mobile Station | Network)",
         'file' : '3G_PPAuthentication_sec_2s.txt',
         'cat' : 3,
     },
     'AKA_3G_3s' : {
         'res' : True,
-        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 3 sessions of (Mobile Station | Network)"
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 3 sessions of (Mobile Station | Network)",
         'file' : '3G_PPAuthentication_sec_3s.txt',
         'cat' : 3,
     },
