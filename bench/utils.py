@@ -90,13 +90,13 @@ def pprintMatrix(matrix):
     table.set_cols_width([firstWidth]+ ([width]*lm))
     table.set_cols_align(["l"] + (["c"]*lm))
     table.set_cols_dtype(['t'] +  # text 
-                         (['a']*lm)) # automatic
+                         (['t']*lm)) # automatic
     # table.set_cols_valign(["t", "m", "b"])
     table.add_rows(matrix)
     return(table.draw())
 
 def prettyFloat(f):
-    return("%.3e" % f)
+    return("%.2E" % f)
 
 def extractResults(dicoV, sortedV, dicoT, keyT):
     # First column of the line:
@@ -118,7 +118,7 @@ def extractResults(dicoV, sortedV, dicoT, keyT):
                 elif dateutil.parser.parse(versionBenchs[bench]["date"]) > datetime.now() + timedelta(hours=-2):
                     res.append("[" + prettyFloat(versionBenchs[bench]["time"]) + "]")
                 else:
-                    res.append(versionBenchs[bench]["time"])
+                    res.append(prettyFloat(versionBenchs[bench]["time"]))
                 found = True
         if not(found):
             res.append(".")
