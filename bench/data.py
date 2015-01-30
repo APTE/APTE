@@ -2,6 +2,36 @@
 # -*- coding: iso-8859-1 -*-
 
 TESTS = {
+    'AKA_3G_1s' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 1 session of (Mobile Station | Network)",
+        'file' : '3G_PPAuthentication_sec_1s.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_2s' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 2 sessions of (Mobile Station | Network)",
+        'file' : '3G_PPAuthentication_sec_2s.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_3s' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 3 sessions of (Mobile Station | Network)",
+        'file' : '3G_PPAuthentication_sec_3s.txt',
+        'cat' : 3,
+    },
+    'NSL_L_1' : {
+        'res' : True,
+        'name' : "Needham Shroeder Love Public Key: Strong secrecy of the nonce N_b (Bob's nonce) - 1 session of (Alice | Server | Bob)",
+        'file' : 'Auth_Needham_Schroeder_Love_strongSec_1s.txt',
+        'cat' : 3,
+    },
+    'NSL_L_2' : {
+        'res' : True,
+        'name' : "Needham Shroeder Love Public Key: Strong secrecy of the nonce N_b (Bob's nonce) - 2 sessions of (Alice | Server | Bob)",
+        'file' : 'Auth_Needham_Schroeder_Love_strongSec_2s.txt',
+        'cat' : 3,
+    },
     'Pass_PA+AA_ano_0' : {
         'res' : True,
         'name' : 'Passport: Active Authentification in parallel with Passive Authentication - Anonymity of one Passport + 0 symmetric session P+R',

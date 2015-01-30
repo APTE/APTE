@@ -12,6 +12,7 @@ import pprint
 import logging
 import math
 import marshal
+import argparse
 
 import dateutil.parser
 from rainbow_logging_handler import RainbowLoggingHandler
@@ -20,6 +21,14 @@ from texttable import *
 import data
 from utils import *
 
+parser = argparse.ArgumentParser(description='Extract results of benchmarks from log files.')
+parser.add_argument('--latex',
+                    help='you can choose to write all extracted results in a Latex file')
+
+parser.add_argument('--vers',
+                    help='you can choose to only extacts results for ref/comp/red using --vers paper')
+
+args = parser.parse_args()
 isLoad = True
 dateMajorPatch = dateutil.parser.parse('2015-01-26 19:20:38.616735')
 
@@ -98,7 +107,7 @@ def main():
     listLog = glob.glob('log/*.log')
     dicoPath = "summary/DumpRes.json"
     TestsDico = TESTSDICO
-    if isLoad:
+    if isLoad and (os.path.exists(dicoPath)):
         dicoFile = open(dicoPath, 'rb')
         VersionsDico = marshal.load(dicoFile)
         dicoFile.close()
@@ -153,15 +162,21 @@ def main():
                         nbExplo = int(benchTests.split("explorations:")[1].split(".")[0])
                     else:
                         nbExplo = -1
-                    time = float(benchTests.split("obtained in")[1].split(" seconds")[0])
+                    if "KILLED" in benchTests:
+                        time = 3600*float(benchTests.split("[>")[1].split("h]")[0])
+                        killed = True
+                    else:
+                        time = float(benchTests.split("obtained in")[1].split(" seconds")[0])
+                        killed = False
                     logging.debug("New test: " + testName + "|: True? " + str(isTrue) + ", nbExplo: " + str(nbExplo) +
                                  ", date: " + date + ", time: " + str(time) + "  |  ")
                     testDico = {
                         "new" : True,        # bool
                         "file": testFile,    # str
-                        "res" : isTrue,      # bool
+                        "res" : killed or isTrue, # bool
                         "date" : date,       # string
                         "time" : time,       # float
+                        "killed" : killed,   # bool
                         "nbExplo" : nbExplo, # int
                         "fileFrom": log,     # string
                     }
@@ -217,24 +232,35 @@ def main():
           "Nb. of Tests: %d. Number of versions: %d. Number of new tests: %d. Number of rewrites: %d." % (nbTests, nbVers, nbNewTests, nbRewrite))
 
     print2("\n~~~~~~~~~ Results ~~~~~~~~~")
-    toPrint = fromVersToTests(VersionsDico, TestsDico)
+    if args.vers:
+        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="paper")
+    else:
+        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="all")
+
     logging.debug(toPrint)
     toPrintColor = toPrint
-    toPrintColor = toPrintColor.replace(" >", " >" + bcolors.FAIL)
+    toPrintColor = toPrintColor.replace(">(", bcolors.HEADER + "> ")
+    toPrintColor = toPrintColor.replace(")", bcolors.ENDC + " ")
+    toPrintColor = toPrintColor.replace(" > ", " > " + bcolors.FAIL)
     toPrintColor = toPrintColor.replace("< ", bcolors.ENDC + "< ")
-    toPrintColor = toPrintColor.replace("-->", "-->" + bcolors.WARNING)
-    toPrintColor = toPrintColor.replace("<--", bcolors.ENDC + "<--")
+    toPrintColor = toPrintColor.replace("->", "->" + bcolors.WARNING)
+    toPrintColor = toPrintColor.replace("<-", bcolors.ENDC + "<-")
     toPrintColor = toPrintColor.replace(" [", " [" + bcolors.HEADER)
     toPrintColor = toPrintColor.replace("] ", bcolors.ENDC + "] ")
     toPrintColor = toPrintColor.replace(" . ", bcolors.OKBLUE + " . " + bcolors.ENDC)
 
 
     print(toPrintColor)
-    print2("Captions: [> X <] if the returned result is false, [.] if is there is no benchmark, [--> t <--] for new tests and [[t]] if test performed in the last 2 hours.")
+    print2("Captions: [> X <] if the returned result is false, [.] if is there is no benchmark, [-> t <-] for new tests and [[t]] if test performed in the last 2 hours.")
     logging.error("#" * 80 + "\n")
 
     dicoFile = open(dicoPath, 'wb')
     marshal.dump(VersionsDico, dicoFile)
     dicoFile.close()
+
+    if args.latex:
+        fileLatex = open(args.latex, 'w')
+        fileLatex.write(str(fromVersToTests(VersionsDico, TestsDico, toLatex=True)))
+        fileLatex.close()
 
 main()
