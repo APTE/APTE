@@ -1,0 +1,14 @@
+#############  Benchmarks for POR ############
+# 0 IN.OUT in parallel
+
+# Channels
+
+
+# Public constant
+free ok.
+let P = 
+
+
+( in(c-1, x); if x = ok then out(c-1, o-1) ).
+
+equivalence P and P.
