@@ -22,13 +22,14 @@ new n4;
 new n5;
 new n6;
 new n7;
-( in(c0, x); if x = ok then out(c0, o0) ) |
-( in(c1, x); if x = ok then out(c1, o1) ) |
-( in(c2, x); if x = ok then out(c2, o2) ) |
-( in(c3, x); if x = ok then out(c3, o3) ) |
-( in(c4, x); if x = ok then out(c4, o4) ) |
-( in(c5, x); if x = ok then out(c5, o5) ) |
-( in(c6, x); if x = ok then out(c6, o6) ) |
-( in(c7, x); if x = ok then out(c7, o7) ).
+(( in(c0, x); if x = ok then out(c0, n0) ) |
+( in(c1, x); if x = ok then out(c1, n1) ) |
+( in(c2, x); if x = ok then out(c2, n2) ) |
+( in(c3, x); if x = ok then out(c3, n3) ) |
+( in(c4, x); if x = ok then out(c4, n4) ) |
+( in(c5, x); if x = ok then out(c5, n5) ) |
+( in(c6, x); if x = ok then out(c6, n6) ) |
+( in(c7, x); if x = ok then out(c7, n7) )
+).
 
 equivalence P and P.

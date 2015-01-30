@@ -14,9 +14,10 @@ new n0;
 new n1;
 new n2;
 new n3;
-( in(c0, x); if x = ok then out(c0, o0) ) |
-( in(c1, x); if x = ok then out(c1, o1) ) |
-( in(c2, x); if x = ok then out(c2, o2) ) |
-( in(c3, x); if x = ok then out(c3, o3) ).
+(( in(c0, x); if x = ok then out(c0, n0) ) |
+( in(c1, x); if x = ok then out(c1, n1) ) |
+( in(c2, x); if x = ok then out(c2, n2) ) |
+( in(c3, x); if x = ok then out(c3, n3) )
+).
 
 equivalence P and P.

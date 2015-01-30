@@ -13,11 +13,11 @@ def gen(n):
 
     res += ("let P = \n")
     res += "\n".join([("new n%d;" % i) for i in range(n)])
-    res += "\n"
+    res += "\n("
     res += "\n".join([
-            ("( in(c%d, x); if x = ok then out(c%d, o%d) ) |" % (i,i,i))
+            ("( in(c%d, x); if x = ok then out(c%d, n%d) ) |" % (i,i,i))
             for i in range(n-1)])
-    res += ("\n( in(c%d, x); if x = ok then out(c%d, o%d) ).\n\n" % (n-1,n-1,n-1))
+    res += ("\n( in(c%d, x); if x = ok then out(c%d, n%d) )\n).\n\n" % (n-1,n-1,n-1))
 
     res += "equivalence P and P."
     return(res)

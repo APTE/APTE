@@ -293,12 +293,6 @@ TESTS = {
         'name' : 'Many parallels, complex tests - 7',
         'file' : 'Simple_tests_h_7par.txt',
     },
-'Bench_Graph_0' : {
-        'res' : True,
-        'name' : 'Benchmarks for POR - 0 sessions of very simple processes',
-        'file' : 'Simple_Benchmarks_Graph_0_par.txt',
-        'cat' : 4,
-    },
 'Bench_Graph_1' : {
         'res' : True,
         'name' : 'Benchmarks for POR - 1 sessions of very simple processes',

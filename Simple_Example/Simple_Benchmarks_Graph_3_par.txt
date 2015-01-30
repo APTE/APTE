@@ -12,8 +12,9 @@ let P =
 new n0;
 new n1;
 new n2;
-( in(c0, x); if x = ok then out(c0, o0) ) |
-( in(c1, x); if x = ok then out(c1, o1) ) |
-( in(c2, x); if x = ok then out(c2, o2) ).
+(( in(c0, x); if x = ok then out(c0, n0) ) |
+( in(c1, x); if x = ok then out(c1, n1) ) |
+( in(c2, x); if x = ok then out(c2, n2) )
+).
 
 equivalence P and P.

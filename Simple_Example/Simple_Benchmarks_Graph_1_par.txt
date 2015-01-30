@@ -8,7 +8,8 @@ free c0.
 free ok.
 let P = 
 new n0;
-
-( in(c0, x); if x = ok then out(c0, o0) ).
+(
+( in(c0, x); if x = ok then out(c0, n0) )
+).
 
 equivalence P and P.
