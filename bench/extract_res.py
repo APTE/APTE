@@ -98,7 +98,7 @@ def main():
     listLog = glob.glob('log/*.log')
     dicoPath = "summary/DumpRes.json"
     TestsDico = TESTSDICO
-    if isLoad:
+    if isLoad and (os.path.exists(dicoPath)):
         dicoFile = open(dicoPath, 'rb')
         VersionsDico = marshal.load(dicoFile)
         dicoFile.close()
@@ -164,7 +164,7 @@ def main():
                     testDico = {
                         "new" : True,        # bool
                         "file": testFile,    # str
-                        "res" : isTrue,      # bool
+                        "res" : killed or isTrue, # bool
                         "date" : date,       # string
                         "time" : time,       # float
                         "killed" : killed,   # bool
@@ -226,7 +226,9 @@ def main():
     toPrint = fromVersToTests(VersionsDico, TestsDico)
     logging.debug(toPrint)
     toPrintColor = toPrint
-    toPrintColor = toPrintColor.replace(" >", " >" + bcolors.FAIL)
+    toPrintColor = toPrintColor.replace(">(", bcolors.HEADER + "> ")
+    toPrintColor = toPrintColor.replace(")", bcolors.ENDC + "")
+    toPrintColor = toPrintColor.replace(" > ", " > " + bcolors.FAIL)
     toPrintColor = toPrintColor.replace("< ", bcolors.ENDC + "< ")
     toPrintColor = toPrintColor.replace("-->", "-->" + bcolors.WARNING)
     toPrintColor = toPrintColor.replace("<--", bcolors.ENDC + "<--")

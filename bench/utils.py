@@ -23,7 +23,7 @@ import data
 # First Column' width
 firstWidth = 17
 # Others Columns' width
-width = 10
+width = 13
 
 
 def extractBench(text):
@@ -95,6 +95,9 @@ def pprintMatrix(matrix):
     table.add_rows(matrix)
     return(table.draw())
 
+def prettyFloat(f):
+    return("%.3e" % f)
+
 def extractResults(dicoV, sortedV, dicoT, keyT):
     # First column of the line:
     res = [keyT]
@@ -109,9 +112,11 @@ def extractResults(dicoV, sortedV, dicoT, keyT):
                 if versionBenchs[bench]["res"] != dicoT[keyT]["res"]:
                     res.append("> X <")
                 elif versionBenchs[bench]["new"]:
-                    res.append("-->" + str(versionBenchs[bench]["time"]) + "<--")
+                    res.append("->" + prettyFloat(versionBenchs[bench]["time"]) + "<-")
+                elif not(None == versionBenchs[bench].get("killed")) and versionBenchs[bench]["killed"]:
+                    res.append(">(" + prettyFloat(versionBenchs[bench]["time"]) + ")")
                 elif dateutil.parser.parse(versionBenchs[bench]["date"]) > datetime.now() + timedelta(hours=-2):
-                    res.append("[" + str(versionBenchs[bench]["time"]) + "]")
+                    res.append("[" + prettyFloat(versionBenchs[bench]["time"]) + "]")
                 else:
                     res.append(versionBenchs[bench]["time"])
                 found = True
