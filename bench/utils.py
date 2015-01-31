@@ -128,9 +128,17 @@ def extractResults(dicoV, sortedV, dicoT, keyT):
             res.append(".")
     return(res)
 
+def cmpGraph(ex1, ex2):
+    if "Graph" in ex1 and "Graph" in ex2:
+        n1 = (int(ex1.split("Graph_")[1].split("_par")[0]))
+        n2 = (int(ex2.split("Graph_")[1].split("_par")[0]))
+        return(cmp(n1,n2))
+    else:
+        return(cmp(ex1,ex2))
+
 def fromVersToTests(dicoVersions, dicoTests, toLatex=False, vers="all"):
     sortedVersions = ['ref', 'old_comp', 'comp_no_impr', 'comp',  'old_red',  'red_no_2', 'red_no_impr', 'red_no_nouse', 'red']
-    listTestsKey = sorted(dicoTests.keys())
+    listTestsKey = sorted(dicoTests.keys(), cmp = cmpGraph)
     listTestsFile = map(lambda x: dicoTests[x]['file'], listTestsKey)
     # first line of the matrix:
     fstLine = [" / "] + sortedVersions

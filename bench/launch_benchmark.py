@@ -13,6 +13,10 @@ import data
 import utils
 ## I reuse an old script (for SPEC)
 
+def sortGraph(listEx):
+   listAssoc = [(int(ex.split("Graph_")[1].split("_par")[0]), ex) for ex in listEx]
+   listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
+   return([ex for (nb, ex) in listSorted])
 
 def main():
     # PARSING ARGSSS
@@ -116,15 +120,20 @@ def main():
                 list_tests += tests_m
             if "hard" in args.difficulty:
                 list_tests = [x for x in list_tests_tout if x not in list_tests]
+
     else:
         parser.print_help()
         list_tests = list_tests_tout
         list_binaries = list_binaries_tout
 
+    list_tests.sort()
+    
     if args.filter_tests:
         list_tests = filter(lambda s: args.filter_tests in s, list_tests_tout)
+        if args.filter_tests == "Graph":
+            list_tests = sortGraph(list_tests)
 
-    pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
+            pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
     pprint_all("Date: " + str(datetime.now()) + "\n")
     if not(args.version or args.difficulty):
         print("You use no options, are you sure? Look at the helping message above.")
@@ -139,7 +148,6 @@ def main():
     IND = " " * 50
 
     list_binaries.sort()
-    list_tests.sort()
     for binary in list_binaries:
         b_name = binary.split('../')[1]
         pprint_all("\n" + HEAD + "Starting a benchmark version: " + b_name + HEAD)
