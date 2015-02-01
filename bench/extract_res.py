@@ -142,7 +142,7 @@ def main():
                     nbTests = nbTests + 1
                     testName = test.split(".")[0]
                     testFile = test.strip() + ".txt"
-                    isTrue = ("true" in benchTests)
+                    isTrue = ("true" in benchTests or "KILLED" in benchTests)
                     date = benchTests.splitlines()[1].strip()
                     testKey = findTest(testFile, TestsDico)
                     if testKey == "" or testKey == None:
@@ -239,19 +239,19 @@ def main():
 
     logging.debug(toPrint)
     toPrintColor = toPrint
-    toPrintColor = toPrintColor.replace(">(", bcolors.HEADER + "> ")
+    toPrintColor = toPrintColor.replace(">(", bcolors.HEADER + "  ")
     toPrintColor = toPrintColor.replace(")", bcolors.ENDC + " ")
     toPrintColor = toPrintColor.replace(" > ", " > " + bcolors.FAIL)
     toPrintColor = toPrintColor.replace("< ", bcolors.ENDC + "< ")
     toPrintColor = toPrintColor.replace("->", "->" + bcolors.WARNING)
     toPrintColor = toPrintColor.replace("<-", bcolors.ENDC + "<-")
-    toPrintColor = toPrintColor.replace(" [", " [" + bcolors.HEADER)
+    toPrintColor = toPrintColor.replace(" [", " [" )
     toPrintColor = toPrintColor.replace("] ", bcolors.ENDC + "] ")
     toPrintColor = toPrintColor.replace(" . ", bcolors.OKBLUE + " . " + bcolors.ENDC)
 
 
     print(toPrintColor)
-    print2("Captions: [> X <] if the returned result is false, [.] if is there is no benchmark, [-> t <-] for new tests and [[t]] if test performed in the last 2 hours.")
+    print2("Captions: [> X <] if the returned result is false, [.] if is there is no benchmark, [-> t <-] for new tests, [NonTerm] if we killed the process because either it took more tahn 20 hours or it consumed more than 15GO of RAM , and [[t]] if test performed in the last 2 hours.")
     logging.error("#" * 80 + "\n")
 
     dicoFile = open(dicoPath, 'wb')
@@ -260,7 +260,7 @@ def main():
 
     if args.latex:
         fileLatex = open(args.latex, 'w')
-        fileLatex.write(str(fromVersToTests(VersionsDico, TestsDico, toLatex=True)))
+        fileLatex.write(str(fromVersToTests(VersionsDico, TestsDico, toLatex=True, vers="paper")))
         fileLatex.close()
 
 main()

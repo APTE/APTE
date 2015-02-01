@@ -189,12 +189,6 @@ TESTS = {
         'file' : 'Passport_PassiveAuthentification_ano_3s.txt',
         'cat' : 2,
     },
-    'Pass_PA+AA_ano' : {
-        'res' : True,
-        'name' : 'Passport: Passive|Active Authentification - 1 session - Anonymity',
-        'file' : 'Passport_PA+AA.txt',
-        'cat' : 2,
-    },
     'WMF_1s' : {
         'res' : True,
         'name' : 'Wide Mouth Frog - 1 session - authentfication',

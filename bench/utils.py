@@ -118,7 +118,8 @@ def extractResults(dicoV, sortedV, dicoT, keyT):
                 elif versionBenchs[bench]["new"]:
                     res.append("->" + prettyFloat(versionBenchs[bench]["time"]) + "<-")
                 elif not(None == versionBenchs[bench].get("killed")) and versionBenchs[bench]["killed"]:
-                    res.append(">(" + prettyFloat(versionBenchs[bench]["time"]) + ")")
+#                    res.append(">(" + prettyFloat(versionBenchs[bench]["time"]) + ")")
+                    res.append(">(NonTerm)")
                 elif dateutil.parser.parse(versionBenchs[bench]["date"]) > datetime.now() + timedelta(hours=-2):
                     res.append("[" + prettyFloat(versionBenchs[bench]["time"]) + "]")
                 else:
