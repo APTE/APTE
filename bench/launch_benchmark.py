@@ -49,7 +49,7 @@ def main():
                        glob.glob('../Simple_Example/Passport_*.txt') +
                        glob.glob('../Simple_Example/Auth_*.txt') +
                        glob.glob('../Simple_Example/3G_*.txt') +
-                       glob.glob('../Simple_Example/NS_*.txt'))
+                       glob.glob('../Simple_Example/NS-*.txt'))
     list_tests_tout = filter(lambda s : utils.filterData(s,data.TESTS), list_tests_tout)
     list_binaries_tout = glob.glob('../apte_*')
     onlyNew = False
