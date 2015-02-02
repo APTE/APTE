@@ -18,6 +18,11 @@ def sortGraph(listEx):
    listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
    return([ex for (nb, ex) in listSorted])
 
+def sortWMF(listEx):
+   listAssoc = [(int(ex.split("-key-")[1].split(".txt")[0]), ex) for ex in listEx]
+   listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
+   return([ex for (nb, ex) in listSorted])
+
 def main():
     # PARSING ARGSSS
     parser = argparse.ArgumentParser(description='Launch some benchmarks on different versions of APTE')
@@ -49,7 +54,8 @@ def main():
                        glob.glob('../Simple_Example/Passport_*.txt') +
                        glob.glob('../Simple_Example/Auth_*.txt') +
                        glob.glob('../Simple_Example/3G_*.txt') +
-                       glob.glob('../Simple_Example/NS*.txt'))
+                       glob.glob('../Simple_Example/NS*.txt') +
+                       glob.glob('../Simple_Example/WMF*.txt'))
     list_tests_tout = filter(lambda s : utils.filterData(s,data.TESTS), list_tests_tout)
     list_binaries_tout = glob.glob('../apte_*')
     onlyNew = False
@@ -133,7 +139,8 @@ def main():
         list_tests = filter(lambda s: args.filter_tests in s, list_tests_tout)
         if args.filter_tests == "Graph":
             list_tests = sortGraph(list_tests)
-
+        if args.filter_tests == "WMF":
+            list_tests = sortWMF(list_tests)
             pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
     pprint_all("Date: " + str(datetime.now()) + "\n")
     if not(args.version or args.difficulty):
