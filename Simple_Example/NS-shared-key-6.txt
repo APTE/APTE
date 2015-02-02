@@ -1,0 +1,118 @@
+# Needham Schroeder Symmetric Key
+#
+# 1.  A	->	S:  	A, B, Na
+# 2.  S	->	A:  	{Na, B, Kab, {Kab, A}Kbs}Kas
+# 3.  A	->	B:  	{Kab,A}Kbs
+# 4.  B	->	A:  	{req,Nb}Kab
+# 5.  A	->	B:  	{rep,Nb}Kab
+# Strong secrecy of Kab
+# 6.  B      ->     : {m}Kab versus {m}K with K fresh
+
+free a.
+free b.
+
+free c.
+free ca1. 
+free cb1.
+free cs1.
+free ca2. 
+free cb2.
+free cs2.
+
+free ok.
+free req.
+free rep.
+
+#######################################
+#    Description of role A played:
+# - on channel ca
+# - by a with key kas (shared with the server S)
+# - with responder b
+#######################################
+
+let processA ca a kas b =
+  new na;
+  out(ca,(a,b,na));
+  in(ca,xa);
+  let (xna,xb,xab,xmb) = sdec(xa,kas) in
+  if xna = na  && xb = b then
+    out(ca,xmb);
+    in(ca,xchall);
+    let (xreq,xnb) = sdec(xchall,xab) in
+    if xreq =req then
+    out(ca,senc((rep,xnb),xab)).
+
+#######################################
+#    Description of role B played:    
+# - on channel cb
+# - by b with key kbs (shared with the server S)
+# - with initiator a
+#######################################
+
+
+let processB cb b kbs a  =
+  in(cb,yb);
+  let (yab,ya)= sdec(yb,kbs) in
+  if ya = a then
+    new nb;
+    out(cb,senc((req, nb),yab));
+    in(cb,ychall);
+    let (yrep,ynb) = sdec(ychall,yab) in 
+    	if yrep = rep && ynb = nb then 0.
+
+let processBreal cb b kbs a  =
+  in(cb,yb);
+  let (yab,ya)= sdec(yb,kbs) in
+  if ya = a then
+    new nb;
+    out(cb,senc((req, nb),yab));
+    in(cb,ychall);
+    let (yrep,ynb) = sdec(ychall,yab) in 
+    	if yrep = rep && ynb = nb then 
+	out(cb,senc(ok,yab)).
+
+
+let processBideal cb b kbs a  =
+  in(cb,yb);
+  let (yab,ya)= sdec(yb,kbs) in
+  if ya = a then
+    new nb;
+    out(cb,senc((req, nb),yab));
+    in(cb,ychall);
+    let (yrep,ynb) = sdec(ychall,yab) in 
+    	if yrep = rep && ynb = nb then 
+	new k;
+	out(cb,senc(ok,k)).
+
+#######################################
+#    Description of role S played:    
+# - on channel cs
+# - to answer a request coming from a (with key kas) 
+# - who wants to communicate with b (with key kbs) 
+#######################################
+
+let processS cs a kas b kbs =
+	in(cs,zs); 
+	let (za,zb,zna) = zs in 
+	if za =a && zb = b then
+	new kab;
+	out(cs,senc((zna,zb,kab,senc((kab,za),kbs)),kas)).
+
+#######################################
+#   			Main                  #
+#######################################
+
+let Preal = 
+  in(c,zz); if zz= ok then
+  new kas; new kbs;
+( processA ca1 a kas b |  processBreal  cb1 b kbs a | processS cs1 a kas b kbs
+| processA ca2 a kas b |  processB cb2 b kbs a | processS cs2 a kas b kbs).
+
+
+let Pideal = 
+  in(c,zz); if zz= ok then
+  new kas; new kbs; 
+( processA ca1 a kas b |  processBideal  cb1 b kbs a | processS cs1 a kas b kbs
+| processA ca2 a kas b |  processB cb2 b kbs a | processS cs2 a kas b kbs).
+
+equivalence Preal and Pideal.
