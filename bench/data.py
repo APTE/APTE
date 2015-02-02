@@ -69,6 +69,32 @@ DICO = {
 }
 
 TESTS = {
+    'PrivateAuth_XX' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-XX.txt',
+        'cat' : 9,
+    },
+    'NS-Shared_diff_XX' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'NS-shared-key-XX-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_shared_diff_XX' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-XX.txt',
+        'cat' : 9,
+    },    
+
+    'WMF_SS_3' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 3 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-3.txt',
+        'cat' : 3,
+    },
+
     'WMF_SS_3' : {
         'res' : True,
         'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 3 agents among [Alice | Server | Bob]",

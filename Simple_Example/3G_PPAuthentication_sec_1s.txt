@@ -9,6 +9,8 @@ free cm2.
 free cs3.
 free cm3.
 
+free d.
+
 (* public identity of MS *)
 free imsi_wtn.
 
@@ -53,7 +55,7 @@ let AKA_SN k osqn c =
     let ck = f3(k, rand) in (
     let ik = f4(k, rand) in (
     let ak = f5(k, rand) in (
-    let autn = (senc((ak, r_sn), osqn), mac) in (
+    let autn = (senc(osqn, (ak, r_sn)), mac) in (
     let av = (rand, res, ck, ik, ak) in (
     out(c, (rand, autn));
     in(c, xres);
@@ -74,7 +76,7 @@ let AKA_SN_n k osqn c =
     let ck = f3(k, rand) in (
     let ik = f4(k, rand) in (
     let ak = f5(k, rand) in (
-    let autn = (senc((ak, r_sn), osqn), mac) in (
+    let autn = (senc(osqn,(ak, r_sn)), mac) in (
     let av = (rand, res, ck, ik, ak) in (
     out(c, (rand, autn));
     in(c, xres);
@@ -84,9 +86,6 @@ let AKA_SN_n k osqn c =
     )
     else (
        out(c, reject))))))))).
-
-let MS k osqn c =  (AKA_MS k osqn c).
-let SN k osqn c =  (AKA_SN k osqn c).
 
 let Proto_l = in(c,zz);
   new k;

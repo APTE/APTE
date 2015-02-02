@@ -50,13 +50,19 @@ def main():
         log_all.write(s)
         log_all.flush()
 
+    def new(s):
+       words = s.split("-")
+       return(("PrivateAuth" in words) or
+              ("shared" in words))
+
     list_tests_tout = (glob.glob('../Simple_Example/Simple_*.txt') +
                        glob.glob('../Simple_Example/Passport_*.txt') +
                        glob.glob('../Simple_Example/Auth_*.txt') +
                        glob.glob('../Simple_Example/3G_*.txt') +
                        glob.glob('../Simple_Example/NS*.txt') +
-                       glob.glob('../Simple_Example/WMF*.txt'))
-    list_tests_tout = filter(lambda s : utils.filterData(s,data.TESTS), list_tests_tout)
+                       glob.glob('../Simple_Example/WMF*.txt') +
+                       glob.glob('../Simple_Example/PrivateAuth*.txt'))
+    list_tests_tout = filter(lambda s : new(s) or utils.filterData(s,data.TESTS), list_tests_tout)
     list_binaries_tout = glob.glob('../apte_*')
     onlyNew = False
     if list_binaries_tout == []:
