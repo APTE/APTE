@@ -24,6 +24,15 @@ free cs2.
 free ca3.
 free cb3.
 free cs3.
+
+free ca4.
+free cb4.
+free cs4.
+
+free ca5.
+free cb5.
+free cs5.
+
 free K_is.
 
 #######################################
@@ -98,14 +107,39 @@ let P_1 = in(c,zz);
   new K_as; new K_bs ; new K_ab ;
 ( processS K_ab K_as K_bs cs |
   processA K_as I ca |
-  processB_1 K_bs K_ab cb
+  processB_1 K_bs K_ab cb |
+  processS K_ab K_as K_bs cs2 |
+  processA K_as I ca2 |
+  processB_1 K_bs K_ab cb2 |
+  processS K_ab K_as K_bs cs3 |
+  processA K_as I ca3 |
+  processB_1 K_bs K_ab cb3 |
+  processS K_ab K_as K_bs cs4 |
+  processA K_as I ca4 |
+  processB_1 K_bs K_ab cb4 |
+  processS K_ab K_as K_bs cs5 |
+  processA K_as I ca5 |
+  processB_1 K_bs K_ab cb5
 ).
 
 let P_2 = in(c,zz);
   new K_as; new K_bs ; new K_ab ;
 ( processS K_ab K_as K_bs cs |
   processA K_as I ca |
-  processB_2 K_bs K_ab cb
+  processB_2 K_bs K_ab cb |
+  processS K_ab K_as K_bs cs2 |
+  processA K_as I ca2 |
+  processB_2 K_bs K_ab cb2 |
+  processS K_ab K_as K_bs cs3 |
+  processA K_as I ca3 |
+  processB_2 K_bs K_ab cb3 |
+  processS K_ab K_as K_bs cs4 |
+  processA K_as I ca4 |
+  processB_2 K_bs K_ab cb4 |
+  processS K_ab K_as K_bs cs5 |
+  processA K_as I ca5 |
+  processB_2 K_bs K_ab cb5
+
 ).
 
 equivalence P_1 and P_2.

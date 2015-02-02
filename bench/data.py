@@ -69,6 +69,134 @@ DICO = {
 }
 
 TESTS = {
+    'PrivateAuth_XX' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-XX.txt',
+        'cat' : 9,
+    },
+    'NS-Shared_diff_XX' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'NS-shared-key-XX-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_shared_diff_XX' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-XX.txt',
+        'cat' : 9,
+    },    
+
+    'WMF_SS_3' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 3 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-3.txt',
+        'cat' : 3,
+    },
+
+    'WMF_SS_3' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 3 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-3.txt',
+        'cat' : 3,
+    },
+    'WMF_SS_4' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 4 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-4.txt',
+        'cat' : 3,
+    },
+    'WMF_SS_5' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 5 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-5.txt',
+        'cat' : 3,
+    },
+    'WMF_SS_6' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 6 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-6.txt',
+        'cat' : 3,
+    },
+    'WMF_SS_7' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 7 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-7.txt',
+        'cat' : 3,
+    },
+    'WMF_SS_8' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 8 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-8.txt',
+        'cat' : 3,
+    },
+    'WMF_SS_9' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 9 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-9.txt',
+        'cat' : 3,
+    },
+    'WMF_SS_10' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 10 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-10.txt',
+        'cat' : 3,
+    },
+    'WMF_SS_11' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 11 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-11.txt',
+        'cat' : 3,
+    },
+    'WMF_SS_12' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 12 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-12.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_3' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 3 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared-key-3.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_4' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 4 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared-key-4.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_5' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 5 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared-key-5.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_6' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 6 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared-key-6.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_7' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 7 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared-key-7.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_8' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 8 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared-key-8.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_9' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 9 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared-key-9.txt',
+        'cat' : 3,
+    },
     'NS_Sym_1s' : {
         'res' : True,
         'name' : "Needham Shroeder Symmetric: Authentication of Bob - 1 session of (Alice | Server | Bob)",
@@ -91,6 +219,12 @@ TESTS = {
         'res' : True,
         'name' : "Needham Shroeder Symmetric: Authentication of Bob - 4 sessions of (Alice | Server | Bob)",
         'file' : 'Auth_Needham_Shroeder_sym_auth_4s.txt',
+        'cat' : 3,
+    },
+    'NS_Sym_5s' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 5 sessions of (Alice | Server | Bob)",
+        'file' : 'Auth_Needham_Shroeder_sym_auth_5s.txt',
         'cat' : 3,
     },
     'AKA_3G_1s' : {

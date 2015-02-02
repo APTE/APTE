@@ -12,6 +12,7 @@ import pprint
 import logging
 import math
 import marshal
+import re
 
 import dateutil.parser
 from rainbow_logging_handler import RainbowLoggingHandler
@@ -74,12 +75,18 @@ def findVers(call, dicoVersions):
 def findTest(fileName, dicoTests):
     res = {}
     resKey = ""
+    nb = re.findall(r'\d+', fileName)
     for testKey in dicoTests:
         test = dicoTests[testKey]
         if (test["file"].strip() == fileName.strip()):
             res = test
             resKey = testKey
             return(resKey)
+        if (test["file"].strip().replace("XX", str(nb)) == fileName.strip()):
+            res = test
+            resKey = testKey
+            return(resKey)
+
 
 def printLatexMatrix(matrix):
     return(tabulate(matrix[1:], matrix[0], tablefmt="latex"))
