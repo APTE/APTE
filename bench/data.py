@@ -93,6 +93,12 @@ TESTS = {
         'file' : 'Auth_Needham_Shroeder_sym_auth_4s.txt',
         'cat' : 3,
     },
+    'NS_Sym_5s' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 5 sessions of (Alice | Server | Bob)",
+        'file' : 'Auth_Needham_Shroeder_sym_auth_5s.txt',
+        'cat' : 3,
+    },
     'AKA_3G_1s' : {
         'res' : True,
         'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 1 session of (Mobile Station | Network)",
