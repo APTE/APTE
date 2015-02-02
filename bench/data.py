@@ -69,6 +69,48 @@ DICO = {
 }
 
 TESTS = {
+    'NS_SharedK_3' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 3 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared_key_3.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_4' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 4 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared_key_4.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_5' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 5 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared_key_5.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_6' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 6 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared_key_6.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_7' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 7 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared_key_7.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_8' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 8 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared_key_8.txt',
+        'cat' : 3,
+    },
+    'NS_SharedK_9' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 9 agents among [Alice | Server | Bob]",
+        'file' : 'NS-shared_key_9.txt',
+        'cat' : 3,
+    },
     'NS_Sym_1s' : {
         'res' : True,
         'name' : "Needham Shroeder Symmetric: Authentication of Bob - 1 session of (Alice | Server | Bob)",
