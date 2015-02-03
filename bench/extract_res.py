@@ -26,7 +26,10 @@ parser.add_argument('--latex',
                     help='you can choose to write all extracted results in a Latex file')
 
 parser.add_argument('--vers',
-                    help='you can choose to only extacts results for ref/comp/red using --vers paper')
+                    help='you can choose to only extracts results for ref/comp/red using --vers paper')
+
+parser.add_argument('--tests',
+                    help='you can choose to only extracts of new tests')
 
 args = parser.parse_args()
 isLoad = True
@@ -101,9 +104,7 @@ def main():
     nbVers = 0
     nbNewTests = 0
     nbRewrite = 0
-    list_tests_tout = glob.glob('../Simple_Example/Simple_*.txt')
     list_binaries_tout = glob.glob('../apte_*')
-    list_tests = list_tests_tout
     listLog = glob.glob('log/*.log')
     dicoPath = "summary/DumpRes.json"
     TestsDico = TESTSDICO
@@ -150,7 +151,7 @@ def main():
                             continue
                         else:
                             logging.critical("The tests %s cannot be found.\n" % testFile)
-                            return()
+                            continue
                     testDico = TestsDico[testKey]
                     if testDico['res'] != isTrue:
                         if ((dateutil.parser.parse(date) < dateutil.parser.parse('2015-01-21 14:13:38.616735')) and
@@ -235,10 +236,15 @@ def main():
           "Nb. of Tests: %d. Number of versions: %d. Number of new tests: %d. Number of rewrites: %d." % (nbTests, nbVers, nbNewTests, nbRewrite))
 
     print2("\n~~~~~~~~~ Results ~~~~~~~~~")
-    if args.vers:
-        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="paper")
+    if args.tests:
+        testsFlag = "all"
     else:
-        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="all")
+        testsFlag = "notall"
+
+    if args.vers:
+        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="paper", tests=testsFlag)
+    else:
+        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="all", tests=testsFlag)
 
     logging.debug(toPrint)
     toPrintColor = toPrint
@@ -261,9 +267,10 @@ def main():
     marshal.dump(VersionsDico, dicoFile)
     dicoFile.close()
 
+    
     if args.latex:
         fileLatex = open(args.latex, 'w')
-        fileLatex.write(str(fromVersToTests(VersionsDico, TestsDico, toLatex=True, vers="paper")))
+        fileLatex.write(str(fromVersToTests(VersionsDico, TestsDico, toLatex=True, vers="paper", tests="notall")))
         fileLatex.close()
 
 main()

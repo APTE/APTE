@@ -181,7 +181,7 @@ def main():
         log_all.write("\n")
         pprint_all(IND + str(datetime.now()) + "\n")
         for file in list_tests:
-            t_name = file.split("/Simple_Example/")[1].split(".txt")[0]
+            t_name = file.split("/")[-1].split(".txt")[0]
             pprint_all(HEADA + "Benchmark of Protocol: " + t_name + HEADA)
             log_all.write("\n")
             pprint_all(IND + str(datetime.now()) + "\n") # timestamp

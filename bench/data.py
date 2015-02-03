@@ -69,12 +69,6 @@ DICO = {
 }
 
 TESTS = {
-    'PrivateAuth_XX' : {
-        'res' : True,
-        'name' : "TODO",
-        'file' : 'PrivateAuth-pub-key-XX.txt',
-        'cat' : 9,
-    },
     'NS-Shared_diff_4' : {
         'res' : True,
         'name' : "TODO",
@@ -289,38 +283,6 @@ TESTS = {
         'file' : 'NS-shared-key-9.txt',
         'cat' : 3,
     },
-    'NS_Sym_1s' : {
-        'res' : True,
-        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 1 session of (Alice | Server | Bob)",
-        'file' : 'Auth_Needham_Shroeder_sym_auth_1s.txt',
-        'cat' : 3,
-    },
-    'NS_Sym_2s' : {
-        'res' : True,
-        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 2 sessions of (Alice | Server | Bob)",
-        'file' : 'Auth_Needham_Shroeder_sym_auth_2s.txt',
-        'cat' : 3,
-    },
-    'NS_Sym_3s' : {
-        'res' : True,
-        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 3 sessions of (Alice | Server | Bob)",
-        'file' : 'Auth_Needham_Shroeder_sym_auth_3s.txt',
-        'cat' : 3,
-    },
-    'NS_Sym_4s' : {
-        'res' : True,
-        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 4 sessions of (Alice | Server | Bob)",
-        'file' : 'Auth_Needham_Shroeder_sym_auth_4s.txt',
-        'cat' : 3,
-    },
-    'NS_Sym_5s' : {
-        'res' : True,
-        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 5 sessions of (Alice | Server | Bob)",
-        'file' : 'Auth_Needham_Shroeder_sym_auth_5s.txt',
-        'cat' : 3,
-    },
-
-
     'AKA_3G_2' : {
         'res' : True,
         'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 2 agent among [Mobile Station, Network]",
@@ -349,18 +311,6 @@ TESTS = {
         'res' : True,
         'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 6 agent among [Mobile Station, Network]",
         'file' : '3G_PPAuthentication_sec_6.txt',
-        'cat' : 3,
-    },
-    'NSL_L_1' : {
-        'res' : True,
-        'name' : "Needham Shroeder Love Public Key: Strong secrecy of the nonce N_b (Bob's nonce) - 1 session of (Alice | Server | Bob)",
-        'file' : 'Auth_Needham_Schroeder_Love_strongSec_1s.txt',
-        'cat' : 3,
-    },
-    'NSL_L_2' : {
-        'res' : True,
-        'name' : "Needham Shroeder Love Public Key: Strong secrecy of the nonce N_b (Bob's nonce) - 2 sessions of (Alice | Server | Bob)",
-        'file' : 'Auth_Needham_Schroeder_Love_strongSec_2s.txt',
         'cat' : 3,
     },
      'Pass-PA_ano_2' : {
@@ -547,6 +497,48 @@ TESTS = {
 
 
     # TO REMOVE!
+    'NSL_L_1-old' : {
+        'res' : True,
+        'name' : "Needham Shroeder Love Public Key: Strong secrecy of the nonce N_b (Bob's nonce) - 1 session of (Alice | Server | Bob)",
+        'file' : 'Auth_Needham_Schroeder_Love_strongSec_1s.txt',
+        'cat' : 3,
+    },
+    'NSL_L_2-old' : {
+        'res' : True,
+        'name' : "Needham Shroeder Love Public Key: Strong secrecy of the nonce N_b (Bob's nonce) - 2 sessions of (Alice | Server | Bob)",
+        'file' : 'Auth_Needham_Schroeder_Love_strongSec_2s.txt',
+        'cat' : 3,
+    },
+    'NS_Sym_1s-old' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 1 session of (Alice | Server | Bob)",
+        'file' : 'Auth_Needham_Shroeder_sym_auth_1s.txt',
+        'cat' : 3,
+    },
+    'NS_Sym_2s-old' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 2 sessions of (Alice | Server | Bob)",
+        'file' : 'Auth_Needham_Shroeder_sym_auth_2s.txt',
+        'cat' : 3,
+    },
+    'NS_Sym_3s-old' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 3 sessions of (Alice | Server | Bob)",
+        'file' : 'Auth_Needham_Shroeder_sym_auth_3s.txt',
+        'cat' : 3,
+    },
+    'NS_Sym_4s-old' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 4 sessions of (Alice | Server | Bob)",
+        'file' : 'Auth_Needham_Shroeder_sym_auth_4s.txt',
+        'cat' : 3,
+    },
+    'NS_Sym_5s-old' : {
+        'res' : True,
+        'name' : "Needham Shroeder Symmetric: Authentication of Bob - 5 sessions of (Alice | Server | Bob)",
+        'file' : 'Auth_Needham_Shroeder_sym_auth_5s.txt',
+        'cat' : 3,
+    },
     'WMF_1s_old' : {
         'res' : True,
         'name' : 'Wide Mouth Frog - 1 session - authentfication',

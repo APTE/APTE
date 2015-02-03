@@ -148,7 +148,7 @@ def cmpGraph(ex1, ex2):
     else:
         return(cmp(ex1,ex2))
 
-def fromVersToTests(dicoVersions, dicoTests, toLatex=False, vers="all"):
+def fromVersToTests(dicoVersions, dicoTests, toLatex=False, vers="all", tests="all"):
     sortedVersions = ['ref', 'old_comp', 'comp_no_impr', 'comp',  'old_red',  'red_no_2', 'red_no_impr', 'red_no_nouse', 'red']
     listTestsKey = sorted(dicoTests.keys(), cmp = cmpGraph)
     listTestsFile = map(lambda x: dicoTests[x]['file'], listTestsKey)
@@ -158,13 +158,14 @@ def fromVersToTests(dicoVersions, dicoTests, toLatex=False, vers="all"):
         fstLine = [fstLine[0], fstLine[1], fstLine[4], fstLine[9]]
     matrix = [fstLine]
     for i in range(len(listTestsFile)):
-        keyTest = listTestsKey[i]
-        fileName = listTestsFile[i]
-        listResults = extractResults(dicoVersions, sortedVersions, dicoTests, keyTest)
-        if vers=="all":
-            matrix.append(listResults)
-        else:
-            matrix.append([listResults[0], listResults[1], listResults[4], listResults[9]])                      
+        if tests=="all" or (not("old" in listTestsKey[i])):
+            keyTest = listTestsKey[i]
+            fileName = listTestsFile[i]
+            listResults = extractResults(dicoVersions, sortedVersions, dicoTests, keyTest)
+            if vers=="all":
+                matrix.append(listResults)
+            else:
+                matrix.append([listResults[0], listResults[1], listResults[4], listResults[9]])                      
     if toLatex:
         return(printLatexMatrix(matrix))
     else:
