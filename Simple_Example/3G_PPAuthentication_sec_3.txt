@@ -1,0 +1,128 @@
+# G3/UMTS: AKA - Key Agreement protocol between
+#          - a mobile station (MS) (i.e. a mobile phone) and
+#          - a serving network (SN) (i.e., an antenna)
+# We test the strong secrecy of the shared key received by SN
+
+(* public communication channel *)
+free c.
+free cs1.
+free cm1.
+free cs2.
+free cm2.
+free cs3.
+free cm3.
+
+(* constant values *)
+free macFail.
+free syncFail.
+free reject.
+free cst.
+
+(* UMTS AKA protocol specific mac and key generation functions *)
+fun f1/2.
+fun f2/2.
+fun f3/2.
+fun f4/2.
+fun f5/2.
+
+###############################################
+#   Description of role Mobile Station played:
+#  - on channel cm
+#  - with a shared knwoledge (with SN) osqn
+#  - with mac/enc key k
+###############################################
+
+let MS k osqn cm = 
+    new r_ms;
+    in(cm, x);
+    let (xrand, xautn) = x in
+    let (msg, xmac) = xautn in
+    let ak = f5(xrand, k) in
+    let (xsqn, xr_sn)  = sdec(msg, ak) in
+    let mac = f1((xrand, xsqn), k) in
+    if xmac = mac then (
+       if xsqn = osqn then (
+       	  let res = f2(xrand, k) in
+	  let ck = f3(xrand, k) in
+	  let ik = f4(xrand, k) in
+	  out(cm, res);
+	  in(cm, xmsg))
+        else out(cm, syncFail))
+    else out(cm, macFail).
+
+################################################
+#   Description of role Serving Netwotk played:
+#  - on channel cs
+#  - with a shared knwoledge (with MS) osqn
+#  - with mac/enc key k
+###############################################
+
+let SN_real k osqn cs =
+    new rand;
+    new r_sn;
+    new s;
+    new r;
+    let mac = f1((rand, osqn), k) in
+    let res = f2(rand, k) in
+    let ck = f3(rand, k) in
+    let ik = f4(rand, k) in
+    let ak = f5(rand, k) in
+    let autn = (senc((osqn, r_sn), ak), mac) in
+    let av = (rand, res, ck, ik, ak) in
+    out(cs, (rand, autn));
+    in(cs, xres);
+    if xres = res then (       
+       out(cs, senc((s, r), ck));
+        (* SN sends cst with the new shared key ck *)
+       out(cs, senc(cst, ck)))
+    else out(cs, reject).
+
+(* In this version, SN_real sends a random none in the end instead of cst *)
+let SN_ideal k osqn cs =
+    new rand;
+    new r_sn;
+    new s;
+    new r;
+    let mac = f1((rand, osqn), k) in
+    let res = f2(rand, k) in
+    let ck = f3(rand, k) in
+    let ik = f4(rand, k) in
+    let ak = f5(rand, k) in
+    let autn = (senc((osqn, r_sn), ak), mac) in
+    let av = (rand, res, ck, ik, ak) in
+    out(cs, (rand, autn));
+    in(cs, xres);
+    if xres = res then (       
+       out(cs, senc((r, s), ck));
+        (* SN sends a nonce with the new shared key ck *)
+       new n;
+       out(cs, senc(n, ck)))
+    else (
+       out(cs, reject)).
+
+########################################
+# Whole systems (idealized and real)
+# If we consider multiple sessions, we
+# reuse the same key k (we consider same
+# phone) but we must choose different
+# fresh osqn (modeling an internal sync.
+# counter of sessions.
+########################################
+
+let AKA_real = in(c,zz);
+  new k;
+  new osqn1; 
+  new osqn2; 
+  new osqn3; 
+ ((MS k osqn1 cm1) | (SN_real k osqn1 cs1) |
+  (SN_real k osqn2 cs2)).
+
+let AKA_ideal = in(c,zz);
+  new k;
+  new osqn1; 
+  new osqn2; 
+  new osqn3; 
+ ((MS k osqn1 cm1) | (SN_ideal k osqn1 cs1) |
+  (SN_ideal k osqn2 cs2)).
+
+equivalence AKA_real and AKA_ideal.
