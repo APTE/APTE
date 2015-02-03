@@ -227,22 +227,40 @@ TESTS = {
         'file' : 'Auth_Needham_Shroeder_sym_auth_5s.txt',
         'cat' : 3,
     },
-    'AKA_3G_1s' : {
+    'AKA_3G_1' : {
         'res' : True,
-        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 1 session of (Mobile Station | Network)",
-        'file' : '3G_PPAuthentication_sec_1s.txt',
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 1 agent among [Mobile Station, Network]",
+        'file' : '3G_PPAuthentication_sec_1.txt',
         'cat' : 3,
     },
-    'AKA_3G_2s' : {
+    'AKA_3G_2' : {
         'res' : True,
-        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 2 sessions of (Mobile Station | Network)",
-        'file' : '3G_PPAuthentication_sec_2s.txt',
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 2 agent among [Mobile Station, Network]",
+        'file' : '3G_PPAuthentication_sec_2.txt',
         'cat' : 3,
     },
-    'AKA_3G_3s' : {
+    'AKA_3G_3' : {
         'res' : True,
-        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 3 sessions of (Mobile Station | Network)",
-        'file' : '3G_PPAuthentication_sec_3s.txt',
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 3 agent among [Mobile Station, Network]",
+        'file' : '3G_PPAuthentication_sec_3.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_4' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 4 agent among [Mobile Station, Network]",
+        'file' : '3G_PPAuthentication_sec_4.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_5' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 5 agent among [Mobile Station, Network]",
+        'file' : '3G_PPAuthentication_sec_5.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_6' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 6 agent among [Mobile Station, Network]",
+        'file' : '3G_PPAuthentication_sec_6.txt',
         'cat' : 3,
     },
     'NSL_L_1' : {
