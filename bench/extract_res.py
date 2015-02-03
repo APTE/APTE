@@ -146,8 +146,11 @@ def main():
                     date = benchTests.splitlines()[1].strip()
                     testKey = findTest(testFile, TestsDico)
                     if testKey == "" or testKey == None:
-                        logging.critical("The tests %s cannot be found.\n" % testFile)
-                        return()
+                        if "3G" in testFile and "s.txt" in testFile:
+                            continue
+                        else:
+                            logging.critical("The tests %s cannot be found.\n" % testFile)
+                            return()
                     testDico = TestsDico[testKey]
                     if testDico['res'] != isTrue:
                         if ((dateutil.parser.parse(date) < dateutil.parser.parse('2015-01-21 14:13:38.616735')) and

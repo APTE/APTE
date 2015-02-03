@@ -186,12 +186,6 @@ TESTS = {
     },
 
     
-    'WMF_SS_3' : {
-        'res' : True,
-        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 3 agents among [Alice | Server | Bob]",
-        'file' : 'WMF-shared-key-3.txt',
-        'cat' : 3,
-    },
 
     'WMF_SS_3' : {
         'res' : True,
