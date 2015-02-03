@@ -363,24 +363,24 @@ TESTS = {
         'file' : 'Auth_Needham_Schroeder_Love_strongSec_2s.txt',
         'cat' : 3,
     },
-    'Pass_PA+AA_ano_0' : {
-        'res' : True,
-        'name' : 'Passport: Active Authentification in parallel with Passive Authentication - Anonymity of one Passport + 0 symmetric session P+R',
-        'file' : 'Passport_PA+AA_0s.txt',
-        'cat' : 2,
-    },
-    'Pass_PA+AA_ano_1' : {
-        'res' : True,
-        'name' : 'Passport: Active Authentification in parallel with Passive Authentication - Anonymity of one Passport + 1 symmetric session P+R',
-        'file' : 'Passport_PA+AA_1s.txt',
-        'cat' : 2,
-    },
-    'Pass_PA+AA_ano_2' : {
-        'res' : True,
-        'name' : 'Passport: Active Authentification in parallel with Passive Authentication - Anonymity of one Passport + 2 symmetric session P+R',
-        'file' : 'Passport_PA+AA_2s.txt',
-        'cat' : 2,
-    },
+    # 'Pass_PA+AA_ano_0' : {
+    #     'res' : True,
+    #     'name' : 'Passport: Active Authentification in parallel with Passive Authentication - Anonymity of one Passport + 0 symmetric session P+R',
+    #     'file' : 'Passport_PA+AA_0s.txt',
+    #     'cat' : 2,
+    # },
+    # 'Pass_PA+AA_ano_1' : {
+    #     'res' : True,
+    #     'name' : 'Passport: Active Authentification in parallel with Passive Authentication - Anonymity of one Passport + 1 symmetric session P+R',
+    #     'file' : 'Passport_PA+AA_1s.txt',
+    #     'cat' : 2,
+    # },
+    # 'Pass_PA+AA_ano_2' : {
+    #     'res' : True,
+    #     'name' : 'Passport: Active Authentification in parallel with Passive Authentication - Anonymity of one Passport + 2 symmetric session P+R',
+    #     'file' : 'Passport_PA+AA_2s.txt',
+    #     'cat' : 2,
+    # },
     'Pass_AA_ano_0' : {
         'res' : True,
         'name' : 'Passport: Active Authentification - Anonymity of one Passport + 0 symmetric session P+R',
@@ -405,30 +405,67 @@ TESTS = {
         'file' : 'Passport_ActiveAuthentification_ano_3s.txt',
         'cat' : 2,
     },
-    'Pass_PA_ano_0' : {
+     'Pass_PA_ano_2' : {
         'res' : True,
-        'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 0 symmetric session P+R',
-        'file' : 'Passport_PassiveAuthentification_ano_0s.txt',
+        'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 2 agents among [Reader, Passport]',
+        'file' : 'PA_ano_2.txt',
         'cat' : 2,
     },
-    'Pass_PA_ano_1' : {
+     'Pass_PA_ano_3' : {
         'res' : True,
-        'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 1 symmetric session P+R',
-        'file' : 'Passport_PassiveAuthentification_ano_1s.txt',
+        'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 3 agents among [Reader, Passport]',
+        'file' : 'PA_ano_3.txt',
         'cat' : 2,
     },
-    'Pass_PA_ano_2' : {
+     'Pass_PA_ano_4' : {
         'res' : True,
-        'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 2 symmetric session P+R',
-        'file' : 'Passport_PassiveAuthentification_ano_2s.txt',
+        'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 4 agents among [Reader, Passport]',
+        'file' : 'PA_ano_4.txt',
         'cat' : 2,
     },
-    'Pass_PA_ano_3' : {
+     'Pass_PA_ano_5' : {
         'res' : True,
-        'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 3 symmetric session P+R',
-        'file' : 'Passport_PassiveAuthentification_ano_3s.txt',
+        'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 5 agents among [Reader, Passport]',
+        'file' : 'PA_ano_5.txt',
         'cat' : 2,
     },
+     'Pass_PA_ano_6' : {
+        'res' : True,
+        'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 6 agents among [Reader, Passport]',
+        'file' : 'PA_ano_6.txt',
+        'cat' : 2,
+    },
+     'Pass_PA_ano_7' : {
+        'res' : True,
+        'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 7 agents among [Reader, Passport]',
+        'file' : 'PA_ano_7.txt',
+        'cat' : 2,
+    },
+
+    # 'Pass_PA_ano_0' : {
+    #     'res' : True,
+    #     'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 0 symmetric session P+R',
+    #     'file' : 'Passport_PassiveAuthentification_ano_0s.txt',
+    #     'cat' : 2,
+    # },
+    # 'Pass_PA_ano_1' : {
+    #     'res' : True,
+    #     'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 1 symmetric session P+R',
+    #     'file' : 'Passport_PassiveAuthentification_ano_1s.txt',
+    #     'cat' : 2,
+    # },
+    # 'Pass_PA_ano_2' : {
+    #     'res' : True,
+    #     'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 2 symmetric session P+R',
+    #     'file' : 'Passport_PassiveAuthentification_ano_2s.txt',
+    #     'cat' : 2,
+    # },
+    # 'Pass_PA_ano_3' : {
+    #     'res' : True,
+    #     'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 3 symmetric session P+R',
+    #     'file' : 'Passport_PassiveAuthentification_ano_3s.txt',
+    #     'cat' : 2,
+    # },
     'WMF_1s' : {
         'res' : True,
         'name' : 'Wide Mouth Frog - 1 session - authentfication',

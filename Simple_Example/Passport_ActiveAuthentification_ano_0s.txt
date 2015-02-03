@@ -44,7 +44,6 @@ let AAreader ksenc ksmac pkP c =
   new rnd;
   let menc = senc((init,rnd),ksenc) in
   let mmac = mac(menc,ksmac) in
-  in(c,zz);
   out(c, (menc, mmac));
   in(c,x);
   let (xenc, xmac) = x in 
