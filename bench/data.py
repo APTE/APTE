@@ -69,6 +69,61 @@ DICO = {
 }
 
 TESTS = {
+    'PrivateAuth-2' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-2.txt',
+        'cat' : 9,
+    },
+    'PrivateAuth-3' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-3.txt',
+        'cat' : 9,
+    },
+    'PrivateAuth-4' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-4.txt',
+        'cat' : 9,
+    },
+    'PrivateAuth-5' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-5.txt',
+        'cat' : 9,
+    },
+    'PrivateAuth-6' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-6.txt',
+        'cat' : 9,
+    },
+    'PrivateAuth-5+' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-5+.txt',
+        'cat' : 9,
+    },
+    'PrivateAuth-6-' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-6-.txt',
+        'cat' : 9,
+    },
+    'PrivateAuth-4-diff' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-4-diff.txt',
+        'cat' : 9,
+    },
+    'PrivateAuth-6-diff' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-6-diff.txt',
+        'cat' : 9,
+    },
+
     'DS-Shared-3' : {
         'res' : True,
         'name' : "TODO",
