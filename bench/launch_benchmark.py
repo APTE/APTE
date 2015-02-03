@@ -37,6 +37,8 @@ def main():
                         help='you can choose the version beteween [ref,old_comp,comp,comp_no_impro,old_red,red,red_no_impro,red_no_nouse,red_no_2_nouse_improper]')
     parser.add_argument('-ft', '--filter_tests',
                         help='you can choose tests by giving a substrings')
+    parser.add_argument('-a', '--all',
+                        help='you can choose tests from the folder Simple_Example')
 
     args = parser.parse_args()
 
@@ -58,13 +60,17 @@ def main():
        return(("PrivateAuth" in words) or
               ("shared" in words))
 
-    list_tests_tout = (glob.glob('../Simple_Example/Simple_*.txt') +
-                       glob.glob('../Simple_Example/Passport_*.txt') +
-                       glob.glob('../Simple_Example/Auth_*.txt') +
-                       glob.glob('../Simple_Example/3G_*.txt') +
-                       glob.glob('../Simple_Example/NS*.txt') +
-                       glob.glob('../Simple_Example/WMF*.txt') +
-                       glob.glob('../Simple_Example/PrivateAuth*.txt'))
+    if args.all:
+       list_tests_tout = (glob.glob('../Simple_Example/Simple_*.txt') +
+                          glob.glob('../Simple_Example/Passport_*.txt') +
+                          glob.glob('../Simple_Example/Auth_*.txt') +
+                          glob.glob('../Simple_Example/3G_*.txt') +
+                          glob.glob('../Simple_Example/NS*.txt') +
+                          glob.glob('../Simple_Example/WMF*.txt') +
+                          glob.glob('../Simple_Example/PrivateAuth*.txt'))
+    else:
+       list_tests_tout = (glob.glob('protocols/*/*.txt'))
+       
     list_tests_tout = filter(lambda s : new(s) or utils.filterData(s,data.TESTS), list_tests_tout)
     list_binaries_tout = glob.glob('../apte_*')
     onlyNew = False
