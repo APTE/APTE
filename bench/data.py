@@ -69,6 +69,49 @@ DICO = {
 }
 
 TESTS = {
+    'DS-Shared-3' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'DS-shared-key-3.txt',
+        'cat' : 9,
+    },
+    'DS-Shared-4' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'DS-shared-key-4.txt',
+        'cat' : 9,
+    },
+    'DS-Shared-5' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'DS-shared-key-5.txt',
+        'cat' : 9,
+    },
+    'DS-Shared-6' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'DS-shared-key-6.txt',
+        'cat' : 9,
+    },
+    'DS-Shared-7' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'DS-shared-key-7.txt',
+        'cat' : 9,
+    },
+    'DS-Shared-8' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'DS-shared-key-8.txt',
+        'cat' : 9,
+    },
+    'DS-Shared-9' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'DS-shared-key-9.txt',
+        'cat' : 9,
+    },
+
     'NS-Shared_diff_4' : {
         'res' : True,
         'name' : "TODO",
