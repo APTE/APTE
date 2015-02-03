@@ -13,10 +13,10 @@ free cs3.
 free cm3.
 
 (* constant values *)
-fun macFail/0.
-fun syncFail/0.
-fun reject/0.
-fun cst/0.
+free macFail.
+free syncFail.
+free reject.
+free cst.
 
 (* UMTS AKA protocol specific mac and key generation functions *)
 fun f1/2.
@@ -96,7 +96,6 @@ let SN_ideal k osqn cs =
        out(cs, senc((r, s), ck));
         (* SN sends a nonce with the new shared key ck *)
        new n;
-       out(cs, cst);
        out(cs, senc(n, ck)))
     else (
        out(cs, reject)).
