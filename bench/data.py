@@ -363,37 +363,37 @@ TESTS = {
         'file' : 'Auth_Needham_Schroeder_Love_strongSec_2s.txt',
         'cat' : 3,
     },
-     'Pass_PA_ano_2' : {
+     'Pass-PA_ano_2' : {
         'res' : True,
         'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 2 agents among [Reader, Passport]',
         'file' : 'PA_ano_2.txt',
         'cat' : 2,
     },
-     'Pass_PA_ano_3' : {
+     'Pass-PA_ano_3' : {
         'res' : True,
         'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 3 agents among [Reader, Passport]',
         'file' : 'PA_ano_3.txt',
         'cat' : 2,
     },
-     'Pass_PA_ano_4' : {
+     'Pass-PA_ano_4' : {
         'res' : True,
         'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 4 agents among [Reader, Passport]',
         'file' : 'PA_ano_4.txt',
         'cat' : 2,
     },
-     'Pass_PA_ano_5' : {
+     'Pass-PA_ano_5' : {
         'res' : True,
         'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 5 agents among [Reader, Passport]',
         'file' : 'PA_ano_5.txt',
         'cat' : 2,
     },
-     'Pass_PA_ano_6' : {
+     'Pass-PA_ano_6' : {
         'res' : True,
         'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 6 agents among [Reader, Passport]',
         'file' : 'PA_ano_6.txt',
         'cat' : 2,
     },
-     'Pass_PA_ano_7' : {
+     'Pass-PA_ano_7' : {
         'res' : True,
         'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 7 agents among [Reader, Passport]',
         'file' : 'PA_ano_7.txt',
@@ -544,125 +544,127 @@ TESTS = {
         'file' : 'Simple_Benchmarks_Graph_24_par.txt',
         'cat' : 4,
     },
+
+
     # TO REMOVE!
-    'WMF_1s' : {
+    'WMF_1s_old' : {
         'res' : True,
         'name' : 'Wide Mouth Frog - 1 session - authentfication',
         'file' : 'Simple_wmf_1s.txt',
         'cat' : 1,
     },
-    'WMF_2s' : {
+    'WMF_2s_old' : {
         'res' : True,
         'name' : 'Wide Mouth Frog - 2 sessions - authentfication',
         'file' : 'Simple_wmf_2s.txt',
         'cat' : 1,
     },
-    'WMF_3s' : {
+    'WMF_3s_old' : {
         'res' : True,
         'name' : 'Wide Mouth Frog - 3 sessions - authentfication',
         'file' : 'Simple_wmf_3s.txt',
         'cat' : 1,
     },
-    'AS_RPC_a' : {
+    'AS_RPC_a_old' : {
         'res' : False,
         'name' : 'Andrew Secure RPC - auth',
         'file' : 'Simple_Andrew_Secure_RPC_auth.txt',
     },
-    'AS_RPC_BAN_auth' : {
+    'AS_RPC_BAN_auth_old' : {
         'res' : False,
         'name' : 'Andrew Secure RPC - auth',
         'file' : 'Simple_Andrew_Secure_RPC_BAN_auth.txt',
     },
-    'AS_RPC_BAN_sec' : {
+    'AS_RPC_BAN_sec_old' : {
         'res' : True,
         'name' : 'Andrew Secure RPC - auth',
         'file' : 'Simple_Andrew_Secure_RPC_BAN_sec.txt',
     },
-    'AS_RPC_sec' : {
+    'AS_RPC_sec_old' : {
         'res' : True,
         'name': 'Andrew Secure RPC - auth',
         'file' : 'Simple_Andrew_Secure_RPC_sec.txt',
     },
-    'BAC_FR' : {
+    'BAC_FR_old' : {
         'res' : False,
         'name': 'Basic Accress Control FR',
         'file' : 'Simple_Basic_Access_Control_protocol_FR.txt',
     },
-    'BAC_UK' : {
+    'BAC_UK_old' : {
         'res' : False,
         'name' : 'Basic Accress Control UK',
         'file' : 'Simple_Basic_Access_Control_protocol_UK.txt',
     },
-    'Bench_10' : {
+    'Bench_10_old' : {
         'res' : True,
         'name': 'Many parallels - 10',
         'file' : 'Simple_bench_10par.txt',
     },
-    'Bench_3' : {
+    'Bench_3_old' : {
         'res' : True,
         'name' : 'Many parallels - 3',
         'file' : 'Simple_bench_3par.txt',
     },
-    'Bench_5' : {
+    'Bench_5_old' : {
         'res' : True,
         'name' : 'Many parallels - 5',
         'file' : 'Simple_bench_5par.txt',
     },
-    'Bench_7' : {
+    'Bench_7_old' : {
         'res' : True,
         'name' : 'Many parallels - 7',
         'file' : 'Simple_bench_7par.txt',
     },
-    'Passport_PA' : {
+    'Passport_PA_old' : {
         'res' : True,
         'name': 'Private Authentification - Unlinkability',
         'file' : 'Simple_Passport_PA_Unlinkability.txt',
     },
-    'PA_2' : {
+    'PA_2_old' : {
         'res' : True,
         'name': 'Private Authentification - 2 sessions',
         'file' : 'Simple_Private_Authentication_Protocol_2_sessions.txt',
     },
-    'PA_3' : {
+    'PA_3_old' : {
         'res' : True,
         'name': 'Private Authentification - 3 sessions',
         'file' : 'Simple_Private_Authentication_Protocol_3_sessions.txt',
     },
-    'PA_1' : {
+    'PA_1_old' : {
         'res' : True,
         'name': 'Private Authentification - 1 session',
         'file' : 'Simple_Private_Authentication_Protocol.txt',
     },
-    'Bench_C_4' : {
+    'Bench_C_4_old' : {
         'res' : True,
         'name' : 'Many parallels, complex tests - 4',
         'file' : 'Simple_tests_h_4par.txt',
     },
-    'Bench_C_7' : {
+    'Bench_C_7_old' : {
         'res' : True,
         'name' : 'Many parallels, complex tests - 7',
         'file' : 'Simple_tests_h_7par.txt',
     },
 
-   'Pass_PA_ano_0' : {
+   'Pass_PA_ano_0_old' : {
         'res' : True,
         'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 0 symmetric session P+R',
         'file' : 'Passport_PassiveAuthentification_ano_0s.txt',
         'cat' : 2,
     },
-    'Pass_PA_ano_1' : {
+    'Pass_PA_ano_1_old' : {
         'res' : True,
         'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 1 symmetric session P+R',
         'file' : 'Passport_PassiveAuthentification_ano_1s.txt',
         'cat' : 2,
     },
-    'Pass_PA_ano_2' : {
+    'Pass_PA_ano_2_old' : {
         'res' : True,
         'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 2 symmetric session P+R',
         'file' : 'Passport_PassiveAuthentification_ano_2s.txt',
         'cat' : 2,
     },
-    'Pass_PA_ano_3' : {
+    'Pass_PA_ano_3_old' : {
         'res' : True,
         'name' : 'Passport: Passive Authentification - Anonymity of one Passport + 3 symmetric session P+R',
         'file' : 'Passport_PassiveAuthentification_ano_3s.txt',
