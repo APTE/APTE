@@ -319,12 +319,8 @@ TESTS = {
         'file' : 'Auth_Needham_Shroeder_sym_auth_5s.txt',
         'cat' : 3,
     },
-    'AKA_3G_1' : {
-        'res' : True,
-        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 1 agent among [Mobile Station, Network]",
-        'file' : '3G_PPAuthentication_sec_1.txt',
-        'cat' : 3,
-    },
+
+
     'AKA_3G_2' : {
         'res' : True,
         'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 2 agent among [Mobile Station, Network]",
