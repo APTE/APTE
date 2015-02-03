@@ -19,7 +19,10 @@ def sortGraph(listEx):
    return([ex for (nb, ex) in listSorted])
 
 def sortWMF(listEx):
-   listAssoc = [(int(ex.split("-key-")[1].split(".txt")[0]), ex) for ex in listEx]
+   if "diff" in listEx[0]:
+      listAssoc = [(int(ex.split("-key-")[1].split("-diff.txt")[0]), ex) for ex in listEx]
+   else:
+      listAssoc = [(int(ex.split("-key-")[1].split(".txt")[0]), ex) for ex in listEx]
    listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
    return([ex for (nb, ex) in listSorted])
 
@@ -140,14 +143,18 @@ def main():
         list_binaries = list_binaries_tout
 
     list_tests.sort()
-    
+
     if args.filter_tests:
-        list_tests = filter(lambda s: args.filter_tests in s, list_tests_tout)
-        if args.filter_tests == "Graph":
-            list_tests = sortGraph(list_tests)
-        if args.filter_tests == "WMF":
-            list_tests = sortWMF(list_tests)
-            pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
+       if "_diff" in args.filter_tests:
+          pattern = args.filter_tests.split("_diff")[0]
+          list_tests = filter(lambda s: pattern in s and "diff" in s, list_tests_tout)
+       else:
+          list_tests = filter(lambda s: args.filter_tests in s and not("diff" in s), list_tests_tout)
+       if args.filter_tests == "Graph":
+          list_tests = sortGraph(list_tests)
+       if args.filter_tests == "WMF" or args.filter_tests == "WMF_diff":
+          list_tests = sortWMF(list_tests)
+          pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
     pprint_all("Date: " + str(datetime.now()) + "\n")
     if not(args.version or args.difficulty):
         print("You use no options, are you sure? Look at the helping message above.")

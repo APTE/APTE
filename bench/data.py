@@ -75,19 +75,117 @@ TESTS = {
         'file' : 'PrivateAuth-pub-key-XX.txt',
         'cat' : 9,
     },
-    'NS-Shared_diff_XX' : {
+    'NS-Shared_diff_4' : {
         'res' : True,
         'name' : "TODO",
-        'file' : 'NS-shared-key-XX-diff.txt',
+        'file' : 'NS-shared-key-4-diff.txt',
         'cat' : 9,
     },
-    'WMF_SS_shared_diff_XX' : {
+    'NS-Shared_diff_5' : {
         'res' : True,
         'name' : "TODO",
-        'file' : 'WMF-shared-key-XX.txt',
+        'file' : 'NS-shared-key-5-diff.txt',
         'cat' : 9,
-    },    
+    },
+    'NS-Shared_diff_6' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'NS-shared-key-6-diff.txt',
+        'cat' : 9,
+    },
+    'NS-Shared_diff_7' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'NS-shared-key-7-diff.txt',
+        'cat' : 9,
+    },
+    'NS-Shared_diff_8' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'NS-shared-key-8-diff.txt',
+        'cat' : 9,
+    },
+    'NS-Shared_diff_9' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'NS-shared-key-9-diff.txt',
+        'cat' : 9,
+    },
 
+    'WMF_SS_diff_4' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-4-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_diff_5' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-5-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_diff_6' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-6-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_diff_7' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-7-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_diff_8' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-8-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_diff_9' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-9-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_diff_10' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-10-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_diff_11' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-11-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_diff_12' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-12-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_diff_13' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-13-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_diff_14' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-14-diff.txt',
+        'cat' : 9,
+    },
+    'WMF_SS_diff_15' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'WMF-shared-key-15-diff.txt',
+        'cat' : 9,
+    },
+
+    
     'WMF_SS_3' : {
         'res' : True,
         'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 3 agents among [Alice | Server | Bob]",
@@ -98,7 +196,7 @@ TESTS = {
     'WMF_SS_3' : {
         'res' : True,
         'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 3 agents among [Alice | Server | Bob]",
-        'file' : 'WMF-shared-key-3.txt',
+        'file' : 'WMF-shared-key-3.txt', 
         'cat' : 3,
     },
     'WMF_SS_4' : {

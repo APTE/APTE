@@ -23,7 +23,7 @@ import data
 
 # SETTINGS FOR PRETTY PRINTINGS
 # First Column' width
-firstWidth = 17
+firstWidth = 22
 # Others Columns' width
 width = 13
 
@@ -75,7 +75,11 @@ def findVers(call, dicoVersions):
 def findTest(fileName, dicoTests):
     res = {}
     resKey = ""
-    nb = re.findall(r'\d+', fileName)
+    listNb = re.findall(r'\d+', fileName)
+    if listNb != []:
+        nb = listNb[-1]
+    else:
+        nb = 0
     for testKey in dicoTests:
         test = dicoTests[testKey]
         if (test["file"].strip() == fileName.strip()):
