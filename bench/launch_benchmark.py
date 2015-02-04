@@ -19,7 +19,10 @@ def sortGraph(listEx):
    return([ex for (nb, ex) in listSorted])
 
 def sortWMF(listEx):
-   listAssoc = [(int(ex.split("-key-")[1].split(".txt")[0]), ex) for ex in listEx]
+   if "diff" in listEx[0]:
+      listAssoc = [(int(ex.split("-key-")[1].split("-diff.txt")[0]), ex) for ex in listEx]
+   else:
+      listAssoc = [(int(ex.split("-key-")[1].split(".txt")[0]), ex) for ex in listEx]
    listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
    return([ex for (nb, ex) in listSorted])
 
@@ -34,6 +37,8 @@ def main():
                         help='you can choose the version beteween [ref,old_comp,comp,comp_no_impro,old_red,red,red_no_impro,red_no_nouse,red_no_2_nouse_improper]')
     parser.add_argument('-ft', '--filter_tests',
                         help='you can choose tests by giving a substrings')
+    parser.add_argument('-a', '--all',
+                        help='you can choose tests from the folder Simple_Example')
 
     args = parser.parse_args()
 
@@ -55,13 +60,17 @@ def main():
        return(("PrivateAuth" in words) or
               ("shared" in words))
 
-    list_tests_tout = (glob.glob('../Simple_Example/Simple_*.txt') +
-                       glob.glob('../Simple_Example/Passport_*.txt') +
-                       glob.glob('../Simple_Example/Auth_*.txt') +
-                       glob.glob('../Simple_Example/3G_*.txt') +
-                       glob.glob('../Simple_Example/NS*.txt') +
-                       glob.glob('../Simple_Example/WMF*.txt') +
-                       glob.glob('../Simple_Example/PrivateAuth*.txt'))
+    if args.all:
+       list_tests_tout = (glob.glob('../Simple_Example/Simple_*.txt') +
+                          glob.glob('../Simple_Example/Passport_*.txt') +
+                          glob.glob('../Simple_Example/Auth_*.txt') +
+                          glob.glob('../Simple_Example/3G_*.txt') +
+                          glob.glob('../Simple_Example/NS*.txt') +
+                          glob.glob('../Simple_Example/WMF*.txt') +
+                          glob.glob('../Simple_Example/PrivateAuth*.txt'))
+    else:
+       list_tests_tout = (glob.glob('protocols/*/*.txt'))
+       
     list_tests_tout = filter(lambda s : new(s) or utils.filterData(s,data.TESTS), list_tests_tout)
     list_binaries_tout = glob.glob('../apte_*')
     onlyNew = False
@@ -140,14 +149,18 @@ def main():
         list_binaries = list_binaries_tout
 
     list_tests.sort()
-    
+
     if args.filter_tests:
-        list_tests = filter(lambda s: args.filter_tests in s, list_tests_tout)
-        if args.filter_tests == "Graph":
-            list_tests = sortGraph(list_tests)
-        if args.filter_tests == "WMF":
-            list_tests = sortWMF(list_tests)
-            pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
+       if "_diff" in args.filter_tests:
+          pattern = args.filter_tests.split("_diff")[0]
+          list_tests = filter(lambda s: pattern in s and "diff" in s, list_tests_tout)
+       else:
+          list_tests = filter(lambda s: args.filter_tests in s and not("diff" in s), list_tests_tout)
+       if args.filter_tests == "Graph":
+          list_tests = sortGraph(list_tests)
+       if args.filter_tests == "WMF" or args.filter_tests == "WMF_diff":
+          list_tests = sortWMF(list_tests)
+          pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
     pprint_all("Date: " + str(datetime.now()) + "\n")
     if not(args.version or args.difficulty):
         print("You use no options, are you sure? Look at the helping message above.")
@@ -168,7 +181,7 @@ def main():
         log_all.write("\n")
         pprint_all(IND + str(datetime.now()) + "\n")
         for file in list_tests:
-            t_name = file.split("/Simple_Example/")[1].split(".txt")[0]
+            t_name = file.split("/")[-1].split(".txt")[0]
             pprint_all(HEADA + "Benchmark of Protocol: " + t_name + HEADA)
             log_all.write("\n")
             pprint_all(IND + str(datetime.now()) + "\n") # timestamp

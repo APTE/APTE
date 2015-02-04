@@ -113,14 +113,18 @@ let AKA_real = in(c,zz);
   new k;
   new osqn1; 
   new osqn2; 
+  new osqn3; 
  ((MS k osqn1 cm1) | (SN_real k osqn1 cs1) |
-  (MS k osqn2 cm2) | (SN_real k osqn2 cs2)).
+  (MS k osqn2 cm2) | (SN_real k osqn2 cs2) |
+  (SN_real k osqn3 cs3)).
 
 let AKA_ideal = in(c,zz);
   new k;
   new osqn1; 
   new osqn2; 
+  new osqn3; 
  ((MS k osqn1 cm1) | (SN_ideal k osqn1 cs1) |
-  (MS k osqn2 cm2) | (SN_ideal k osqn2 cs2)).
+  (MS k osqn2 cm2) | (SN_ideal k osqn2 cs2) |
+  (SN_ideal k osqn3 cs3)).
 
 equivalence AKA_real and AKA_ideal.
