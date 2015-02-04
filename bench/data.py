@@ -69,6 +69,49 @@ DICO = {
 }
 
 TESTS = {
+    'Yahalom-3' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'Yahalom-shared-key-3.txt',
+        'cat' : 9,
+    },
+    'Yahalom-4' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'Yahalom-shared-key-4.txt',
+        'cat' : 9,
+    },
+    'Yahalom-5' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'Yahalom-shared-key-5.txt',
+        'cat' : 9,
+    },
+    'Yahalom-6' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'Yahalom-shared-key-6.txt',
+        'cat' : 9,
+    },
+    'Yahalom-7' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'Yahalom-shared-key-7.txt',
+        'cat' : 9,
+    },
+    'Yahalom-8' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'Yahalom-shared-key-8.txt',
+        'cat' : 9,
+    },
+    'Yahalom-9' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'Yahalom-shared-key-9.txt',
+        'cat' : 9,
+    },
+
     'PrivateAuth-2' : {
         'res' : True,
         'name' : "TODO",
