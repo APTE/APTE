@@ -228,6 +228,24 @@ TESTS = {
         'file' : 'DS-shared-key-9.txt',
         'cat' : 9,
     },
+    'DS-Shared-10' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'DS-shared-key-10.txt',
+        'cat' : 9,
+    },
+    'DS-Shared-11' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'DS-shared-key-11.txt',
+        'cat' : 9,
+    },
+    'DS-Shared-12' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'DS-shared-key-12.txt',
+        'cat' : 9,
+    },
 
     'NS-Shared_diff_4' : {
         'res' : True,
