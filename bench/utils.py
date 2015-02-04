@@ -113,7 +113,7 @@ def pprintMatrix(matrix):
 def prettyFloat(f):
     return("%.2E" % f)
 
-def extractResults(dicoV, sortedV, dicoT, keyT):
+def extractResults(dicoV, sortedV, dicoT, keyT, disp=None):
     # First column of the line:
     res = [keyT]
     for keyV in sortedV:
@@ -127,14 +127,23 @@ def extractResults(dicoV, sortedV, dicoT, keyT):
                 if versionBenchs[bench]["res"] != dicoT[keyT]["res"]:
                     res.append("> X <")
                 elif versionBenchs[bench]["new"]:
-                    res.append("->" + prettyFloat(versionBenchs[bench]["time"]) + "<-")
+                    if disp:
+                        res.append("->" + prettyFloat(versionBenchs[bench]["nbExplo"]) + "<-")
+                    else:
+                        res.append("->" + prettyFloat(versionBenchs[bench]["time"]) + "<-")
                 elif not(None == versionBenchs[bench].get("killed")) and versionBenchs[bench]["killed"]:
 #                    res.append(">(" + prettyFloat(versionBenchs[bench]["time"]) + ")")
                     res.append(">(NonTerm)")
                 elif dateutil.parser.parse(versionBenchs[bench]["date"]) > datetime.now() + timedelta(hours=-2):
-                    res.append("[" + prettyFloat(versionBenchs[bench]["time"]) + "]")
+                    if disp:
+                        res.append("[" + prettyFloat(versionBenchs[bench]["nbExplo"]) + "]")
+                    else:
+                        res.append("[" + prettyFloat(versionBenchs[bench]["time"]) + "]")
                 else:
-                    res.append(prettyFloat(versionBenchs[bench]["time"]))
+                    if disp:
+                        res.append(prettyFloat(versionBenchs[bench]["nbExplo"]))
+                    else:
+                        res.append(prettyFloat(versionBenchs[bench]["time"]))
                 found = True
         if not(found):
             res.append(".")
@@ -148,7 +157,7 @@ def cmpGraph(ex1, ex2):
     else:
         return(cmp(ex1,ex2))
 
-def fromVersToTests(dicoVersions, dicoTests, toLatex=False, vers="all", tests="all"):
+def fromVersToTests(dicoVersions, dicoTests, toLatex=False, vers="all", tests="all", disp=None):
     sortedVersions = ['ref', 'old_comp', 'comp_no_impr', 'comp',  'old_red',  'red_no_2', 'red_no_impr', 'red_no_nouse', 'red']
     listTestsKey = sorted(dicoTests.keys(), cmp = cmpGraph)
     listTestsFile = map(lambda x: dicoTests[x]['file'], listTestsKey)
@@ -161,7 +170,7 @@ def fromVersToTests(dicoVersions, dicoTests, toLatex=False, vers="all", tests="a
         if tests=="all" or (not("old" in listTestsKey[i])):
             keyTest = listTestsKey[i]
             fileName = listTestsFile[i]
-            listResults = extractResults(dicoVersions, sortedVersions, dicoTests, keyTest)
+            listResults = extractResults(dicoVersions, sortedVersions, dicoTests, keyTest, disp=disp)
             if vers=="all":
                 matrix.append(listResults)
             else:

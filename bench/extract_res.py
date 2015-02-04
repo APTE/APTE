@@ -30,6 +30,8 @@ parser.add_argument('--vers',
 
 parser.add_argument('--tests',
                     help='you can choose to only extracts of new tests')
+parser.add_argument('--explo',
+                    help='to display number of explorations instead of time')
 
 args = parser.parse_args()
 isLoad = True
@@ -242,9 +244,9 @@ def main():
         testsFlag = "notall"
 
     if args.vers:
-        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="paper", tests=testsFlag)
+        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="paper", tests=testsFlag, disp=args.explo)
     else:
-        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="all", tests=testsFlag)
+        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="all", tests=testsFlag, disp=args.explo)
 
     logging.debug(toPrint)
     toPrintColor = toPrint
@@ -270,7 +272,7 @@ def main():
     
     if args.latex:
         fileLatex = open(args.latex, 'w')
-        fileLatex.write(str(fromVersToTests(VersionsDico, TestsDico, toLatex=True, vers="paper", tests="notall")))
+        fileLatex.write(str(fromVersToTests(VersionsDico, TestsDico, toLatex=True, vers="paper", tests="notall", disp=args.explo)))
         fileLatex.close()
 
 main()
