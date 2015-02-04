@@ -142,6 +142,25 @@ TESTS = {
         'file' : 'PrivateAuth-pub-key-6.txt',
         'cat' : 9,
     },
+    'PrivateAuth-7' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-7.txt',
+        'cat' : 9,
+    },
+    'PrivateAuth-8' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-8.txt',
+        'cat' : 9,
+    },
+    'PrivateAuth-9' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'PrivateAuth-pub-key-9.txt',
+        'cat' : 9,
+    },
+
     'PrivateAuth-5+' : {
         'res' : True,
         'name' : "TODO",
