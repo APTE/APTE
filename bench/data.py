@@ -527,6 +527,24 @@ TESTS = {
         'file' : 'PA_ano_7.txt',
         'cat' : 2,
     },
+     'Pass-PA_ano_8' : {
+        'res' : True,
+        'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 8 agents among [Reader, Passport]',
+        'file' : 'PA_ano_8.txt',
+        'cat' : 2,
+    },
+     'Pass-PA_ano_9' : {
+        'res' : True,
+        'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 9 agents among [Reader, Passport]',
+        'file' : 'PA_ano_9.txt',
+        'cat' : 2,
+    },
+     'Pass-PA_ano_10' : {
+        'res' : True,
+        'name' : 'Passport: Passive Authentification - Anonymity of one Passport - 10 agents among [Reader, Passport]',
+        'file' : 'PA_ano_10.txt',
+        'cat' : 2,
+    },
 
 'Bench_Graph_1' : {
         'res' : True,
