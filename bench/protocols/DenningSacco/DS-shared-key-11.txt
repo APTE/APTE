@@ -90,7 +90,7 @@ let Preal =
 ( processA ca1 a kas b |  processBreal  cb1 b kbs a | processS cs1 a kas b kbs
 | processA ca2 a kas b |  processB  cb2 b kbs a | processS cs2 a kas b kbs
 | processA ca3 a kas b |  processB  cb3 b kbs a | processS cs3 a kas b kbs |
-  processA ca4 a kas b | processS cs4 a kas b kbs)).
+  processA ca4 a kas b | processS cs4 a kas b kbs).
 
 
 let Pideal = 
@@ -99,6 +99,6 @@ let Pideal =
 ( processA ca1 a kas b |  processBideal  cb1 b kbs a | processS cs1 a kas b kbs
 | processA ca2 a kas b |  processB  cb2 b kbs a | processS cs2 a kas b kbs
 | processA ca3 a kas b |  processB  cb3 b kbs a | processS cs3 a kas b kbs |
-  processA ca4 a kas b | processS cs4 a kas b kbs)).
+  processA ca4 a kas b | processS cs4 a kas b kbs).
 
 equivalence Preal and Pideal.
