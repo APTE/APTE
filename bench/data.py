@@ -419,6 +419,12 @@ TESTS = {
         'file' : 'WMF-shared-key-12.txt',
         'cat' : 3,
     },
+    'WMF_SS_13' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 13 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-13.txt',
+        'cat' : 3,
+    },
     'NS_SharedK_3' : {
         'res' : True,
         'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 3 agents among [Alice | Server | Bob]",
