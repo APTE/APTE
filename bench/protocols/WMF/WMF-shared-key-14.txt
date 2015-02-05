@@ -87,7 +87,7 @@ let Preal =
 | processA ca2 a kas b |  processB  cb2 b kbs a | processS cs2 a kas b kbs
 | processA ca3 a kas b |  processB  cb3 b kbs a | processS cs3 a kas b kbs
 | processA ca4 a kas b |  processB  cb4 b kbs a | processS cs4 a kas b kbs
-  processA ca5 a kas b | processS cs5 a kas b kbs ).
+| processA ca5 a kas b | processS cs5 a kas b kbs ).
 
 
 
@@ -98,7 +98,7 @@ let Pideal =
 | processA ca2 a kas b |  processB cb2 b kbs a | processS cs2 a kas b kbs
 | processA ca3 a kas b |  processB  cb3 b kbs a | processS cs3 a kas b kbs
 | processA ca4 a kas b |  processB  cb4 b kbs a | processS cs4 a kas b kbs
-  processA ca5 a kas b | processS cs5 a kas b kbs ).
+| processA ca5 a kas b | processS cs5 a kas b kbs ).
 
 
 equivalence Preal and Pideal.
