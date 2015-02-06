@@ -69,6 +69,19 @@ DICO = {
 }
 
 TESTS = {
+    'Yahalom-stef-6' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'yahalom-s-6.txt',
+        'cat' : 9,
+    }
+    'Yahalom-stef-modif' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'yahalom-s-modified.txt',
+        'cat' : 9,
+    },
+
     'Yahalom-3' : {
         'res' : True,
         'name' : "TODO",
