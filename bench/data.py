@@ -485,7 +485,7 @@ TESTS = {
         'file' : '3G-AKA-s-4.txt',
         'cat' : 3,
     },
-    'AKA_3G_s__5' : {
+    'AKA_3G_s__6' : {
         'res' : True,
         'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 6 agent among [Mobile Station, Network]",
         'file' : '3G-AKA-s-6.txt',
