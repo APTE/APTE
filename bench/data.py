@@ -473,6 +473,31 @@ TESTS = {
         'file' : 'NS-shared-key-9.txt',
         'cat' : 3,
     },
+    'AKA_3G_s__2' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 2 agent among [Mobile Station, Network]",
+        'file' : '3G-AKA-s-2.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_s__4' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 4 agent among [Mobile Station, Network]",
+        'file' : '3G-AKA-s-4.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_s__5' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 6 agent among [Mobile Station, Network]",
+        'file' : '3G-AKA-s-6.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_s__8' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 8 agent among [Mobile Station, Network]",
+        'file' : '3G-AKA-s-8.txt',
+        'cat' : 3,
+    },
+
     'AKA_3G_2' : {
         'res' : True,
         'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 2 agent among [Mobile Station, Network]",
