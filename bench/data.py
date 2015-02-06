@@ -74,7 +74,7 @@ TESTS = {
         'name' : "TODO",
         'file' : 'yahalom-s-6.txt',
         'cat' : 9,
-    }
+    },
     'Yahalom-stef-modif' : {
         'res' : True,
         'name' : "TODO",
