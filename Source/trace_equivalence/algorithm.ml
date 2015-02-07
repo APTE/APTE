@@ -515,7 +515,14 @@ let apply_strategy_one_transition_por (* given .... *)
 
     if !print_debug_por then Printf.printf "end of labelling process...\n";
 
-							
+    (* ** We check the last remaining case to ensure skl(P)=skl(Q) that is P=0 and Q <> 0
+          (we already deal withthe symmetric case since P can perform an action). *)
+    if Process.is_null proc_left_label && not(Process.is_null proc_right_label) 
+    then  begin
+	Printf.printf "Witness' type: Null process on the left, not on the right.\n";
+	raise (Not_equivalent_right proc_right_label);
+      end;
+	
     (* ** SECOND step: Distinguish two cases whether pro_left/right_label have focus or not.
          (if they do not have the same status we raise an error. *)
     match (Process.has_focus proc_left_label_up, Process.has_focus proc_right_label_up) with

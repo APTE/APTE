@@ -412,6 +412,13 @@ let display_trace_simple symb_proc =
 			 str_acc^(display_trace_label_simple tr_label)^"; "
 			) "" (List.rev trace))^" |]"
 	  
+let is_null symP = 
+  let rec go_through = function
+    | [] -> true
+    | (Nil, _) :: tl -> go_through tl
+    | _ -> false in
+  go_through (symP.process)
+
 (******* Testing ********)
 
 let is_bottom symb_proc = Constraint_system.is_bottom symb_proc.constraint_system
