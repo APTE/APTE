@@ -506,8 +506,9 @@ let apply_strategy_one_transition_por (* given .... *)
 
       (* ** FIRST step: labelises processes and update 'has_focus': at this point, some new processes coming from 
         breaking a parallel composition are in the multiset. All those new processes come from a unique parallel
-        composition, so we label them in an arbitrary order but consistently with right_symb_proc_list. *)
-
+        composition, so we label them in an arbitrary order but consistently with right_symb_proc_list.
+        Note that, by perfomring this step we also check skl(P)=skl(Q) except when P is a null process (represented
+        as an empty list in APTE). *)
       let proc_left_label, how_to_label = try_P proc_left proc_right (lazy (Process.labelise proc_left)) in
       let proc_right_label = try_P proc_left proc_right (lazy (Process.labelise_consistently how_to_label proc_right)) in
       (* Updating 'has_focus' on the left : set to false if focused process is negative *)
@@ -527,7 +528,14 @@ let apply_strategy_one_transition_por (* given .... *)
 
       if !print_debug_por then Printf.printf "end of labelling process...\n";
 
-      
+      (* ** We check the last remaining case to ensure skl(P)=skl(Q) that is P=0 and Q <> 0
+          (we already deal withthe symmetric case since P can perform an action). *)
+      if Process.is_null proc_left_label && not(Process.is_null proc_right_label) 
+      then  begin
+	  Printf.printf "Witness' type: Null process on the left, not on the right.\n";
+	raise (Not_equivalent_right proc_right_label);
+	end;
+
       (* ** SECOND step: Distinguish two cases whether pro_left/right_label have focus or not.
          (if they do not have the same status we raise an error. *)
       match (Process.has_focus proc_left_label_up, Process.has_focus proc_right_label_up) with
