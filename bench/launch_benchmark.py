@@ -13,6 +13,11 @@ import data
 import utils
 ## I reuse an old script (for SPEC)
 
+def sortAKA(listEx):
+   listAssoc = [(int(ex.split("AKA-s-")[1].split(".txt")[0]), ex) for ex in listEx]
+   listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
+   return([ex for (nb, ex) in listSorted])
+
 def sortGraph(listEx):
    listAssoc = [(int(ex.split("Graph_")[1].split("_par")[0]), ex) for ex in listEx]
    listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
@@ -160,7 +165,10 @@ def main():
           list_tests = sortGraph(list_tests)
        if args.filter_tests == "WMF" or args.filter_tests == "WMF_diff":
           list_tests = sortWMF(list_tests)
-          pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
+       if args.filter_tests == "AKA-s" or args.filter_tests == "WMF_qsqsqsdiff":
+          list_tests = sortAKA(list_tests)
+
+    pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
     pprint_all("Date: " + str(datetime.now()) + "\n")
     if not(args.version or args.difficulty):
         print("You use no options, are you sure? Look at the helping message above.")

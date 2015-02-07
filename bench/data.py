@@ -74,7 +74,7 @@ TESTS = {
         'name' : "TODO",
         'file' : 'yahalom-s-6.txt',
         'cat' : 9,
-    }
+    },
     'Yahalom-stef-modif' : {
         'res' : True,
         'name' : "TODO",
@@ -498,7 +498,7 @@ TESTS = {
         'file' : '3G-AKA-s-4.txt',
         'cat' : 3,
     },
-    'AKA_3G_s__5' : {
+    'AKA_3G_s__6' : {
         'res' : True,
         'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 6 agent among [Mobile Station, Network]",
         'file' : '3G-AKA-s-6.txt',
@@ -508,6 +508,18 @@ TESTS = {
         'res' : True,
         'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 8 agent among [Mobile Station, Network]",
         'file' : '3G-AKA-s-8.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_s__10' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 10 agent among [Mobile Station, Network]",
+        'file' : '3G-AKA-s-10.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_s__12' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 12 agent among [Mobile Station, Network]",
+        'file' : '3G-AKA-s-12.txt',
         'cat' : 3,
     },
 
