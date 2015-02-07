@@ -542,8 +542,9 @@ let apply_strategy_one_transition_por (* given .... *)
 
       (* ** FIRST step: labelises processes and update 'has_focus': at this point, some new processes coming from 
         breaking a parallel composition are in the multiset. All those new processes come from a unique parallel
-        composition, so we label them in an arbitrary order but consistently with right_symb_proc_list. *)
-
+        composition, so we label them in an arbitrary order but consistently with right_symb_proc_list.
+        Note that, by perfomring this step we also check skl(P)=skl(Q) except when P is a null process (represented
+        as an empty list in APTE). *)
   let proc_left_label, how_to_label = try_P proc_left proc_right (lazy (Process.labelise proc_left)) in
   let proc_right_label = try_P proc_left proc_right (lazy (Process.labelise_consistently how_to_label proc_right)) in
   (* Updating 'has_focus' on the left : set to false if focused process is negative *)
@@ -574,7 +575,7 @@ let apply_strategy_one_transition_por (* given .... *)
       end
     else (proc_left_label_up,proc_right_label_up ) in
 
-    (* Using the flag has_generate_dep_csts, we know if this is the first time last block has at least one output
+  (* Using the flag has_generate_dep_csts, we know if this is the first time last block has at least one output
 	   In this case, we must generate dependency constraints for the last inputs. *)
   let proc_left_label_red_up, proc_right_label_red_up =
     if !option_red && Process.must_generate_dep_csts proc_left_label_up
@@ -586,9 +587,17 @@ let apply_strategy_one_transition_por (* given .... *)
       end
     else (proc_left_label_up, proc_right_label_up) in
   
+  (* ** We check the last remaining case to ensure skl(P)=skl(Q) that is P=0 and Q <> 0
+          (we already deal withthe symmetric case since P can perform an action). *)
+  if Process.is_null proc_left_label && not(Process.is_null proc_right_label) 
+  then  begin
+      Printf.printf "Witness' type: Null process on the left, not on the right.\n";
+      raise (Not_equivalent_right proc_right_label);
+    end;
+
   (* We keep exploring actions from this point only if all dependency constraints hold or reduction is not enabled *)
-  if not(!option_red) || Process.test_dependency_constraints proc_left_label_red_up !option_nouse then
-    
+  if not(!option_red) || Process.test_dependency_constraints proc_left_label_red_up !option_nouse then    
+
     (* ** SECOND step: Distinguish two cases whether pro_left/right_label have focus or not.
          (if they do not have the same status we raise an error. *)
     match (Process.has_focus proc_left_label_red_up, Process.has_focus proc_right_label_red_up) with
