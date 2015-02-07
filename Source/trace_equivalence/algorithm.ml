@@ -575,6 +575,14 @@ let apply_strategy_one_transition_por (* given .... *)
 	      | _ -> proc_right_label)
 	else proc_right_label in 
 
+      (* ** We check the last remaining case to ensure skl(P)=skl(Q) that is P=0 and Q <> 0
+          (we already deal with the symmetric case since P can perform an action in that case). *)
+      if Process.is_null proc_left_label && not(Process.is_null proc_right_label) 
+      then  begin
+	  Printf.printf "Witness' type: Null process on the left, not on the right.\n";
+	  raise (Not_equivalent_right proc_right_label);
+	end;
+
       if !print_debug_por then Printf.printf "end of labelling process...\n";
 
       (* We now update the complete_inp flag *)
@@ -587,14 +595,6 @@ let apply_strategy_one_transition_por (* given .... *)
 	     Process.block_set_complete_inp proc_right_label_up)
 	  end
 	else (proc_left_label_up,proc_right_label_up ) in
-
-      (* ** We check the last remaining case to ensure skl(P)=skl(Q) that is P=0 and Q <> 0
-          (we already deal withthe symmetric case since P can perform an action). *)
-      if Process.is_null proc_left_label && not(Process.is_null proc_right_label) 
-      then  begin
-	  Printf.printf "Witness' type: Null process on the left, not on the right.\n";
-	  raise (Not_equivalent_right proc_right_label);
-	end;
 
 
       (** [PHASE 3] A. Generate dependency constraints if needed and  B. Test whether all of them hold *)
