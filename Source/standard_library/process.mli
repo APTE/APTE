@@ -54,6 +54,9 @@ val display_trace_no_unif_no_csts : symbolic_process -> string
 
 val display_trace_blocks :  symbolic_process -> string
 
+(** [is_null symP] assuming symP has been fully reduced (Conditionals/Let/New/Par), returns true if symP is a null process *)
+val is_null : symbolic_process -> bool
+
 (** {4 Testing} *)
 
 val is_bottom : symbolic_process -> bool

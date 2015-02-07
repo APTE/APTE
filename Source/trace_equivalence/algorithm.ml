@@ -553,7 +553,10 @@ let apply_strategy_one_transition_por (* given .... *)
       (** [PHASE 2] Labelisation and updating flags *)
       (* ** We labelise processes and update 'has_focus': at this point, some new processes coming from 
         breaking a parallel composition are in the multiset. All those new processes come from a unique parallel
-        composition, so we label them in an arbitrary order but consistently with right_symb_proc_list. *)
+        composition, so we label them in an arbitrary order but consistently with right_symb_proc_list.
+        Note that, by perfomring this step we also check skl(P)=skl(Q) except when P is a null process (represented
+        as an empty list in APTE). *)
+
       let proc_left_label, how_to_label = try_P proc_left proc_right (lazy (Process.labelise proc_left)) in
       let proc_right_label = try_P proc_left proc_right (lazy (Process.labelise_consistently how_to_label proc_right)) in
       (* Updating 'has_focus' on the left : set to false if focused process is negative *)
@@ -578,12 +581,20 @@ let apply_strategy_one_transition_por (* given .... *)
       let proc_left_label_up,proc_right_label_up =
 	if !option_red && (not (Process.has_focus proc_left_label_up) && not (Process.block_complete_inp proc_left_label_up))
 	(* no focus (no more input) and flag complete_inp not already set to true -> first time without focus -> 
-         we cannot already generate dep csts but we must set complete_inp flag to true *)
+           we cannot already generate dep csts but we must set complete_inp flag to true *)
 	then begin
 	    (Process.block_set_complete_inp proc_left_label_up,
 	     Process.block_set_complete_inp proc_right_label_up)
 	  end
 	else (proc_left_label_up,proc_right_label_up ) in
+
+      (* ** We check the last remaining case to ensure skl(P)=skl(Q) that is P=0 and Q <> 0
+          (we already deal withthe symmetric case since P can perform an action). *)
+      if Process.is_null proc_left_label && not(Process.is_null proc_right_label) 
+      then  begin
+	  Printf.printf "Witness' type: Null process on the left, not on the right.\n";
+	  raise (Not_equivalent_right proc_right_label);
+	end;
 
 
       (** [PHASE 3] A. Generate dependency constraints if needed and  B. Test whether all of them hold *)
@@ -598,6 +609,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	     proc_right_label_up)
 	  end
 	else (proc_left_label_up, proc_right_label_up) in
+
       (* We keep exploring actions from this point only if all dependency constraints hold or reduction is not enabled *)
       if not(!option_red) || Process.test_dependency_constraints proc_left_label_red_up !option_nouse then
 	
