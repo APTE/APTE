@@ -69,6 +69,19 @@ DICO = {
 }
 
 TESTS = {
+    'Yahalom-stef-6' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'yahalom-s-6.txt',
+        'cat' : 9,
+    }
+    'Yahalom-stef-modif' : {
+        'res' : True,
+        'name' : "TODO",
+        'file' : 'yahalom-s-modified.txt',
+        'cat' : 9,
+    },
+
     'Yahalom-3' : {
         'res' : True,
         'name' : "TODO",
@@ -419,6 +432,18 @@ TESTS = {
         'file' : 'WMF-shared-key-12.txt',
         'cat' : 3,
     },
+    'WMF_SS_13' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 13 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-13.txt',
+        'cat' : 3,
+    },
+    'WMF_SS_14' : {
+        'res' : True,
+        'name' : "Wide Mouth Frog: Strong secrecy of the shared key kab - 14 agents among [Alice | Server | Bob]",
+        'file' : 'WMF-shared-key-14.txt',
+        'cat' : 3,
+    },
     'NS_SharedK_3' : {
         'res' : True,
         'name' : "Needham Shroeder Symmetric: Strong Secrecy of shared key - 3 agents among [Alice | Server | Bob]",
@@ -461,6 +486,31 @@ TESTS = {
         'file' : 'NS-shared-key-9.txt',
         'cat' : 3,
     },
+    'AKA_3G_s__2' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 2 agent among [Mobile Station, Network]",
+        'file' : '3G-AKA-s-2.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_s__4' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 4 agent among [Mobile Station, Network]",
+        'file' : '3G-AKA-s-4.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_s__5' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 6 agent among [Mobile Station, Network]",
+        'file' : '3G-AKA-s-6.txt',
+        'cat' : 3,
+    },
+    'AKA_3G_s__8' : {
+        'res' : True,
+        'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 8 agent among [Mobile Station, Network]",
+        'file' : '3G-AKA-s-8.txt',
+        'cat' : 3,
+    },
+
     'AKA_3G_2' : {
         'res' : True,
         'name' : "3G AKA protocol: we test strong secrecy of the agreed key - 2 agent among [Mobile Station, Network]",
