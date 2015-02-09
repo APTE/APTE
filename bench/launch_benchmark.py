@@ -11,13 +11,8 @@ import argparse
 
 import data
 import utils
-## I reuse an old script (for SPEC)
 
-def sortAKA(listEx):
-   listAssoc = [(int(ex.split("AKA-s-")[1].split(".txt")[0]), ex) for ex in listEx]
-   listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
-   return([ex for (nb, ex) in listSorted])
-
+# 
 def sortGraph(listEx):
    listAssoc = [(int(ex.split("Graph_")[1].split("_par")[0]), ex) for ex in listEx]
    listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
@@ -34,16 +29,12 @@ def sortWMF(listEx):
 def main():
     # PARSING ARGSSS
     parser = argparse.ArgumentParser(description='Launch some benchmarks on different versions of APTE')
-    parser.add_argument('-d', '--difficulty',
-                        help='you can choose the type of examples you want to check by difficulty:  [easy,middle,hard]')
     parser.add_argument('-f', '--file_log',
-                        help='you can choose a name for the results file')
+                        help='you can choose a name of the log file')
     parser.add_argument('-v', '--version', nargs='*',
-                        help='you can choose the version beteween [ref,old_comp,comp,comp_no_impro,old_red,red,red_no_impro,red_no_nouse,red_no_2_nouse_improper]')
+                        help='you can choose the versions in [ref,comp,red]')
     parser.add_argument('-ft', '--filter_tests',
-                        help='you can choose tests by giving a substrings')
-    parser.add_argument('-a', '--all',
-                        help='you can choose tests from the folder Simple_Example')
+                        help='you can filter tests by giving a substrings')
 
     args = parser.parse_args()
 
@@ -65,117 +56,45 @@ def main():
        return(("PrivateAuth" in words) or
               ("shared" in words))
 
-    if args.all:
-       list_tests_tout = (glob.glob('../Simple_Example/Simple_*.txt') +
-                          glob.glob('../Simple_Example/Passport_*.txt') +
-                          glob.glob('../Simple_Example/Auth_*.txt') +
-                          glob.glob('../Simple_Example/3G_*.txt') +
-                          glob.glob('../Simple_Example/NS*.txt') +
-                          glob.glob('../Simple_Example/WMF*.txt') +
-                          glob.glob('../Simple_Example/PrivateAuth*.txt'))
-    else:
-       list_tests_tout = (glob.glob('protocols/*/*.txt'))
-       
-    list_tests_tout = filter(lambda s : new(s) or utils.filterData(s,data.TESTS), list_tests_tout)
-    list_binaries_tout = glob.glob('../apte_*')
-    onlyNew = False
-    if list_binaries_tout == []:
-        list_binaries_tout = glob.glob('../apte*')
-        onlyNew = True
-    list_tests = list_tests_tout
+    list_tests = (glob.glob('protocols/*/*.txt'))
+    list_tests = filter(lambda s : new(s) or utils.filterData(s,data.TESTS), list_tests)
+    bina_pref = '../apte'
     if not(args.version):
-        args.version = ["ref","old_comp","comp","comp_no_impro","old_red","red","red_no_impro","red_no_nouse","red_no_2_nouse_improper"]
+        args.version = ["ref","comp","red"]
     if args.version or args.difficulty:
         if args.version:
             print(args.version)
             list_binaries = []
             if "ref" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
-                list_binaries.append(bina)
+                list_binaries.append(bina_pref)
             if "comp" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
-                bina = bina + " -with_por compr improper"
-                list_binaries.append(bina)
-            if "old_comp" in args.version:
-                bina = [i for i in list_binaries_tout if ("_2_" in i or onlyNew)][0]
-                list_binaries.append(bina)
-            if "comp_no_impro" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
-                bina = bina + " -with_por compr"
-                list_binaries.append(bina)
-            if "old_red" in args.version:
-                bina = [i for i in list_binaries_tout if ("_3_" in i or onlyNew)][0]
+                bina = bina_pref + " -with_por compr improper"
                 list_binaries.append(bina)
             if "red" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
-                bina = bina + " -with_por red improper nouse"
+                bina = bina_pref + " -with_por red improper nouse"
                 list_binaries.append(bina)
-            if "red_no_impro" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
-                bina = bina + " -with_por red nouse"
-                list_binaries.append(bina)
-            if "red_no_nouse" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
-                bina = bina + " -with_por red improper"
-                list_binaries.append(bina)
-            if "red_no_2_nouse_improper" in args.version:
-                bina = [i for i in list_binaries_tout if ("_1_" in i or onlyNew)][0]
-                bina = bina + " -with_por red"
-                list_binaries.append(bina)
-        if args.difficulty:
-            print(args.difficulty)
-            # on met les easy dans tous les cas
-            def test_easy(i):
-                return((("wmf" in i and "_1s" in i) or
-                        ("Private" in i and not("_2_" in i or "_3_" in i)) or
-                        ("Basic" in i) or
-                        ("PassiveAuthentification_ano_1s" in i) or
-                        ("bench_3par" in i) or
-                        ("tests_h_4par" in i)))
-            def test_middle(i):
-                return((("wmf" in i and "_2s" in i) or
-                 ("Private" in i and not("_3_" in i)) or
-                 ("bench_5par" in i) or
-                 ("bench_7par" in i) or
-                 ("bench_10par" in i) or
-                 ("tests_h_4par" in i) or
-                 ("Andrew" in i)))
-            list_tests = [i for i in list_tests_tout if test_easy(i)]
-            if "middle" in args.difficulty:
-                tests_m = [i for i in list_tests_tout
-                           if test_middle(i) and (not (i in list_tests)) ]
-                list_tests += tests_m
-            if "hard" in args.difficulty:
-                list_tests = [x for x in list_tests_tout if x not in list_tests]
-
-    else:
-        parser.print_help()
-        list_tests = list_tests_tout
-        list_binaries = list_binaries_tout
-
-    list_tests.sort()
 
     if args.filter_tests:
+# We consider versions of tests where agents are different in each session only if we add '_diff ' to the filter.
        if "_diff" in args.filter_tests:
           pattern = args.filter_tests.split("_diff")[0]
-          list_tests = filter(lambda s: pattern in s and "diff" in s, list_tests_tout)
+          list_tests = filter(lambda s: pattern in s and "diff" in s, list_tests)
        else:
-          list_tests = filter(lambda s: args.filter_tests in s and not("diff" in s), list_tests_tout)
+          list_tests = filter(lambda s: args.filter_tests in s and not("diff" in s), list_tests)
        if args.filter_tests == "Graph":
           list_tests = sortGraph(list_tests)
        if args.filter_tests == "WMF" or args.filter_tests == "WMF_diff":
           list_tests = sortWMF(list_tests)
-       if args.filter_tests == "AKA-s" or args.filter_tests == "WMF_qsqsqsdiff":
+       if args.filter_tests == "AKA":
           list_tests = sortAKA(list_tests)
 
     pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
     pprint_all("Date: " + str(datetime.now()) + "\n")
     if not(args.version or args.difficulty):
-        print("You use no options, are you sure? Look at the helping message above.")
-    pprint_all("You choose those version: " + str(list_binaries) + "\n" +
+        print("You have used no option, are you sure? Look at the helping message above.")
+    pprint_all("You chose those versions: " + str(args.version) + "\n" +
                "On all those examples: " + str(list_tests) + "\n")
-    pprint_all("Am I right?")
-    raw_input("Press Enter to continue...")
+    raw_input("Press Enter to launch all benchmarks...")
 
    # BENCHMARKS
     HEAD = " " + "#"*10 + " "
