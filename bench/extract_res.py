@@ -122,8 +122,12 @@ def main():
         for el in listVers:
             nbVers = nbVers +1
             (version, benchVers) = el
+            version = version.strip()
             versionKey = findVers(version, VersionsDico)
-            versionDico =VersionsDico[versionKey] 
+            if not(versionKey in VersionsDico):
+                print("Cannot find version '%s' in data.py..." % version)
+                continue
+            versionDico = VersionsDico[versionKey] 
             versionName = versionDico["name"]
             logging.debug(" ----- NEW version: " + versionName + " ----- ")
             listTests = extractTests(benchVers)
