@@ -4,7 +4,7 @@
 DICO = {
     'ref' : {
         "name" : "Apte without POR (reference version)",
-        "call" : "apte_1_new_all",
+        "call" : "apte",
         "branch" : "",
         "benchs": {
             "TEST": {
@@ -18,54 +18,18 @@ DICO = {
             }
         }
     },
-    'old_comp' : {
-        "name" : "Old compression like defined in POST'14",
-        "call" : "apte_2_old_compr",
-        "branch" : "",
-        "benchs": {}
-    },
-    'old_red' : {
-        "name" : "Old reduction like defined in POST'14",
-        "call" : "apte_3_old_red",
-        "branch" : "",
-        "benchs": {}
-    },
     'comp' : {
         "name" : "Compression (+ killing improper)",
-        "call" : "apte_1_new_all -with_por compr improper",
-        "branch" : "",
-        "benchs": {}
-    },
-    'comp_no_impr' : {
-        "name" : "Compression (- killing improper)",
-        "call" : "apte_1_new_all -with_por compr",
+        "call" : "apte -with_por compr improper",
         "branch" : "",
         "benchs": {}
     },
     'red' : {
         "name" : "Reduction (+ killing improper + NoUse criterion)",
-        "call" : "apte_1_new_all -with_por red improper nouse",
+        "call" : "apte -with_por red improper nouse",
         "branch" : "",
         "benchs": {}
     },
-    'red_no_impr' : {
-        "name" : "Reduction (- killing improper + NoUse criterion)",
-        "call" : "apte_1_new_all -with_por red nouse",
-        "branch" : "",
-        "benchs": {}
-    },
-    'red_no_nouse' : {
-        "name" : "Reduction (+ killing improper - NoUse criterion)",
-        "call" : "apte_1_new_all -with_por red improper",
-        "branch" : "",
-        "benchs": {}
-    },
-    'red_no_2' : {
-        "name" : "Reduction (- killing improper - NoUse criterion)",
-        "call" : "apte_1_new_all -with_por red",
-        "branch" : "",
-        "benchs": {}
-    }
 }
 
 TESTS = {
