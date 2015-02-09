@@ -15,7 +15,6 @@ import marshal
 import argparse
 
 import dateutil.parser
-from rainbow_logging_handler import RainbowLoggingHandler
 from texttable import *
 
 import data
@@ -24,18 +23,11 @@ from utils import *
 parser = argparse.ArgumentParser(description='Extract results of benchmarks from log files.')
 parser.add_argument('--latex',
                     help='you can choose to write all extracted results in a Latex file')
-
-parser.add_argument('--vers',
-                    help='you can choose to only extracts results for ref/comp/red using --vers paper')
-
-parser.add_argument('--tests',
-                    help='you can choose to only extracts of new tests')
 parser.add_argument('--explo',
                     help='to display number of explorations instead of time')
 
 args = parser.parse_args()
 isLoad = True
-dateMajorPatch = dateutil.parser.parse('2015-01-26 19:20:38.616735')
 
 # -- LOGGING --
 rootLogger = logging.getLogger()
@@ -64,8 +56,10 @@ rootLogger.addHandler(debug)
 rootLogger.addHandler(err)
 
 # Stdout
-handler = RainbowLoggingHandler(sys.stderr,
-                                datefmt=DATEFMT_S)
+handler = logging.FileHandler("to_rm")
+# stream=sys.stderr,
+#                               format='%(asctime)s [%(levelname)-5.5s] | %(message)s",',
+#                               level=logging.WARNING)
 handler.setFormatter(logFormatter)
 handler.setLevel(logging.WARNING)
 rootLogger.addHandler(handler)
@@ -149,21 +143,12 @@ def main():
                     date = benchTests.splitlines()[1].strip()
                     testKey = findTest(testFile, TestsDico)
                     if testKey == "" or testKey == None:
-                        if "3G" in testFile and "s.txt" in testFile:
-                            continue
-                        else:
-                            logging.critical("The tests %s cannot be found.\n" % testFile)
-                            continue
+                        logging.critical("The tests %s cannot be found.\n" % testFile)
+                        continue
                     testDico = TestsDico[testKey]
                     if testDico['res'] != isTrue:
-                        if ((dateutil.parser.parse(date) < dateutil.parser.parse('2015-01-21 14:13:38.616735')) and
-                            not(versionKey[0:3] == "ref" or versionKey[0:3] == "old")):
-                            logging.info("NOT EXPECTED RESULT. But this is normal since this version was before the major patch."
-                                         "The version %s on test %s answerd %s."
+                        logging.critical("NOT EXPECTED RESULT. The version %s on test %s answerd %s."
                                          % (versionName, testName, str(isTrue)))
-                        else:
-                            logging.critical("NOT EXPECTED RESULT. The version %s on test %s answerd %s."
-                                             % (versionName, testName, str(isTrue)))
                     if "explorations:" in benchTests:
                         nbExplo = int(benchTests.split("explorations:")[1].split(".")[0])
                     else:
@@ -199,9 +184,6 @@ def main():
                         overWrite = ""
                         isOverWrite = False
                         comm = ""
-                        if ((dateutil.parser.parse(date) < dateMajorPatch or (dateutil.parser.parse(oldDate) <dateMajorPatch)) and
-                            not(versionKey[0:3] == "ref" or versionKey[0:3] == "old")):
-                            comm = "Not surprising, we compare two benchs on a reduced version before and after the major patch! -- "
                         if (dateutil.parser.parse(date) > dateutil.parser.parse(oldDate)):
                             nbRewrite = nbRewrite + 1
                             overWrite = " --> OVERWRITTEN! "
@@ -222,15 +204,11 @@ def main():
                         elif diffRel > 0.0001:
                             logging.debug(toPrint)
                     else:
-                        if ((dateutil.parser.parse(date) < dateMajorPatch) and
-                            not(versionKey[0:3] == "ref" or versionKey[0:3] == "old")):
-                            logging.info("We do not take this test into account since it concerns an old version of red*.")
-                        else:
-                            nbNewTests = nbNewTests + 1
-                            versionDico["benchs"][testName] = testDico
-                            logging.critical(("----------------------------------------------- NEW RESULT:"
-                                              "Version %s on test %s. Time: %f, nbExplo: %d.")
-                                             % (versionName, testName, time, nbExplo))
+                        nbNewTests = nbNewTests + 1
+                        versionDico["benchs"][testName] = testDico
+                        logging.critical(("----------------------------------------------- NEW RESULT:"
+                                          "Version %s on test %s. Time: %f, nbExplo: %d.")
+                                         % (versionName, testName, time, nbExplo))
             logging.debug("\n")
 
 
@@ -238,15 +216,9 @@ def main():
           "Nb. of Tests: %d. Number of versions: %d. Number of new tests: %d. Number of rewrites: %d." % (nbTests, nbVers, nbNewTests, nbRewrite))
 
     print2("\n~~~~~~~~~ Results ~~~~~~~~~")
-    if args.tests:
-        testsFlag = "all"
-    else:
-        testsFlag = "notall"
+    testsFlag = "all"
 
-    if args.vers:
-        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="paper", tests=testsFlag, disp=args.explo)
-    else:
-        toPrint = fromVersToTests(VersionsDico, TestsDico, vers="all", tests=testsFlag, disp=args.explo)
+    toPrint = fromVersToTests(VersionsDico, TestsDico, vers="paper", tests=testsFlag, disp=args.explo)
 
     logging.debug(toPrint)
     toPrintColor = toPrint

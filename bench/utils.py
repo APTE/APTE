@@ -15,7 +15,6 @@ import marshal
 import re
 
 import dateutil.parser
-from rainbow_logging_handler import RainbowLoggingHandler
 from texttable import *
 from tabulate import tabulate
 
