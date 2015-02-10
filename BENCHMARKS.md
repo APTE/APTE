@@ -6,7 +6,7 @@ We present on this page how to build APTE and instructions for reproduction of o
 
 Some links:
 [official website](http://projects.lsv.ens-cachan.fr/APTE/),
-[official distribution and source code of APTE](https://github.com/APTE/APTE), and the [branch](https://github.com/APTE/APTE/tree/POR) containing only POR contributions.
+[official distribution on Github](https://github.com/APTE/APTE), and the [branch](https://github.com/APTE/APTE/tree/POR) containing only POR contributions.
 
 ## How to build APTE and launch benchmarks
 ### Build APTE
@@ -66,12 +66,12 @@ $ ./extract_res.py
 ## Tested protocols and results
 ### Protocols
 We performed benchmarks on real world protocols. They all are defined in the folder *./bench/protocols/* (via Github: [Protocols Files]). We check various properties. We list here all tested protocols and what property we check using APTE:
-- [Yahalom] (folder *Yahalom*): we test strong strong secrecy of the established key received by Bob (the responder);
-- [Needham Shroeder Symmetric Key] (folder *NS_sym*): we test strong strong secrecy of the established key received by Bob (the responder);
-- [Dennin Sacco] (folder *DenningSacco*): we test strong strong secrecy of the established key received by Bob (the responder);
+- [Yahalom] (folder *Yahalom*): we test strong secrecy of the established key received by Bob (the responder);
+- [Needham Shroeder Symmetric Key] (folder *NS_sym*): we test strong secrecy of the established key received by Bob (the responder);
+- [Dennin Sacco] (folder *DenningSacco*): we test strong secrecy of the established key received by Bob (the responder);
 - [Passive Autentication in ePassport] (folder *Passport_PA*): we test anonymity of the ePassport;
 - [Private Authentication] (folder *PrivateAuthentication*): we test anonymity of Bob (the responder);
-- [Wide Mouthed Frog] (folder *WMF*): we test strong strong secrecy of the established key received by Bob (the responder);
+- [Wide Mouthed Frog] (folder *WMF*): we test strong secrecy of the established key received by Bob (the responder);
 
 ### Results
 Running time in seconds (see the paper for graphs):
