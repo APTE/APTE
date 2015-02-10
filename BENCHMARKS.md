@@ -1,4 +1,4 @@
-# APTE AND BENCHMARKS
+# BENCHMARKING POR
 We present on this page how to build APTE and instructions for reproduction of our benchmarks.
 
 >APTE: *Algorithm for Proving Trace Equivalence*. 
@@ -74,7 +74,8 @@ We performed benchmarks on real world protocols. They all are defined in the fol
 - [Wide Mouthed Frog] (folder *WMF*): we test strong secrecy of the established key received by Bob (the responder);
 
 ### Results
-Running time in seconds (see the paper for graphs):
+Several graphs are shown in the paper.
+Here are the raw results (running time in seconds and **NonTerm** when running time > 20 hours or Memory consumption > 15 GO):
 
 | Protocols          |       ref           | comp          |  red        |
 |:-------------------|:-------------------:|:-------------:|:-----------:|

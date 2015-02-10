@@ -14,7 +14,7 @@ import utils
 
 # 
 def sortGraph(listEx):
-   listAssoc = [(int(ex.split("Graph_")[1].split("_par")[0]), ex) for ex in listEx]
+   listAssoc = [(int(ex.split("Simple_")[1].split("_par")[0]), ex) for ex in listEx]
    listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
    return([ex for (nb, ex) in listSorted])
 
@@ -81,7 +81,7 @@ def main():
           list_tests = filter(lambda s: pattern in s and "diff" in s, list_tests)
        else:
           list_tests = filter(lambda s: args.filter_tests in s and not("diff" in s), list_tests)
-       if args.filter_tests == "Graph":
+       if args.filter_tests == "Simple":
           list_tests = sortGraph(list_tests)
        if args.filter_tests == "WMF" or args.filter_tests == "WMF_diff":
           list_tests = sortWMF(list_tests)

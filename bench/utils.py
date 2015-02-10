@@ -157,23 +157,18 @@ def cmpGraph(ex1, ex2):
         return(cmp(ex1,ex2))
 
 def fromVersToTests(dicoVersions, dicoTests, toLatex=False, vers="all", tests="all", disp=None):
-    sortedVersions = ['ref', 'old_comp', 'comp_no_impr', 'comp',  'old_red',  'red_no_2', 'red_no_impr', 'red_no_nouse', 'red']
+    sortedVersions = ['ref', 'comp',  'red']
     listTestsKey = sorted(dicoTests.keys(), cmp = cmpGraph)
     listTestsFile = map(lambda x: dicoTests[x]['file'], listTestsKey)
     # first line of the matrix:
     fstLine = [" / "] + sortedVersions
-    if vers != "all":
-        fstLine = [fstLine[0], fstLine[1], fstLine[4], fstLine[9]]
     matrix = [fstLine]
     for i in range(len(listTestsFile)):
         if tests=="all" or (not("old" in listTestsKey[i])):
             keyTest = listTestsKey[i]
             fileName = listTestsFile[i]
             listResults = extractResults(dicoVersions, sortedVersions, dicoTests, keyTest, disp=disp)
-            if vers=="all":
-                matrix.append(listResults)
-            else:
-                matrix.append([listResults[0], listResults[1], listResults[4], listResults[9]])                      
+            matrix.append(listResults)
     if toLatex:
         return(printLatexMatrix(matrix))
     else:
