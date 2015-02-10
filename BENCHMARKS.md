@@ -40,11 +40,11 @@ By default, the script launches all versions of APTE on all protocols.
 You can also use arguments as follows:
 ```sh
 $ cd bench
-$ ./launch_benchmark.py -v [versions] -ft [filter] -f [path]
+$ ./launch_benchmark.py -v [versions] -ft [filter] -f [filename]
 ```
 - where [versions] are a list of versions taken from ["ref", "comp", "red"] (ex. "-v ref red");
 - where [filter] is used to select all protocols whose names contain [filter] (ex. "WMF", "AKA", "Graph", "DS", "NS", "Yahalom");
-- where [path] is used to create a log file.
+- where [filename] is used to create a log file inside '*log/*' folder.
 You can then manually extract results from log files or read the following section.
 
 #### Extract results
@@ -162,6 +162,6 @@ Here are the raw results (running time in seconds and **NonTerm** when running t
 [Yahalom]:http://www.lsv.ens-cachan.fr/Software/spore/yahalom.html
 [Dennin Sacco]:http://www.lsv.ens-cachan.fr/Software/spore/denningSacco.html
 [Needham Shroeder Symmetric Key]:http://www.lsv.ens-cachan.fr/Software/spore/nssk.html
-[Passive Autentication in ePassport]:http://en.wikipedia.org/wiki/Biometric_passport#Data_protection
-[Private Authentication]: http://dl.acm.org/citation.cfm?id=360213
+[Passive Autentication in ePassport]:http://www.lsv.ens-cachan.fr/Publis/PAPERS/PDF/ACD-csf12.pdf
+[Private Authentication]:https://users.soe.ucsc.edu/~abadi/Papers/tcs-private-authentication.pdf
 [Wide Mouthed Frog]:http://www.lsv.ens-cachan.fr/Software/spore/wideMouthedFrog.html
