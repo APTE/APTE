@@ -6,7 +6,7 @@ We present on this page how to build APTE and instructions for reproduction of o
 
 Some links:
 [official website](http://projects.lsv.ens-cachan.fr/APTE/),
-[official distribution and source code of APTE](https://github.com/APTE/APTE), and the [branch](https://github.com/APTE/APTE/tree/POR) containing only POR contributions.
+[official distribution on Github](https://github.com/APTE/APTE), and the [branch](https://github.com/APTE/APTE/tree/POR) containing only POR contributions.
 
 ## How to build APTE and launch benchmarks
 ### Build APTE
@@ -40,11 +40,11 @@ By default, the script launches all versions of APTE on all protocols.
 You can also use arguments as follows:
 ```sh
 $ cd bench
-$ ./launch_benchmark.py -v [versions] -ft [filter] -f [path]
+$ ./launch_benchmark.py -v [versions] -ft [filter] -f [filename]
 ```
 - where [versions] are a list of versions taken from ["ref", "comp", "red"] (ex. "-v ref red");
 - where [filter] is used to select all protocols whose names contain [filter] (ex. "WMF", "AKA", "Graph", "DS", "NS", "Yahalom");
-- where [path] is used to create a log file.
+- where [filename] is used to create a log file inside '*log/*' folder.
 You can then manually extract results from log files or read the following section.
 
 #### Extract results
@@ -66,12 +66,12 @@ $ ./extract_res.py
 ## Tested protocols and results
 ### Protocols
 We performed benchmarks on real world protocols. They all are defined in the folder *./bench/protocols/* (via Github: [Protocols Files]). We check various properties. We list here all tested protocols and what property we check using APTE:
-- [Yahalom] (folder *Yahalom*): we test strong strong secrecy of the established key received by Bob (the responder);
-- [Needham Shroeder Symmetric Key] (folder *NS_sym*): we test strong strong secrecy of the established key received by Bob (the responder);
-- [Dennin Sacco] (folder *DenningSacco*): we test strong strong secrecy of the established key received by Bob (the responder);
+- [Yahalom] (folder *Yahalom*): we test strong secrecy of the established key received by Bob (the responder);
+- [Needham Shroeder Symmetric Key] (folder *NS_sym*): we test strong secrecy of the established key received by Bob (the responder);
+- [Dennin Sacco] (folder *DenningSacco*): we test strong secrecy of the established key received by Bob (the responder);
 - [Passive Autentication in ePassport] (folder *Passport_PA*): we test anonymity of the ePassport;
 - [Private Authentication] (folder *PrivateAuthentication*): we test anonymity of Bob (the responder);
-- [Wide Mouthed Frog] (folder *WMF*): we test strong strong secrecy of the established key received by Bob (the responder);
+- [Wide Mouthed Frog] (folder *WMF*): we test strong secrecy of the established key received by Bob (the responder);
 
 ### Results
 Several graphs are shown in the paper.
@@ -162,6 +162,6 @@ Here are the raw results (running time in seconds and **NonTerm** when running t
 [Yahalom]:http://www.lsv.ens-cachan.fr/Software/spore/yahalom.html
 [Dennin Sacco]:http://www.lsv.ens-cachan.fr/Software/spore/denningSacco.html
 [Needham Shroeder Symmetric Key]:http://www.lsv.ens-cachan.fr/Software/spore/nssk.html
-[Passive Autentication in ePassport]:http://en.wikipedia.org/wiki/Biometric_passport#Data_protection
-[Private Authentication]: http://dl.acm.org/citation.cfm?id=360213
+[Passive Autentication in ePassport]:http://www.lsv.ens-cachan.fr/Publis/PAPERS/PDF/ACD-csf12.pdf
+[Private Authentication]:https://users.soe.ucsc.edu/~abadi/Papers/tcs-private-authentication.pdf
 [Wide Mouthed Frog]:http://www.lsv.ens-cachan.fr/Software/spore/wideMouthedFrog.html
