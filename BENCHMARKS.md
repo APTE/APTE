@@ -46,7 +46,8 @@ $ ./launch_benchmark.py -v [versions] -ft [filter] -f [filename]
 - where [versions] are a list of versions taken from ["ref", "comp", "red"] (ex. "-v ref red");
 - where [filter] is used to select all protocols whose names contain [filter] (ex. "WMF", "AKA", "Graph", "DS", "NS", "Yahalom");
 - where [filename] is used to create a log file inside '*log/*' folder.
-It is advised to launch in parallel one instance of this script per core of your processor since it will only use one core.
+
+It is advised to launch in parallel one instance of this script per core of your processor since one instance will only use one core.
 For instance:
 ```sh
 $ ./launch_benchmark.py -v ref -ft WMF -f WMF_ref
@@ -92,6 +93,7 @@ We performed those benchmarks on this machine:
 - OS: Linux sume 3.10-2-amd64 #1 SMP Debian 3.10.5-1 (2013-08-07) x86_64 GNU/Linux
 - CPU: Intel(R) Xeon(R) CPU X5650  @ 2.67GHz / stepping: 2 / microcode: 0x13 / cpu MHz: 2659.937 / cache size: 12288 KB
 - RAM: 47GO
+
 Note that, APTE only uses one core of the processor.
 
 
