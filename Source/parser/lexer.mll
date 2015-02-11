@@ -50,7 +50,7 @@ rule token = parse
 | '['	 { LBRACE }
 | ']'	 { RBRACE }
 | '|'	 { BARRE }
-| '+'	 { CHOICE }
+| '+'	 { PLUS }
 | ';'    { PVIR }
 | '.'	 { DOT }
 | ','    { VIR }
