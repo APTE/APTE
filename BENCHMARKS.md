@@ -47,7 +47,7 @@ $ ./launch_benchmark.py -v [versions] -ft [filter] -f [filename]
 - where [filter] is used to select all protocols whose names contain [filter] (ex. "WMF", "AKA", "Graph", "DS", "NS", "Yahalom");
 - where [filename] is used to create a log file inside '*log/*' folder.
 
-It is advised to launch in parallel one instance of this script per core of your processor since it will only use one core.
+It is advised to launch in parallel one instance of this script per core of your processor since one instance will only use one core.
 For instance:
 ```sh
 $ ./launch_benchmark.py -v ref -ft WMF -f WMF_ref
