@@ -1380,6 +1380,8 @@ let extract_common l1 l2 =
 
   aux (l1d,l2d)
 
+let isOrderPriorityInverse = ref false
+				 
 (* l1 ||^s l2 *)
 let lab_inpar l1 l2 = 
   let x1,x2,ld = extract_common l1 l2 in
@@ -1390,7 +1392,9 @@ let lab_inpar l1 l2 =
 (* l1 < l2 *)
 let lab_ord l1 l2 =
   let x1,x2,ld = extract_common l1 l2 in
-  x1 < x2
+  if !isOrderPriorityInverse
+  then x1 < x2
+  else x1 > x2
 
 exception No_pattern
 

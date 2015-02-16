@@ -175,7 +175,8 @@ val block_complete_inp : symbolic_process -> bool
     is of the form [In* : Out] (only one output. *)
 val must_generate_dep_csts : symbolic_process -> bool
 
-
+(** If this is set to true, then dependency constraints are added using an order opposite to the definition order *)
+val isOrderPriorityInverse : bool ref
 
 (** {4 Debugging tools} *)
 (** [is_subtrace traceinfo size symP] Returns true if symP has executed a trace whose the [size] first actions are

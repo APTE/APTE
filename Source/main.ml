@@ -169,6 +169,8 @@ let _ =
 
   while !i < Array.length Sys.argv && not !arret do
     match (Sys.argv).(!i) with
+      | "-orderPrior" -> 
+	 Standard_library.Process.isOrderPriorityInverse := true;
       | "-with_por" -> 
 	 Trace_equivalence.Algorithm.option_compr := true;
 	 if not(!i+1 = (Array.length Sys.argv))
