@@ -1384,6 +1384,9 @@ let extract_common l1 l2 =
     | _, _ ->   Debug.internal_error "[Process.ml >> extact_common] Should not happen!" in
   aux (l1d,l2d)
 
+
+let isOrderPriorityInverse = ref false
+				 
 (* test l1 ||^s l2 (i.e., if l1 and l2 are sequentially independent) *)
 let lab_inpar l1 l2 = 
   let x1,x2 = extract_common l1 l2 in
@@ -1395,7 +1398,9 @@ let lab_inpar l1 l2 =
    Note that we implictly assume that l1 ||^s l2. *)
 let lab_ord l1 l2 =
   let x1,x2 = extract_common l1 l2 in
-  x1 < x2
+  if !isOrderPriorityInverse
+  then x1 < x2
+  else x1 > x2
 
 
 (********** Looking for 'dependency-patterns'  *************)
