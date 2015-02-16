@@ -18,7 +18,7 @@ def sortGraph(listEx):
    listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
    return([ex for (nb, ex) in listSorted])
 
-def sortDS(listEx):
+def sortEx(listEx):
    listAssoc = [(int(ex.split("-")[-1].split(".txt")[0]), ex) for ex in listEx]
    listSorted = sorted(listAssoc, cmp=lambda (x1,x2),(y1,y2): cmp(x1, y1))
    return([ex for (nb, ex) in listSorted])
@@ -62,7 +62,7 @@ def main():
               ("shared" in words))
 
     list_tests = (glob.glob('protocols/*V2/*.txt'))
-    list_tests = filter(lambda s : new(s) or utils.filterData(s,data.TESTS), list_tests)
+#    list_tests = filter(lambda s : new(s) or utils.filterData(s,data.TESTS), list_tests)
     bina_pref = '../apte'
     if not(args.version):
         args.version = ["ref","comp","red"]
@@ -71,7 +71,7 @@ def main():
             print(args.version)
             list_binaries = []
             if "ref" in args.version:
-                list_binaries.append(bina_pref + "-no_comm")
+                list_binaries.append(bina_pref + " -no_comm")
             if "comp" in args.version:
                 bina = bina_pref + " -with_por compr improper"
                 list_binaries.append(bina)
@@ -87,13 +87,13 @@ def main():
        else:
           list_tests = filter(lambda s: args.filter_tests in s and not("diff" in s), list_tests)
        if args.filter_tests == "DS":
-          list_tests = sortDS(list_tests)
+          list_tests = sortEx(list_tests)
        if args.filter_tests == "Simple":
           list_tests = sortGraph(list_tests)
        if args.filter_tests == "WMF" or args.filter_tests == "WMF_diff":
-          list_tests = sortWMF(list_tests)
-       if args.filter_tests == "AKA":
-          list_tests = sortAKA(list_tests)
+          list_tests = sortEx(list_tests)
+       if args.filter_tests == "NS":
+          list_tests = sortEx(list_tests)
 
     pprint_all("="*15 + " STARTING A NEW BENCHMARK " + "="*15 +"\n")
     pprint_all("Date: " + str(datetime.now()) + "\n")
