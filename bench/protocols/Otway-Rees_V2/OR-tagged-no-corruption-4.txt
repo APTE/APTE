@@ -1,0 +1,116 @@
+# Otway Rees
+#
+# 1.  	A	->	B	 :  	M, A, B, {1,Na, M, A, B}Kas
+# 2.  	B	->	S	 :  	M, A, B, {1,Na, M, A, B}Kas , {2,Nb, M, A, B}Kbs
+# 3.  	S	->	B	 :  	M, {3, Na, Kab}Kas, {4, Nb, Kab}Kbs
+# 4.  	B	->	A	 :  	M, {3, Na, Kab}Kas
+# Strong secrecy of Kab
+# 6.  A      ->     : {m1}Kab versus {m2}K with K fresh
+
+free a.
+free b.
+
+free ca1.
+free cb1.
+free cs1.
+free ca2.
+
+free t1.
+free t2.
+free t3.
+free t4.
+
+free start.
+free m1.
+free m2.
+
+
+
+
+#######################################
+#    Description of role A played:
+# - on channel ca
+# - by a with key kas (shared with the server S)
+# - with responder b
+#######################################
+
+let processAreal ca a kas b =
+  in(ca,x);
+  if x = start then  
+  new m; new na;
+  out(ca,(m,(a,(b,senc((t1,(na,(m,(a,b)))),kas)))));
+  in(ca,xa);
+  let (xm,xas)= xa in
+  if xm = m then
+  let (xt3,(xna,xkab)) = sdec(xas,kas) in
+  if xt3 = t3 && xna = na then
+    out(ca,senc(m1,xkab)).
+
+
+let processAideal ca a kas b =
+  in(ca,x);
+  if x = start then  
+  new m; new na;
+  out(ca,(m,(a,(b,senc((t1, (na,(m,(a,b)))),kas)))));
+  in(ca,xa);
+  let (xm,xas)= xa in
+  if xm = m then
+  let (xt3,(xna,xkab)) = sdec(xas,kas) in
+  if xt3 = t3 && xna = na then
+     new k;
+    out(ca,senc(m2,k)).
+
+#######################################
+#    Description of role B played:    
+# - on channel cb
+# - by b with key kbs (shared with the server S)
+# - with initiator a
+#######################################
+
+let processB cb b kbs a  =
+  in(cb,yb1);
+  let (ym, (ya, (yb, yas)))= yb1 in
+  if ya = a && yb = b then
+    new nb;
+    out(cb,(ym,(a,(b,(yas,senc((t2, (nb,(ym,(a,b)))),kbs))))));
+    in(cb,yb2);
+    let (ym2,(yb2a,yb2b)) = yb2 in
+    if ym2 = ym then
+    let (yt4,(ynb,ykab)) = sdec(yb2b,kbs) in
+    	if yt4 = t4 && ynb = nb then 
+	out(cb,(ym,yb2a)).
+
+#######################################
+#    Description of role S played:    
+# - on channel cs
+# - to answer a request coming from a (with key kas) 
+# - who wants to communicate with b (with key kbs) 
+#######################################
+
+let processS cs a kas b kbs =
+	in(cs,zs); 
+	let (zm,(za,(zb,(zas,zbs)))) = zs in 
+	if za =a && zb = b then
+	let (zt1,(zna, (zm1, (za1, zb1)))) = sdec(zas,kas) in
+	if zt1 = t1 && zm1 = zm && za1 = a && zb1  = b then
+	let (zt2,(znb, (zm2, (za2, zb2)))) = sdec(zbs,kbs) in
+	if zt2 = t2 && zm2 = zm && za2 = a && zb2  = b then
+	new kab;
+	out(cs,(zm,(senc((t3,(zna,kab)),kas),senc((t4,(znb,kab)),kbs)))).
+
+#######################################
+#   			Main                  #
+#######################################
+
+let Preal = 
+  new kas; new kbs; 
+(processAreal ca1 a kas b|  processB  cb1 b kbs a | processS cs1 a kas b kbs 
+|processAreal ca2 a kas b).
+
+
+let Pideal = 
+  new kas; new kbs; 
+( processAideal ca1 a kas b | processB  cb1 b kbs a  | processS cs1 a kas b kbs
+|processAideal ca2 a kas b).
+
+equivalence Preal and Pideal.

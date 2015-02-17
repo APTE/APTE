@@ -124,7 +124,10 @@ def extractResults(dicoV, sortedV, dicoT, keyT, disp=None):
                 versionBenchs[bench]["file"].strip() == dicoT[keyT]["file"].strip()):
                 #res.append((versionBenchs[bench]["time"], versionBenchs[bench]["nbExplo"]))
                 if versionBenchs[bench]["res"] != dicoT[keyT]["res"]:
-                    res.append("> X <")
+                    if disp:
+                        res.append("> " + prettyFloat(versionBenchs[bench]["nbExplo"]) + " <")
+                    else:
+                        res.append("> " + prettyFloat(versionBenchs[bench]["time"]) + " <")
                 elif versionBenchs[bench]["new"]:
                     if disp:
                         res.append("->" + prettyFloat(versionBenchs[bench]["nbExplo"]) + "<-")
@@ -158,7 +161,8 @@ def cmpGraph(ex1, ex2):
 
 def fromVersToTests(dicoVersions, dicoTests, toLatex=False, vers="all", tests="all", disp=None):
     sortedVersions = ['ref', 'comp',  'red']
-    listTestsKey = sorted(dicoTests.keys(), cmp = cmpGraph)
+    listTests = filter(lambda s: dicoTests[s]['cat'] == 12, dicoTests.keys())
+    listTestsKey = sorted(listTests, cmp = cmpGraph)
     listTestsFile = map(lambda x: dicoTests[x]['file'], listTestsKey)
     # first line of the matrix:
     fstLine = [" / "] + sortedVersions

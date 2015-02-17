@@ -1,0 +1,117 @@
+# Wide Mouthed Frog Symmetric Key
+#
+# 1.  A	->	S:  	{B, Kab}Kas
+# 2.  S	->	B:  	{A, Kab}Kbs
+# Strong secrecy of Kab
+# 3.  B      ->     : {m1}Kab versus {m2}K with K fresh
+
+# honest agents
+free a.
+free b.
+# dishonest agent
+free c.
+free kcs.
+
+free ca1.
+free cb1.
+free cs1.
+free ca2.
+free cs2.
+free cb3.
+free cs3.
+
+free ca4.
+free cb4.
+free cs4.
+free ca5.
+free cs5.
+free cb6.
+free cs6.
+
+
+free m1.
+free m2.
+free start.
+free ok.
+
+#######################################
+#    Description of role A played:
+# - on channel ca
+# - by a with key kas (shared with the server S)
+# - with responder b
+#######################################
+
+let processA ca a kas b =
+  in(ca,x); 
+  if x = start then
+  new kab;
+  out(ca,senc((b,kab),kas)).
+
+#######################################
+#    Description of role B played:    
+# - on channel cb
+# - by b with key kbs (shared with the server S)
+# - with initiator a
+#######################################
+
+let processBreal cb b kbs a  =
+  in(cb,yb);
+  let (ya,yab)= sdec(yb,kbs) in
+  if ya = a then  
+     	out(cb,senc(m1,yab)).
+
+
+let processBideal cb b kbs a  =
+  in(cb,yb);
+  let (ya,yab)= sdec(yb,kbs) in
+  if ya = a then
+ 	new k;
+	out(cb,senc(m2,k)).
+
+
+let processB cb b kbs a  =
+  in(cb,yb);
+  let (ya,yab)= sdec(yb,kbs) in
+  if ya = a then 
+     out(cb,ok).
+
+#######################################
+#    Description of role S played:    
+# - on channel cs
+# - to answer a request coming from a (with key kas) 
+# - who wants to communicate with b (with key kbs) 
+#######################################
+
+let processS cs a kas b kbs =
+	in(cs,zs); 
+	let (zb,zab) = sdec(zs,kas) in 
+	if zb =b then 
+	out(cs,senc((a,zab),kbs)).
+
+#######################################
+#   			Main                  #
+#######################################
+
+let Preal = 
+  new kas; new kbs; 
+( 
+processA ca1 a kas b |  processBreal  cb1 b kbs a | processS cs1 a kas  b kbs
+|  processA ca2 a kas c | processS cs2 a kas  c kcs
+|  processB  cb3 b kbs c | processS cs3 c kcs  b kbs
+| processA ca4 b kbs a |  processB  cb4 a kas b | processS cs4 b kbs  a kas
+|  processA ca5 b kbs c | processS cs5 b kbs  c kcs
+|  processB  cb6 a kas c | processS cs6 b kbs  c kcs
+).
+
+
+let Pideal = 
+  new kas; new kbs; 
+( processA ca1 a kas b |  processBideal  cb1 b kbs a | processS cs1 a kas b kbs 
+|  processA ca2 a kas c | processS cs2 a kas  c kcs
+|  processB  cb3 b kbs c | processS cs3 c kcs  b kbs
+| processA ca4 b kbs a |  processB  cb4 a kas b | processS cs4 b kbs  a kas
+|  processA ca5 b kbs c | processS cs5 b kbs  c kcs
+|  processB  cb6 a kas c | processS cs6 b kbs  c kcs
+).
+
+equivalence Preal and Pideal.

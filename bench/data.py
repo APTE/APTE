@@ -716,6 +716,7 @@ TESTS = {
         'file' : 'Simple_24_par.txt',
         'cat' : 4,
     },
+    'WMF_corruption_8': {'res': True, 'name': ' ', 'file': 'WMF-corruption-8.txt', 'cat': 12}, 'DS_corruption_7': {'res': True, 'name': ' ', 'file': 'DS-corruption-7.txt', 'cat': 12}, 'NS_no_3': {'res': False, 'name': ' ', 'file': 'NS-no-corruption-3.txt', 'cat': 12}, 'WMF_no_3': {'res': False, 'name': ' ', 'file': 'WMF-no-corruption-3.txt', 'cat': 12}, 'DS_corruption_8': {'res': True, 'name': ' ', 'file': 'DS-corruption-8.txt', 'cat': 12}, 'WMF_corruption_7': {'res': True, 'name': ' ', 'file': 'WMF-corruption-7.txt', 'cat': 12}, 'WMF_no_4': {'res': False, 'name': ' ', 'file': 'WMF-no-corruption-4.txt', 'cat': 12}, 'OR_tagged_corruption': {'res': False, 'name': ' ', 'file': 'OR-tagged-super-modified-no-corruption.txt', 'cat': 12}, 'NS_no_4': {'res': False, 'name': ' ', 'file': 'NS-no-corruption-4.txt', 'cat': 12}, 'DS_no_4': {'res': False, 'name': ' ', 'file': 'DS-no-corruption-4.txt', 'cat': 12}, 'OR_no_3': {'res': False, 'name': ' ', 'file': 'OR-no-corruption-3.txt', 'cat': 12}, 'DS_no_3': {'res': False, 'name': ' ', 'file': 'DS-no-corruption-3.txt', 'cat': 12}
 }
 
 def get_versDico():

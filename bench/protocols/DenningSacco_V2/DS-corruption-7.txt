@@ -1,0 +1,105 @@
+# Denning Sacco Symmetric Key
+#
+# 1.  A	->	S:  	A, B
+# 2.  S	->	A:  	{B, Kab, {Kab, A}Kbs}Kas
+# 3.  A	->	B:  	{Kab,A}Kbs
+# Strong secrecy of Kab
+# 6.  B      ->     : {m1}Kab versus {m2}K with K fresh
+
+free a.
+free b.
+free c.
+free kcs.
+
+free ca1.
+free cb1.
+free cs1.
+free ca2.
+free cs2.
+free cb3.
+free cs3.
+
+
+free m1.
+free m2.
+free start.
+free req.
+free rep.
+free ok.
+#######################################
+#    Description of role A played:
+# - on channel ca
+# - by a with key kas (shared with the server S)
+# - with responder b
+#######################################
+
+let processA ca a kas b =
+  in(ca,x);
+  if x = start then
+  out(ca,(a,b));
+  in(ca,xa);
+  let (xb,xab,xmb) = sdec(xa,kas) in
+  if xb = b then
+    out(ca,xmb).
+
+#######################################
+#    Description of role B played:    
+# - on channel cb
+# - by b with key kbs (shared with the server S)
+# - with initiator a
+#######################################
+
+let processBreal cb b kbs a  =
+  in(cb,yb);
+  let (yab,ya)= sdec(yb,kbs) in
+  if ya = a then
+	out(cb,senc(m1,yab)).
+
+
+let processBideal cb b kbs a  =
+  in(cb,yb);
+  let (yab,ya)= sdec(yb,kbs) in
+  if ya = a then
+	new k;
+	out(cb,senc(m2,k)).
+
+
+let processB cb b kbs a  =
+  in(cb,yb);
+  let (yab,ya)= sdec(yb,kbs) in
+  if ya = a then out(cb,ok).
+
+#######################################
+#    Description of role S played:    
+# - on channel cs
+# - to answer a request coming from a (with key kas) 
+# - who wants to communicate with b (with key kbs) 
+#######################################
+
+let processS cs a kas b kbs =
+	in(cs,zs); 
+	let (za,zb) = zs in 
+	if za =a && zb = b then
+	new kab;
+	out(cs,senc((zb,kab,senc((kab,za),kbs)),kas)).
+
+#######################################
+#   			Main                  #
+#######################################
+
+let Preal = 
+  new kas; new kbs; 
+( processA ca1 a kas b |  processBreal  cb1 b kbs a | processS cs1 a kas b kbs
+  |processA ca2 a kas c | processS cs2 a kas c kcs
+  |processB cb3 b kbs c | processS cs3 c kcs b kbs
+).
+
+
+let Pideal = 
+  new kas; new kbs; 
+( processA ca1 a kas b |  processBideal  cb1 b kbs a | processS cs1 a kas b kbs
+  |processA ca2 a kas c | processS cs2 a kas c kcs
+  |processB cb3 b kbs c | processS cs3 c kcs b kbs
+).
+
+equivalence Preal and Pideal.
