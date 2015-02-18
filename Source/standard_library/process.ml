@@ -658,16 +658,170 @@ let apply_internal_transition_without_comm with_por with_improper function_next 
 			     flag_improper = false;
 			   } 
 			   else flags in
+	    assert (List.length prev_proc < 10);
 	    go_through (proc::prev_proc) csys newFlags q in
   
   (* Initally, we only have one proc to process and we have discovered no proc *)
   let flagsInit = {nb_sub_proc_pos = 0; nb_sub_proc_non_zero = 0; nb_sub_proc_to_process = 1; flag_improper = false;} in
   go_through [] symb_proc.constraint_system flagsInit symb_proc.process
-	     
+
+	     (*************************************
+	   Display function
+**************************************)  
+
+let rec display_formula and_prev or_prev = function
+  | Neq(t1,t2) -> Printf.sprintf "%s <> %s" (Term.display_term t1) (Term.display_term t2)
+  | Eq(t1,t2) -> Printf.sprintf "%s = %s" (Term.display_term t1) (Term.display_term t2)
+  | And(eq1,eq2) -> 
+      if or_prev
+      then Printf.sprintf "(%s && %s)" (display_formula true false eq1) (display_formula true false eq2)
+      else Printf.sprintf "%s && %s" (display_formula true false eq1) (display_formula true false eq2)
+  | Or(eq1,eq2) ->
+      if and_prev
+      then Printf.sprintf "(%s || %s)" (display_formula false true eq1) (display_formula false true eq2)
+      else Printf.sprintf "%s || %s" (display_formula false true eq1) (display_formula false true eq2)
+           
+let rec display_list_pattern = function
+  | [] -> ""
+  | [t] -> display_pattern t
+  | t::q -> Printf.sprintf "%s,%s" (display_pattern t) (display_list_pattern q)      
+      
+and display_pattern = function
+  | Var(v) -> Term.display_variable v
+  | Tuple(_,args) -> Printf.sprintf "(%s)" (display_list_pattern args)
+      
+let rec create_depth_tabulation = function
+  |0 -> ""
+  |depth -> "  "^(create_depth_tabulation (depth-1))
+      
+let rec sub_display_process n_tab prev_choice prev_par prev_in_out = function
+  | Nil -> 
+       if prev_in_out
+       then ""
+       else 
+         let tab = create_depth_tabulation (n_tab-1) in
+         tab^"0\n"
+  | Choice(p1,p2) when prev_choice ->
+      let tab = create_depth_tabulation (n_tab-1) in
+      let line = tab^")+(\n" in
+      
+      (sub_display_process n_tab true false false p1)^line^(sub_display_process n_tab true false false p2)
+  | Choice(p1,p2) ->
+      let tab = create_depth_tabulation n_tab in
+      
+      let line1 = tab^"(\n"
+      and line2 = tab^") + (\n"
+      and line3 = tab^")\n" in
+      
+      line1^(sub_display_process (n_tab+1) true false false p1)^line2^(sub_display_process (n_tab+1) true false false p2)^line3
+  | Par(p1,p2) when prev_par ->
+      let tab = create_depth_tabulation (n_tab-1) in
+      let line = tab^") | (\n" in
+      
+      (sub_display_process n_tab false true false p1)^line^(sub_display_process n_tab false true false p2)
+  | Par(p1,p2) ->
+      let tab = create_depth_tabulation n_tab in
+      
+      let line1 = tab^"(\n"
+      and line2 = tab^") | (\n"
+      and line3 = tab^")\n" in
+      
+      line1^(sub_display_process (n_tab+1) false true false p1)^line2^(sub_display_process (n_tab+1) false true false p2)^line3
+  | New(n,p,label) ->
+      let tab = create_depth_tabulation n_tab in
+      Printf.sprintf "%s{%d} new %s.\n%s" tab label (Term.display_name n) (sub_display_process n_tab false false false p)
+  | In(ch,v,p,label) ->
+      let tab = create_depth_tabulation n_tab in
+      
+      Printf.sprintf "%s{%d} in(%s,%s);\n%s" tab label
+        (Term.display_term ch)
+        (Term.display_variable v)
+        (sub_display_process n_tab false false true p)
+  | Out(ch,t,p,label) ->
+      let tab = create_depth_tabulation n_tab in
+      
+      Printf.sprintf "%s{%d} out(%s,%s);\n%s" tab label
+        (Term.display_term ch)
+        (Term.display_term t)
+        (sub_display_process n_tab false false true p)
+  | Let(pat,t,p,label) ->
+      let tab = create_depth_tabulation n_tab in
+  
+      Printf.sprintf "%s{%d} let %s = %s in\n%s" tab label
+        (display_pattern pat)
+        (Term.display_term t)
+        (sub_display_process n_tab false false false p)
+  | IfThenElse(form,p1,Nil,label) ->
+      let tab = create_depth_tabulation n_tab in
+  
+      let line = Printf.sprintf "%s{%d} if %s then\n" tab label (display_formula false false form) in
+
+      line^(sub_display_process (n_tab+1) false false false p1)
+  | IfThenElse(form,p1,p2,label) ->
+      let tab = create_depth_tabulation n_tab in
+  
+      let line = Printf.sprintf "%s{%d} if %s then\n" tab label (display_formula false false form) in
+
+      line^(sub_display_process (n_tab+1) false false false p1)^tab^"else\n"^(sub_display_process (n_tab+1) false false false p2)
+      
+let display_process = sub_display_process 0 false false false
+
+let display_trace_label_no_unif m_subst recipe_term_assoc = function 
+  | Output(label,r_ch,m_ch,ax,t,pl) -> 
+      Printf.sprintf "Output {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
+        label 
+	(display_parlab pl)
+        (Term.display_term (Term.apply_substitution m_subst m_ch (fun t f -> f t)))
+        (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch)
+        (Term.display_term (Term.apply_substitution m_subst t (fun t f -> f t)))
+        (Recipe.display_axiom ax)
+  | Input(label,r_ch,m_ch,r_t,m_t,pl) ->
+      Printf.sprintf "Input {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
+        label 
+	(display_parlab pl)
+        (Term.display_term (Term.apply_substitution m_subst m_ch (fun t f -> f t)))
+        (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch)
+        (Term.display_term (Term.apply_substitution m_subst m_t (fun t f -> f t)))
+        (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_t)
+  | Comm(intern) ->
+      Printf.sprintf "Internal communication between the input {%d} and output {%d}\n" intern.in_label intern.out_label  
+
+let display_trace_no_unif symb_proc =
+  let message_eq = Constraint_system.get_message_equations symb_proc.constraint_system in
+  
+  let subst = Term.unify message_eq in
+  
+  let trace = 
+    List.fold_left (fun str_acc tr_label ->
+      str_acc^(display_trace_label_no_unif subst symb_proc.axiom_name_assoc tr_label)
+    ) "" (List.rev symb_proc.trace) in
+  
+  Printf.sprintf "%s\n%s\n" trace (Constraint_system.display symb_proc.constraint_system)
+
+let display_trace_no_unif_no_csts symb_proc =
+  let message_eq = Constraint_system.get_message_equations symb_proc.constraint_system in
+  
+  let subst = Term.unify message_eq in
+  
+  let trace = 
+    List.fold_left (fun str_acc tr_label ->
+      str_acc^(display_trace_label_no_unif subst symb_proc.axiom_name_assoc tr_label)
+    ) "" (List.rev symb_proc.trace) in
+  Printf.sprintf "%s" trace
+
+let pp = Printf.printf
+let display_symb_process symP =
+  Printf.printf "##################### Symbolic Process ###########################\n";
+  List.iter (fun (p,pl) -> Printf.printf "## Process (index %s):\n%s\n" (display_parlab (fst pl)) (display_process p))
+	    symP.process;
+  Printf.printf "%s" (display_trace_blocks symP)
+
+
 (* We assume in this function that the internal transition except the communication have been applied.
  It is not executed if with_comm = true *)  
 let rec apply_one_internal_transition_with_comm function_next symb_proc = 
-
+  display_symb_process symb_proc;
+  
   let rec go_through prev_proc_1 forbid_comm_1 = function
     | [] -> function_next { symb_proc with forbidden_comm = forbid_comm_1 }
     | ((In(ch_in,v,sub_proc_in,label_in),_) as proc_in)::q_1 -> 
@@ -933,149 +1087,6 @@ let apply_output_filter ch_f function_next ch_var_r symb_proc =
   go_through [] symb_proc.process
 
 
-(*************************************
-	   Display function
-**************************************)  
-
-let rec display_formula and_prev or_prev = function
-  | Neq(t1,t2) -> Printf.sprintf "%s <> %s" (Term.display_term t1) (Term.display_term t2)
-  | Eq(t1,t2) -> Printf.sprintf "%s = %s" (Term.display_term t1) (Term.display_term t2)
-  | And(eq1,eq2) -> 
-      if or_prev
-      then Printf.sprintf "(%s && %s)" (display_formula true false eq1) (display_formula true false eq2)
-      else Printf.sprintf "%s && %s" (display_formula true false eq1) (display_formula true false eq2)
-  | Or(eq1,eq2) ->
-      if and_prev
-      then Printf.sprintf "(%s || %s)" (display_formula false true eq1) (display_formula false true eq2)
-      else Printf.sprintf "%s || %s" (display_formula false true eq1) (display_formula false true eq2)
-           
-let rec display_list_pattern = function
-  | [] -> ""
-  | [t] -> display_pattern t
-  | t::q -> Printf.sprintf "%s,%s" (display_pattern t) (display_list_pattern q)      
-      
-and display_pattern = function
-  | Var(v) -> Term.display_variable v
-  | Tuple(_,args) -> Printf.sprintf "(%s)" (display_list_pattern args)
-      
-let rec create_depth_tabulation = function
-  |0 -> ""
-  |depth -> "  "^(create_depth_tabulation (depth-1))
-      
-let rec sub_display_process n_tab prev_choice prev_par prev_in_out = function
-  | Nil -> 
-       if prev_in_out
-       then ""
-       else 
-         let tab = create_depth_tabulation (n_tab-1) in
-         tab^"0\n"
-  | Choice(p1,p2) when prev_choice ->
-      let tab = create_depth_tabulation (n_tab-1) in
-      let line = tab^")+(\n" in
-      
-      (sub_display_process n_tab true false false p1)^line^(sub_display_process n_tab true false false p2)
-  | Choice(p1,p2) ->
-      let tab = create_depth_tabulation n_tab in
-      
-      let line1 = tab^"(\n"
-      and line2 = tab^") + (\n"
-      and line3 = tab^")\n" in
-      
-      line1^(sub_display_process (n_tab+1) true false false p1)^line2^(sub_display_process (n_tab+1) true false false p2)^line3
-  | Par(p1,p2) when prev_par ->
-      let tab = create_depth_tabulation (n_tab-1) in
-      let line = tab^") | (\n" in
-      
-      (sub_display_process n_tab false true false p1)^line^(sub_display_process n_tab false true false p2)
-  | Par(p1,p2) ->
-      let tab = create_depth_tabulation n_tab in
-      
-      let line1 = tab^"(\n"
-      and line2 = tab^") | (\n"
-      and line3 = tab^")\n" in
-      
-      line1^(sub_display_process (n_tab+1) false true false p1)^line2^(sub_display_process (n_tab+1) false true false p2)^line3
-  | New(n,p,label) ->
-      let tab = create_depth_tabulation n_tab in
-      Printf.sprintf "%s{%d} new %s.\n%s" tab label (Term.display_name n) (sub_display_process n_tab false false false p)
-  | In(ch,v,p,label) ->
-      let tab = create_depth_tabulation n_tab in
-      
-      Printf.sprintf "%s{%d} in(%s,%s);\n%s" tab label
-        (Term.display_term ch)
-        (Term.display_variable v)
-        (sub_display_process n_tab false false true p)
-  | Out(ch,t,p,label) ->
-      let tab = create_depth_tabulation n_tab in
-      
-      Printf.sprintf "%s{%d} out(%s,%s);\n%s" tab label
-        (Term.display_term ch)
-        (Term.display_term t)
-        (sub_display_process n_tab false false true p)
-  | Let(pat,t,p,label) ->
-      let tab = create_depth_tabulation n_tab in
-  
-      Printf.sprintf "%s{%d} let %s = %s in\n%s" tab label
-        (display_pattern pat)
-        (Term.display_term t)
-        (sub_display_process n_tab false false false p)
-  | IfThenElse(form,p1,Nil,label) ->
-      let tab = create_depth_tabulation n_tab in
-  
-      let line = Printf.sprintf "%s{%d} if %s then\n" tab label (display_formula false false form) in
-
-      line^(sub_display_process (n_tab+1) false false false p1)
-  | IfThenElse(form,p1,p2,label) ->
-      let tab = create_depth_tabulation n_tab in
-  
-      let line = Printf.sprintf "%s{%d} if %s then\n" tab label (display_formula false false form) in
-
-      line^(sub_display_process (n_tab+1) false false false p1)^tab^"else\n"^(sub_display_process (n_tab+1) false false false p2)
-      
-let display_process = sub_display_process 0 false false false
-
-let display_trace_label_no_unif m_subst recipe_term_assoc = function 
-  | Output(label,r_ch,m_ch,ax,t,pl) -> 
-      Printf.sprintf "Output {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (axiom %s)\n" 
-        label 
-	(display_parlab pl)
-        (Term.display_term (Term.apply_substitution m_subst m_ch (fun t f -> f t)))
-        (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch)
-        (Term.display_term (Term.apply_substitution m_subst t (fun t f -> f t)))
-        (Recipe.display_axiom ax)
-  | Input(label,r_ch,m_ch,r_t,m_t,pl) ->
-      Printf.sprintf "Input {%d} (parlab: %s) on the channel %s (obtain by %s) of the term %s (obtain by %s)\n" 
-        label 
-	(display_parlab pl)
-        (Term.display_term (Term.apply_substitution m_subst m_ch (fun t f -> f t)))
-        (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_ch)
-        (Term.display_term (Term.apply_substitution m_subst m_t (fun t f -> f t)))
-        (Recipe.display_recipe2 recipe_term_assoc Term.display_term r_t)
-  | Comm(intern) ->
-      Printf.sprintf "Internal communication between the input {%d} and output {%d}\n" intern.in_label intern.out_label  
-
-let display_trace_no_unif symb_proc =
-  let message_eq = Constraint_system.get_message_equations symb_proc.constraint_system in
-  
-  let subst = Term.unify message_eq in
-  
-  let trace = 
-    List.fold_left (fun str_acc tr_label ->
-      str_acc^(display_trace_label_no_unif subst symb_proc.axiom_name_assoc tr_label)
-    ) "" (List.rev symb_proc.trace) in
-  
-  Printf.sprintf "%s\n%s\n" trace (Constraint_system.display symb_proc.constraint_system)
-
-let display_trace_no_unif_no_csts symb_proc =
-  let message_eq = Constraint_system.get_message_equations symb_proc.constraint_system in
-  
-  let subst = Term.unify message_eq in
-  
-  let trace = 
-    List.fold_left (fun str_acc tr_label ->
-      str_acc^(display_trace_label_no_unif subst symb_proc.axiom_name_assoc tr_label)
-    ) "" (List.rev symb_proc.trace) in
-  Printf.sprintf "%s" trace
 
 
 (*************************************
@@ -1296,12 +1307,6 @@ let set_focus new_flag symb_proc =
     has_focus = new_flag;
     
   }
-
-let display_symb_process symP =
-  Printf.printf "##################### Symbolic Process ###########################\n";
-  List.iter (fun (p,pl) -> Printf.printf "## Process (index %s):\n%s\n" (display_parlab (fst pl)) (display_process p))
-	    symP.process;
-  Printf.printf "%s" (display_trace_blocks symP)
 
 
 let debug_f = ref false          (* Do we print debugging information for the 'reduced' work  *)

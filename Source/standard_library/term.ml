@@ -223,7 +223,7 @@ let apply_function symbol list_sons =
 
 let top term = match term with
   | Func(s,_) -> s
-  | _ -> Debug.internal_error "[terms.ml >> top] The term is not a function application"
+  | _ -> failwith "eheh";Debug.internal_error "[terms.ml >> top] The term is not a function application"
   
 let nth_args t i = match t with
   | Func(_,l) -> List.nth l (i-1)

@@ -244,13 +244,18 @@ let apply_strategy_one_transition next_function_output next_function_input left_
    conditionals and branch for then/else and for the different ways (disjunction)
    to satisfy the conditional's test. Thanks to our "function_next", we then put
    all those alternatives together in left/right_internal lists. *)
+  let pp = Printf.printf in
   List.iter (fun symb_proc_1 ->
     Process.apply_internal_transition
-      ~with_comm:!option_internal_communication ~with_por:false ~with_improper:false (fun symb_proc_2 -> 
-      left_internal := symb_proc_2::!left_internal
-    ) symb_proc_1
+      ~with_comm:!option_internal_communication ~with_por:false ~with_improper:false
+      (fun symb_proc_2 -> 
+       left_internal := symb_proc_2::!left_internal;
+       if (List.length !left_internal < 100)
+       then pp "Plus que 100: %!";
+      ) symb_proc_1
   ) left_erase_set;
-
+  Printf.printf "Longueur gauche: %d.\n%!" (List.length !left_internal);
+  
   List.iter (fun symb_proc_1 ->
     Process.apply_internal_transition
       ~with_comm:!option_internal_communication
