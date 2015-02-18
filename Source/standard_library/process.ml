@@ -684,7 +684,7 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                   
                   let new_forbid_comm_1 = remove_in_label label_in forbid_comm_2 in
                   let new_forbid_comm_2 = remove_out_label label_out new_forbid_comm_1 in
-                  
+
                   let symb_proc_1 = 
                     { symb_proc with
                       process = prev_proc_1@((sub_proc_in,dummy_l)::(sub_proc_out,dummy_l)::prev_proc_2)@q_2;
@@ -693,7 +693,6 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                       trace = (Comm { in_label = label_in; out_label = label_out })::symb_proc.trace;
                     }
                   in
-                  
                   apply_internal_transition_without_comm false false (* with_por must be false since with_comm = true *)
                     (apply_one_internal_transition_with_comm function_next) symb_proc_1;
                     

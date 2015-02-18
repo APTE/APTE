@@ -221,9 +221,7 @@ let apply_function symbol list_sons =
   
 (********* Access Functions *********)
 
-let top term = match term with
-  | Func(s,_) -> s
-  | _ -> Debug.internal_error "[terms.ml >> top] The term is not a function application"
+let pp = Printf.printf
   
 let nth_args t i = match t with
   | Func(_,l) -> List.nth l (i-1)
@@ -998,3 +996,9 @@ struct
     IntMap.iter (fun t elt -> Printf.printf "%d -> %s; " t (f elt)) map;
     Printf.printf "}"
 end
+
+let top term = match term with
+  | Func(s,_) -> s
+  | _ ->
+     pp "Term is: %s" (display_term term);
+     failwith "eheh"; Debug.internal_error "[terms.ml >> top] The term is not a function application"
