@@ -1,0 +1,148 @@
+Opening file bench/protocols/Otway-Rees_V2/OR-tagged-modified-no-corruption-3.txt
+------------
+Equivalence between the two following processes:
+
+Process 1 =
+{1} new Nkas_32.
+{2} new Nkbs_33.
+(
+  {3} in(Nca_2,Vx_159);
+  {4} if Vx_159 = Nstart_9 then
+    {5} new Nm_36.
+    {6} new Nna_37.
+    {7} out(Nca_2,(Nm_36,(Na_0,(Nb_1,senc((Nt1_5,(Nna_37,(Nm_36,(Na_0,Nb_1)))),Nkas_32)))));
+    {8} in(Nca_2,Vxa_160);
+    {9} let (Vxm_161,Vxas_162) = Vxa_160 in
+    {10} if Vxm_161 = Nm_36 then
+      {11} let (Vxt3_163,(Vxna_164,Vxkab_165)) = sdec(Vxas_162,Nkas_32) in
+      {12} if Vxt3_163 = Nt3_7 && Vxna_164 = Nna_37 then
+        {13} out(Nca_2,senc(Nm1_10,Vxkab_165));
+) | (
+  {14} in(Ncb_3,Vyb1_149);
+  {15} let (Vym_150,(Vya_151,Vyb_152)) = Vyb1_149 in
+  {16} if Vya_151 = Na_0 && Vyb_152 = Nb_1 then
+    {17} new Nnb_35.
+    {18} out(Ncb_3,(Vym_150,(Na_0,(Nb_1,senc((Nt2_6,(Nnb_35,(Vym_150,(Na_0,Nb_1)))),Nkbs_33)))));
+    {19} in(Ncb_3,Vyb2_153);
+    {20} let (Vym2_154,Vyb2b_155) = Vyb2_153 in
+    {21} if Vym2_154 = Vym_150 then
+      {22} let (Vyt4_156,(Vynb_157,Vykab_158)) = sdec(Vyb2b_155,Nkbs_33) in
+      {23} if Vyt4_156 = Nt4_8 && Vynb_157 = Nnb_35 then
+        {24} out(Ncb_3,Vym_150);
+) | (
+  {25} in(Ncs_4,Vzs_133);
+  {26} let (Vzm_134,(Vza_135,(Vzb_136,(Vzas_137,Vzbs_138)))) = Vzs_133 in
+  {27} if Vza_135 = Na_0 && Vzb_136 = Nb_1 then
+    {28} let (Vzt1_139,(Vzna_140,(Vzm1_141,(Vza1_142,Vzb1_143)))) = sdec(Vzas_137,Nkas_32) in
+    {29} if Vzt1_139 = Nt1_5 && Vzm1_141 = Vzm_134 && Vza1_142 = Na_0 && Vzb1_143 = Nb_1 then
+      {30} let (Vzt2_144,(Vznb_145,(Vzm2_146,(Vza2_147,Vzb2_148)))) = sdec(Vzbs_138,Nkbs_33) in
+      {31} if Vzt2_144 = Nt2_6 && Vzm2_146 = Vzm_134 && Vza2_147 = Na_0 && Vzb2_148 = Nb_1 then
+        {32} new Nkab_34.
+        {33} out(Ncs_4,(Vzm_134,(senc((Nt3_7,(Vzna_140,Nkab_34)),Nkas_32),senc((Nt4_8,(Vznb_145,Nkab_34)),Nkbs_33))));
+)
+
+
+Process2 =
+{1} new Nkas_38.
+{2} new Nkbs_39.
+(
+  {3} in(Nca_2,Vx_192);
+  {4} if Vx_192 = Nstart_9 then
+    {5} new Nm_42.
+    {6} new Nna_43.
+    {7} out(Nca_2,(Nm_42,(Na_0,(Nb_1,senc((Nt1_5,(Nna_43,(Nm_42,(Na_0,Nb_1)))),Nkas_38)))));
+    {8} in(Nca_2,Vxa_193);
+    {9} let (Vxm_194,Vxas_195) = Vxa_193 in
+    {10} if Vxm_194 = Nm_42 then
+      {11} let (Vxt3_196,(Vxna_197,Vxkab_198)) = sdec(Vxas_195,Nkas_38) in
+      {12} if Vxt3_196 = Nt3_7 && Vxna_197 = Nna_43 then
+        {13} new Nk_44.
+        {14} out(Nca_2,senc(Nm2_11,Nk_44));
+) | (
+  {15} in(Ncb_3,Vyb1_182);
+  {16} let (Vym_183,(Vya_184,Vyb_185)) = Vyb1_182 in
+  {17} if Vya_184 = Na_0 && Vyb_185 = Nb_1 then
+    {18} new Nnb_41.
+    {19} out(Ncb_3,(Vym_183,(Na_0,(Nb_1,senc((Nt2_6,(Nnb_41,(Vym_183,(Na_0,Nb_1)))),Nkbs_39)))));
+    {20} in(Ncb_3,Vyb2_186);
+    {21} let (Vym2_187,Vyb2b_188) = Vyb2_186 in
+    {22} if Vym2_187 = Vym_183 then
+      {23} let (Vyt4_189,(Vynb_190,Vykab_191)) = sdec(Vyb2b_188,Nkbs_39) in
+      {24} if Vyt4_189 = Nt4_8 && Vynb_190 = Nnb_41 then
+        {25} out(Ncb_3,Vym_183);
+) | (
+  {26} in(Ncs_4,Vzs_166);
+  {27} let (Vzm_167,(Vza_168,(Vzb_169,(Vzas_170,Vzbs_171)))) = Vzs_166 in
+  {28} if Vza_168 = Na_0 && Vzb_169 = Nb_1 then
+    {29} let (Vzt1_172,(Vzna_173,(Vzm1_174,(Vza1_175,Vzb1_176)))) = sdec(Vzas_170,Nkas_38) in
+    {30} if Vzt1_172 = Nt1_5 && Vzm1_174 = Vzm_167 && Vza1_175 = Na_0 && Vzb1_176 = Nb_1 then
+      {31} let (Vzt2_177,(Vznb_178,(Vzm2_179,(Vza2_180,Vzb2_181)))) = sdec(Vzbs_171,Nkbs_39) in
+      {32} if Vzt2_177 = Nt2_6 && Vzm2_179 = Vzm_167 && Vza2_180 = Na_0 && Vzb2_181 = Nb_1 then
+        {33} new Nkab_40.
+        {34} out(Ncs_4,(Vzm_167,(senc((Nt3_7,(Vzna_173,Nkab_40)),Nkas_38),senc((Nt4_8,(Vznb_178,Nkab_40)),Nkbs_39))));
+)
+
+
+Starting the decision procedure...
+--> Term.top applied on: Nt1_5 <--
+
+Fatal error: exception Failure("eheh")  (I replaced internal error by this one)
+
+Raised at file "pervasives.ml", line 20, characters 22-33
+Called from file "standard_library/term.ml", line 1004, characters 5-20
+Called from file "trace_equivalence/strategy.ml", line 1223, characters 24-66
+Called from file "standard_library/recipe.ml", line 400, characters 19-31
+Called from file "list.ml", line 84, characters 24-34
+Called from file "array.ml", line 120, characters 9-30
+Called from file "list.ml", line 84, characters 24-34
+Called from file "trace_equivalence/strategy.ml", line 1274, characters 17-131
+Called from file "trace_equivalence/strategy.ml", line 1269, characters 8-54
+Recursion called 2 times:
+  * Called from file "trace_equivalence/strategy.ml", line 1259, characters 8-54
+Called from file "trace_equivalence/strategy.ml", line 964, characters 6-29
+Called from file "trace_equivalence/strategy.ml", line 1463, characters 6-1023
+Called from file "trace_equivalence/strategy.ml", line 979, characters 6-34
+Recursion called 2 times:
+  * Called from file "trace_equivalence/strategy.ml", line 1259, characters 8-54
+Recursion called 2 times:
+  * Called from file "trace_equivalence/strategy.ml", line 971, characters 6-29
+Called from file "trace_equivalence/strategy.ml", line 265, characters 6-29
+Recursion called 2 times:
+  * Called from file "trace_equivalence/strategy.ml", line 239, characters 6-29
+Called from file "trace_equivalence/strategy.ml", line 265, characters 6-29
+Called from file "trace_equivalence/strategy.ml", line 239, characters 6-29
+Recursion called 2 times:
+  * Called from file "trace_equivalence/strategy.ml", line 265, characters 6-29
+Called from file "trace_equivalence/strategy.ml", line 239, characters 6-29
+Called from file "trace_equivalence/algorithm.ml", line 792, characters 4-193
+Called from file "list.ml", line 73, characters 12-15
+Called from file "trace_equivalence/strategy.ml", line 239, characters 6-29
+Called from file "trace_equivalence/strategy.ml", line 265, characters 6-29
+Called from file "trace_equivalence/algorithm.ml", line 792, characters 4-193
+Called from file "list.ml", line 73, characters 12-15
+Called from file "trace_equivalence/strategy.ml", line 239, characters 6-29
+Called from file "trace_equivalence/algorithm.ml", line 792, characters 4-193
+Called from file "list.ml", line 73, characters 12-15
+Recursion called 2 times:
+  * Called from file "trace_equivalence/strategy.ml", line 239, characters 6-29
+Recursion called 2 times:
+  * Called from file "trace_equivalence/strategy.ml", line 265, characters 6-29
+Called from file "trace_equivalence/strategy.ml", line 239, characters 6-29
+Called from file "trace_equivalence/algorithm.ml", line 792, characters 4-193
+Called from file "trace_equivalence/algorithm.ml", line 306, characters 7-62
+Called from file "list.ml", line 73, characters 12-15
+Called from file "trace_equivalence/strategy.ml", line 239, characters 6-29
+Called from file "trace_equivalence/algorithm.ml", line 792, characters 4-193
+Called from file "list.ml", line 73, characters 12-15
+Recursion called 2 times:
+  * Called from file "trace_equivalence/strategy.ml", line 239, characters 6-29
+Called from file "trace_equivalence/algorithm.ml", line 792, characters 4-193
+Called from file "trace_equivalence/algorithm.ml", line 306, characters 7-62
+Called from file "list.ml", line 73, characters 12-15
+Called from file "trace_equivalence/strategy.ml", line 239, characters 6-29
+Called from file "trace_equivalence/algorithm.ml", line 792, characters 4-193
+Called from file "trace_equivalence/algorithm.ml", line 862, characters 9-52
+Called from file "main.ml", line 121, characters 15-85
+Called from file "list.ml", line 73, characters 12-15
+Called from file "main.ml", line 266, characters 6-107
+
