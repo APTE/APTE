@@ -8,8 +8,8 @@ VERSION = 0.4beta
 #  make NATIVECODE="" <target>
 NATIVECODE=yes
 
-OCAMLC=$(if $(NATIVECODE),ocamlopt,ocamlc)
-OCAMLC_UC=$(shell echo $(OCAMLC) | tr a-z A-Z)
+OCAMLC=$(if $(NATIVECODE),ocamlopt,ocamlc) -g
+OCAMLC_UC=$(shell echo $(OCAMLC) | tr a-z A-Z) -g
 CMO=$(if $(NATIVECODE),cmx,cmo)
 OCAMLDEP=ocamldep $(if $(NATIVECODE),-native)
 OCAMLDOC=ocamldoc
