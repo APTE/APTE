@@ -1,21 +1,7 @@
 #APTE : Algorithm for Proving Trace Equivalence
-Version : 0.4beta-RED
-
-********************************
-This repository contains an ongoing work: implementing the optimized semantics defined in this [paper](http://link.springer.com/chapter/10.1007%2F978-3-642-54792-8_1) in APTE.
-
-There is one branch per optimized semantics:
-
-1. optim-compression: compressed semantics
-2. optim-c+r: reduced semantics
-
-The branch bench_ref corresponds to the reference version (without optimization) used in benchmarks.
-The branch benchmark contains routines and results of benchmarks.
-
-********************************
+Version : 0.4beta
 
 For more information about the original tool, visit the [dedicated website](http://projects.lsv.ens-cachan.fr/APTE/).
-
 
 1. Installation
 2. Usage 
