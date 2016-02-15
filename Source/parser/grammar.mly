@@ -108,7 +108,9 @@ term:
   | ident LPAR term_arguments RPAR
       { FuncApp($1,$3) }
   | LPAR term_arguments RPAR
-      { Tuple($2) }
+      { if List.length $2 = 1
+        then List.hd $2
+        else Tuple($2) }
 
 term_arguments :
   | term
