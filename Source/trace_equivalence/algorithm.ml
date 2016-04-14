@@ -11,7 +11,7 @@ exception Not_equivalent_right of Process.symbolic_process
     - with(out) internal communication
     - full unfolding of interleaving
     - alternating interleaving / csys
-        -- with erase double 
+        -- with erase double
     - partial order reductions (compression, reduction, improper killing, etc.)
 **********************************)
 
@@ -30,7 +30,7 @@ let option_internal_communication = ref true
 let option_erase_double = ref true
 
 let option_alternating_strategy = ref true
-  
+
 let print_debug_por = ref false
 
 let display_traces = ref false
@@ -63,7 +63,7 @@ let ifWitness symP = (Process.is_subtrace witness size symP)
 (************************************
 ***    Partition of the matrix    ***
 *************************************)
-  
+
 let rec add_left_in_partition bool_rep symb_proc = function
   | [] -> [bool_rep, [symb_proc], []]
   | (b_rep,left_symb,right_symb)::q when List.for_all2 (fun b1 b2 -> b1 = b2) b_rep bool_rep ->
@@ -76,43 +76,43 @@ let rec add_right_in_partition bool_rep symb_proc = function
       (b_rep,left_symb,symb_proc::right_symb)::q
   | rep::q -> rep::(add_right_in_partition bool_rep symb_proc q)
 
-let partionate_matrix function_next left_symb_proc right_symb_proc index_right_process  matrix = 
+let partionate_matrix function_next left_symb_proc right_symb_proc index_right_process  matrix =
   let nb_column = Constraint_system.Matrix.get_number_column matrix in
-  
+
   let partition = ref [] in
-  
+
   for j = 1 to index_right_process - 1 do
-    let (bool_rep, csys) = 
+    let (bool_rep, csys) =
       Constraint_system.Matrix.fold_left_on_column j (fun (bool_l,last_csys) csys ->
         if Constraint_system.is_bottom csys
         then (0::bool_l,last_csys)
         else (1::bool_l,csys)
       ) ([],Constraint_system.bottom) matrix
     in
-    
+
     if Constraint_system.is_bottom csys
     then ()
-    else 
+    else
       let old_symb_proc = List.nth left_symb_proc (j-1) in
       partition := add_left_in_partition bool_rep (Process.replace_constraint_system csys old_symb_proc) !partition
   done;
-  
+
   for j = index_right_process to nb_column do
-    let (bool_rep, csys) = 
+    let (bool_rep, csys) =
       Constraint_system.Matrix.fold_left_on_column j (fun (bool_l,last_csys) csys ->
         if Constraint_system.is_bottom csys
         then (0::bool_l,last_csys)
         else (1::bool_l,csys)
       ) ([],Constraint_system.bottom) matrix
     in
-    
+
     if Constraint_system.is_bottom csys
     then ()
-    else 
+    else
       let old_symb_proc = List.nth right_symb_proc (j - index_right_process) in
       partition := add_right_in_partition bool_rep (Process.replace_constraint_system csys old_symb_proc) !partition
   done;
-  
+
   List.iter (fun (_,left_symb,right_symb) -> function_next left_symb right_symb) !partition
 
 (************************************
@@ -120,7 +120,7 @@ let partionate_matrix function_next left_symb_proc right_symb_proc index_right_p
 *************************************)
 
 (** [erase_double] is only effective if the trace of the symbolic processes have been instantiated. *)
-let rec erase_double = function 
+let rec erase_double = function
   | [] -> []
   | symb_csys::q when List.exists (Process.is_same_input_output symb_csys) q -> erase_double q
   | symb_csys::q -> symb_csys::(erase_double q)
@@ -131,11 +131,11 @@ let rec erase_double = function
 
 (** The initial final test *)
 
-let final_test_on_matrix index_right_process left_set right_set matrix = 
+let final_test_on_matrix index_right_process left_set right_set matrix =
   let nb_column = Constraint_system.Matrix.get_number_column matrix in
-  
+
   let nb_line = Constraint_system.Matrix.get_number_line matrix in
- 
+
   for i = 1 to nb_line do
     if index_right_process = nb_column + 1
     then
@@ -156,10 +156,10 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
     else
       try
         let left_csys,j = Constraint_system.Matrix.find_in_row_between_col_index i 1 (index_right_process - 1) (fun csys -> not (Constraint_system.is_bottom csys)) matrix in
-      
+
         if Constraint_system.Matrix.exists_in_row_between_col_index i index_right_process nb_column (fun csys -> not (Constraint_system.is_bottom csys)) matrix
         then ()
-        else 
+        else
           let symb_proc = List.nth left_set (j-1) in
           let symb_proc' = Process.replace_constraint_system left_csys symb_proc in
           raise (Not_equivalent_left (symb_proc'))
@@ -171,35 +171,35 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
             let symb_proc' = Process.replace_constraint_system right_csys symb_proc in
             raise (Not_equivalent_right (symb_proc'))
           with Not_found -> ()
-        end  
+        end
   done
 
 (** Strategy for the matrices of constraint systems *)
 
 let apply_strategy_for_matrices next_function strategy_for_matrix left_set right_set =
-  
+
   let number_left_symb_proc = List.length left_set
   and number_right_symb_proc = List.length right_set in
-  
+
   let index_right_process = number_left_symb_proc + 1 in
 
   (* ** Creation of the matrix *)
-  
-  let complete_csys_list = 
-    List.fold_right (fun left_symb acc -> 
+
+  let complete_csys_list =
+    List.fold_right (fun left_symb acc ->
       (Process.get_constraint_system left_symb)::acc
     ) left_set (List.map Process.get_constraint_system right_set)
   in
-  
-  let matrix = Constraint_system.Matrix.matrix_of_row_matrix 
+
+  let matrix = Constraint_system.Matrix.matrix_of_row_matrix
     (Constraint_system.Row.create
       (number_left_symb_proc + number_right_symb_proc)
       complete_csys_list
     )
   in
-  
+
   (* ** Application of the strategy on matrices *)
-  
+
   strategy_for_matrix (fun matrix_1 ->
     if Constraint_system.Matrix.is_empty matrix_1
     then ()
@@ -213,7 +213,7 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
 
 (** Strategy for the complete unfolding without POR *)
 
-let apply_strategy_one_transition next_function_output next_function_input left_symb_proc_list right_symb_proc_list = 
+let apply_strategy_one_transition next_function_output next_function_input left_symb_proc_list right_symb_proc_list =
   (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
   incr(final_test_count);
 
@@ -223,30 +223,30 @@ let apply_strategy_one_transition next_function_output next_function_input left_
 		       else List.hd right_symb_proc_list in
 	Printf.printf "%s\n" (Process.display_trace_simple one_proc));
 
-  (* ** Option Erase Double *)  
-  let left_erase_set = 
-    if !option_erase_double 
+  (* ** Option Erase Double *)
+  let left_erase_set =
+    if !option_erase_double
     then erase_double (List.map Process.instanciate_trace left_symb_proc_list)
     else left_symb_proc_list
   and right_erase_set =
-    if !option_erase_double 
+    if !option_erase_double
     then erase_double (List.map Process.instanciate_trace right_symb_proc_list)
     else right_symb_proc_list
   in
 
 
   (* ** First step : apply the internal transitions (including conditionals) *)
-  
+
   let left_internal = ref []
   and right_internal = ref [] in
-  
+
   (* Scan all symbolic processes, flatten all parallels/choices and perform all available
    conditionals and branch for then/else and for the different ways (disjunction)
    to satisfy the conditional's test. Thanks to our "function_next", we then put
    all those alternatives together in left/right_internal lists. *)
   List.iter (fun symb_proc_1 ->
     Process.apply_internal_transition
-      ~with_comm:!option_internal_communication ~with_por:false ~with_improper:false (fun symb_proc_2 -> 
+      ~with_comm:!option_internal_communication ~with_por:false ~with_improper:false (fun symb_proc_2 ->
       left_internal := symb_proc_2::!left_internal
     ) symb_proc_1
   ) left_erase_set;
@@ -261,39 +261,39 @@ let apply_strategy_one_transition next_function_output next_function_input left_
   ) right_erase_set;
 
 
-  (* ** Second step : apply the output transitions *)  
-  let support = 
+  (* ** Second step : apply the output transitions *)
+  let support =
     if !left_internal = []
     then Constraint_system.get_maximal_support (Process.get_constraint_system (List.hd !right_internal))
     else Constraint_system.get_maximal_support (Process.get_constraint_system (List.hd !left_internal))
   in
-  
+
   let left_output_set = ref []
   and right_output_set = ref [] in
-  
+
   let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
-  
+
   (* Scan all symbolic processes and look for one starting with an output and
    apply function_next to the resulting symbolic process. We thus store in
    left/right_output_set all the alternatives of performing an output. *)
   List.iter (fun symb_proc_1 ->
 	     Process.apply_output
-	       false (fun (symb_proc_2,_) -> 
+	       false (fun (symb_proc_2,_) ->
 			    let simplified_symb_proc = Process.simplify symb_proc_2 in
 			    if not (Process.is_bottom simplified_symb_proc)
 			    then left_output_set := simplified_symb_proc::!left_output_set
 			   ) var_r_ch symb_proc_1
 	    ) !left_internal;
-  
+
   List.iter (fun symb_proc_1 ->
 	     Process.apply_output
-	       false (fun (symb_proc_2,_) -> 
+	       false (fun (symb_proc_2,_) ->
 			    let simplified_symb_proc = Process.simplify symb_proc_2 in
 			    if not (Process.is_bottom simplified_symb_proc)
 			    then right_output_set := simplified_symb_proc::!right_output_set
 			   ) var_r_ch symb_proc_1
 	    ) !right_internal;
-  
+
   (* We pass those alternatives to the next step which consists in:
      1. put all csys in a row matrix
      2. apply Strategy.apply_strategy_input/output resulting in a branching
@@ -307,42 +307,42 @@ let apply_strategy_one_transition next_function_output next_function_input left_
 
 
   (* ** Third step : apply the input transitions *)
-  
+
   let left_input_set = ref []
   and right_input_set = ref [] in
-  
+
   let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
   and var_r_t = Recipe.fresh_free_variable_from_id "Y" support in
-  
+
   (* Scan all symbolic processes and look for one starting with an input and
    apply function_next to the resulting symbolic process. We thus store in
    left/right_input_set all the alternatives of performing an input. *)
   List.iter (fun symb_proc_1 ->
 	     Process.apply_input
-	       false (fun (symb_proc_2,_) -> 
+	       false (fun (symb_proc_2,_) ->
 			    let simplified_symb_proc = Process.simplify symb_proc_2 in
 			    if not (Process.is_bottom simplified_symb_proc)
 			    then left_input_set := simplified_symb_proc::!left_input_set
 			   ) var_r_ch var_r_t symb_proc_1
 	    ) !left_internal;
-  
+
   List.iter (fun symb_proc_1 ->
 	     Process.apply_input
-	       false (fun (symb_proc_2,_) -> 
+	       false (fun (symb_proc_2,_) ->
 			      let simplified_symb_proc = Process.simplify symb_proc_2 in
 			      if not (Process.is_bottom simplified_symb_proc)
 			      then right_input_set := simplified_symb_proc::!right_input_set
 			     ) var_r_ch var_r_t symb_proc_1
 	    ) !right_internal;
-  
+
   (* We pass those alternatives to the next step (same desc. as for out.) *)
   if !left_input_set <> [] || !right_input_set <> []
   then next_function_input !left_input_set !right_input_set
 
 
 (** Handles exceptions that Process.process.ml may raise and raises the corresponding algorithm.ml exception *)
-let try_P symproc_left symproc_right expr = 
-  try 
+let try_P symproc_left symproc_right expr =
+  try
     Lazy.force expr
   with
   | Process.Not_eq_left s ->
@@ -358,13 +358,13 @@ let try_P symproc_left symproc_right expr =
        raise (Not_equivalent_right symproc_right);
      end
   | _ -> Debug.internal_error "[algorithm.ml >> tryP] We failed to handle an error in process.ml."
-			      
+
 (* Helping functions *)
 let isNotSingleton = function
   | [_] -> false
   | _ -> true
 
-let apply_input_on_focused next_function_input proc_left_label proc_right_label = 
+let apply_input_on_focused next_function_input proc_left_label proc_right_label =
   (* The first process of proc_left/right_label is under focus. We perform
      their first input in case they have the same skeleton and raise an exception otherwise.
      We assume here that focus have been removed as soon as a negative pop out.*)
@@ -383,26 +383,26 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
       and right_input_set = ref []
       and var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
       and var_r_t = Recipe.fresh_free_variable_from_id "Y" support in
-      
+
       Process.apply_input
 	true		(* true: only the first process (that is under focus) is considered *)
-	(fun (symb_proc_2,_) -> 
+	(fun (symb_proc_2,_) ->
 	 (* We do not simplify symbolic processes because it will be done
 	  in the next step when performing conditionals/splittings. *)
 	 left_input_set := symb_proc_2::!left_input_set)
 	var_r_ch
 	var_r_t
 	proc_left_label;
-      
+
       Process.apply_input
 	true             (* true: only the first process (that is under focus) is considered *)
-	(fun (symb_proc_2,_) -> 
+	(fun (symb_proc_2,_) ->
 	 (* same as above *)
 	 right_input_set := symb_proc_2::!right_input_set)
 	var_r_ch
 	var_r_t
 	proc_right_label;
-      
+
       if !print_debug_por then
 	Printf.printf "After IN. Lists' sizes: %d,%d.\n"
 		      (List.length !left_input_set)
@@ -412,7 +412,7 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
       if  isNotSingleton !left_input_set || isNotSingleton !right_input_set
       then Debug.internal_error "[algorithm.ml >> apply_input_on_focused] The sets of pocesses are not singletons. Should not happen since we have already check that skeletons match.";
 
-      (* ** Apply the internal transitions (including conditionals) *)  
+      (* ** Apply the internal transitions (including conditionals) *)
       let left_in_internal = ref []
       and right_in_internal = ref [] in
 
@@ -424,26 +424,26 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
 		 Process.apply_internal_transition
 		   ~with_comm:false
 		   ~with_por:true
-		   ~with_improper:!option_improper 
-		   (fun symb_proc_2 -> 
+		   ~with_improper:!option_improper
+		   (fun symb_proc_2 ->
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
 		    then left_in_internal := simplified_symb_proc :: !left_in_internal
 		   ) symb_proc_1
 		) !left_input_set;
-      
+
       List.iter (fun symb_proc_1 ->
 		 Process.apply_internal_transition
 		   ~with_comm:false
 		   ~with_por:true
-		   ~with_improper:!option_improper 
-		   (fun symb_proc_2 -> 
+		   ~with_improper:!option_improper
+		   (fun symb_proc_2 ->
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
 		    then right_in_internal := simplified_symb_proc :: !right_in_internal
 		   ) symb_proc_1
 		) !right_input_set;
-      
+
       if !print_debug_por then
 	Printf.printf "After IN+TEST. Lists' sizes: %d,%d.\n"
 		      (List.length !left_in_internal)
@@ -474,12 +474,12 @@ let apply_strategy_one_transition_por (* given .... *)
       (* all alternatives on the right *)
       (right_symb_proc_list : Process.symbolic_process list)
     (* ... explore all possible symbolic, observable actions in the compressed semantics,
-      perform all available conditionals and parallel compositions and apply 
+      perform all available conditionals and parallel compositions and apply
      next_function... on resulting processes *)
-    : unit = 
+    : unit =
 
-  (* ** We assume that the sets are singletons and either (i) trace is empty (first call) 
-   but no process can have a conditional at top level or below a Par or 
+  (* ** We assume that the sets are singletons and either (i) trace is empty (first call)
+   but no process can have a conditional at top level or below a Par or
    (ii) all processes start either with an input or an output (they are in normal
    form for the internal reduction \leadsto in the paper) and the two lists contain
    only one symbolic process.
@@ -496,15 +496,15 @@ let apply_strategy_one_transition_por (* given .... *)
       Printf.printf "%s" (Process.display_trace proc_left);
       Printf.printf "%s" (Process.display_trace_blocks proc_left);
     end;
-  
+
   (* We check that sets of processes are singletons *)
   if isNotSingleton left_symb_proc_list || isNotSingleton right_symb_proc_list
   then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] The sets of pocesses are not singletons. It may be the case that inputted processes are not action-deterministic.";
-  
-  (** [PHASE 0] only executed ONCE. *)
+
+  (* [PHASE 0] only executed ONCE. *)
   (*  If this is the first call of apply_strategy, then we must split parallel compositions that may be at
      top level. We assume here that there is no conditional above firsts observable actions. *)
-  let proc_left, proc_right =  
+  let proc_left, proc_right =
     if (Process.size_trace (List.hd left_symb_proc_list)) != 0
     then (List.hd left_symb_proc_list, List.hd right_symb_proc_list) (* Case (ii) *)
     else  begin			                                     (* Case (i) *)
@@ -514,14 +514,14 @@ let apply_strategy_one_transition_por (* given .... *)
 	Process.apply_internal_transition
 	  ~with_comm:false
 	  ~with_por:true
-	  ~with_improper:!option_improper 
+	  ~with_improper:!option_improper
 	  (fun symb_proc_2 -> ps := symb_proc_2 :: !ps)
 	  (List.hd left_symb_proc_list);
 	let qs = ref [] in
 	Process.apply_internal_transition
 	  ~with_comm:false
 	  ~with_por:true
-	  ~with_improper:!option_improper 
+	  ~with_improper:!option_improper
 	  (fun symb_proc_2 -> qs := symb_proc_2 :: !qs)
 	  (List.hd right_symb_proc_list);
 	if (isNotSingleton !ps)|| (isNotSingleton !qs)
@@ -532,12 +532,12 @@ let apply_strategy_one_transition_por (* given .... *)
 
   (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
   incr(final_test_count);
-  
+
   if !display_traces
   then Printf.printf "%s\n" (Process.display_trace_simple proc_left);
 
 
-  (** [PHASE 1] Improper TEST *)
+  (* [PHASE 1] Improper TEST *)
   (* We check whether processes are improper or not and continue only if they are not *)
   (* Note that, the flag is_improper might be set to true when applying 'apply_internal[...]_without_comm *)
   let is_improper_left, is_improper_right = Process.is_improper proc_left, Process.is_improper proc_right in
@@ -550,8 +550,8 @@ let apply_strategy_one_transition_por (* given .... *)
     begin
 
 
-      (** [PHASE 2] Labelisation and updating flags *)
-      (* ** We labelise processes and update 'has_focus': at this point, some new processes coming from 
+      (* [PHASE 2] Labelisation and updating flags *)
+      (* ** We labelise processes and update 'has_focus': at this point, some new processes coming from
         breaking a parallel composition are in the multiset. All those new processes come from a unique parallel
         composition, so we label them in an arbitrary order but consistently with right_symb_proc_list.
         Note that, by perfomring this step we also check skl(P)=skl(Q) except when P is a null process (represented
@@ -562,22 +562,22 @@ let apply_strategy_one_transition_por (* given .... *)
       (* Updating 'has_focus' on the left : set to false if focused process is negative *)
       (* TODO: consider removing this *)
       let proc_left_label_up =
-	if Process.has_focus proc_left_label 
+	if Process.has_focus proc_left_label
 	then (match Process.sk_of_symp proc_left_label with
 	      | Process.OutS _ -> Process.set_focus false proc_left_label
 	      | _ -> proc_left_label)
 	else proc_left_label
       (* Updating 'has_focus' on the right : set to false if focused process is negative *)
       and proc_right_label_up =
-	if Process.has_focus proc_right_label 
+	if Process.has_focus proc_right_label
 	then (match Process.sk_of_symp proc_right_label with
 	      | Process.OutS _ -> Process.set_focus false proc_right_label
 	      | _ -> proc_right_label)
-	else proc_right_label in 
+	else proc_right_label in
 
       (* ** We check the last remaining case to ensure skl(P)=skl(Q) that is P=0 and Q <> 0
           (we already deal with the symmetric case since P can perform an action in that case). *)
-      if Process.is_null proc_left_label && not(Process.is_null proc_right_label) 
+      if Process.is_null proc_left_label && not(Process.is_null proc_right_label)
       then  begin
 	  Printf.printf "Witness' type: Null process on the left, not on the right.\n";
 	  raise (Not_equivalent_right proc_right_label);
@@ -588,7 +588,7 @@ let apply_strategy_one_transition_por (* given .... *)
       (* We now update the complete_inp flag *)
       let proc_left_label_up,proc_right_label_up =
 	if !option_red && (not (Process.has_focus proc_left_label_up) && not (Process.block_complete_inp proc_left_label_up))
-	(* no focus (no more input) and flag complete_inp not already set to true -> first time without focus -> 
+	(* no focus (no more input) and flag complete_inp not already set to true -> first time without focus ->
            we cannot already generate dep csts but we must set complete_inp flag to true *)
 	then begin
 	    (Process.block_set_complete_inp proc_left_label_up,
@@ -597,7 +597,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	else (proc_left_label_up,proc_right_label_up ) in
 
 
-      (** [PHASE 3] A. Generate dependency constraints if needed and  B. Test whether all of them hold *)
+      (* [PHASE 3] A. Generate dependency constraints if needed and  B. Test whether all of them hold *)
       (* Using the flag has_generate_dep_csts, we know if this is the first time last block has at least one output
 	   In this case, we must generate dependency constraints for the last inputs. *)
       let proc_left_label_red_up, proc_right_label_red_up =
@@ -612,9 +612,9 @@ let apply_strategy_one_transition_por (* given .... *)
 
       (* We keep exploring actions from this point only if all dependency constraints hold or reduction is not enabled *)
       if not(!option_red) || Process.test_dependency_constraints proc_left_label_red_up !option_nouse then
-	
 
-	(** [PHASE 5] Distinguish cases whether processes have focus or not *)
+
+	(* [PHASE 5] Distinguish cases whether processes have focus or not *)
 	(* If they do not have the same status we raise an error. *)
 	match (Process.has_focus proc_left_label_red_up, Process.has_focus proc_right_label_red_up) with
 	| true, false -> begin
@@ -627,18 +627,18 @@ let apply_strategy_one_transition_por (* given .... *)
 			 raise (Not_equivalent_left proc_left_label_red_up);
 		       end
 	| true, true ->
-	   (** ****************** WITH FOCUS ****************************  *)
+	   (* ****************** WITH FOCUS ****************************  *)
 	   (* In that case, the first process of proc_left/right_label_red_up is under focus. We perform
           their first input in case thay have the same skeleton and raise an exception otherwise.
 	  We assume here that focus have been removed as soon as a negative pop out.*)
 	   apply_input_on_focused next_function_input proc_left_label_red_up proc_right_label_red_up
 	| false, false ->
-	   (** ***************** WITHOUT FOCUS ****************************  *)
+	   (* ***************** WITHOUT FOCUS ****************************  *)
 	   begin
 	     let support = Constraint_system.get_maximal_support (Process.get_constraint_system proc_left_label_red_up) in
 	     let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
-	     
-	     (* We look for the first negative process in proc_left_left. 
+
+	     (* We look for the first negative process in proc_left_left.
                 Case (i): there is a such process.
                   In that case we perform its first action, store the corresponding channel and look for a
                   corresponding process on the right.
@@ -647,20 +647,20 @@ let apply_strategy_one_transition_por (* given .... *)
                 Case (ii): P is positive. We iter over the whole list of proc_left_label_red_up.process:
     	          put the selected process under focus, set has_focus to true, try to do the same on the right
                   and apply apply_input_on_focused.*)
-	     
+
 	     let left_output_set = ref [] in
 	     Process.apply_output
 	       true
-	       (fun (symb_proc_2,c) -> 
+	       (fun (symb_proc_2,c) ->
 		(* We do not simplify symbolic processes because it will be done
 	  in the next step when performing conditionals/splittings. *)
 		left_output_set := (symb_proc_2,c)::!left_output_set)
 	       var_r_ch
 	       proc_left_label_red_up;
-	     
+
 	     if !left_output_set = []
 	     then begin
-		 (** ******* START A NEW POSITIVE PHASE *****)
+		 (* ******* START A NEW POSITIVE PHASE *****)
 		 (* we must choose any process, put it at the begining of the list, set has_focus
                    to true, find a process with same skeleton on the right, do the same
                    and perform this input *)
@@ -679,18 +679,18 @@ let apply_strategy_one_transition_por (* given .... *)
 	     else if isNotSingleton !left_output_set
 	     then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen."
 	     else begin
-		 (** ****** NEGATIVE PHASE ***********)
+		 (* ****** NEGATIVE PHASE ***********)
 		 (* Contuining the negative phase, perform the same output on the right *)
 		 let (proc_left_out, ch) = List.hd !left_output_set
 		 and right_output_set = ref [] in
 		 Process.apply_output_filter (* this will filter applying output to (first) output on channel ch *)
 		   ch
-		   (fun symb_proc_2 -> 
+		   (fun symb_proc_2 ->
 		    (* same as above *)
 		    right_output_set := symb_proc_2::!right_output_set)
 		   var_r_ch
 		   proc_right_label_red_up;
-		 
+
 		 if !print_debug_por then
 		   Printf.printf "After OUT. Lists' sizes: %d,%d.\n"
     				 (List.length !left_output_set)
@@ -705,8 +705,8 @@ let apply_strategy_one_transition_por (* given .... *)
 		   end
 		 else if isNotSingleton !right_output_set
 		 then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen.";
-		 
-		 (** [PHASE 5/NEG] Apply the internal transitions (including conditionals) *)  
+
+		 (* [PHASE 5/NEG] Apply the internal transitions (including conditionals) *)
 		 let proc_right_out = List.hd !right_output_set
 		 and left_out_internal = ref []
 		 and right_out_internal = ref [] in
@@ -718,23 +718,23 @@ let apply_strategy_one_transition_por (* given .... *)
 		 Process.apply_internal_transition
 		   ~with_comm:false
 		   ~with_por:true
-		   ~with_improper:!option_improper 
-		   (fun symb_proc_2 -> 
+		   ~with_improper:!option_improper
+		   (fun symb_proc_2 ->
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
 		    then left_out_internal := simplified_symb_proc :: !left_out_internal
 		   ) proc_left_out;
-		 
+
 		 Process.apply_internal_transition
 		   ~with_comm:false
-		   ~with_por:true 
-		   ~with_improper:!option_improper 
-		   (fun symb_proc_2 -> 
+		   ~with_por:true
+		   ~with_improper:!option_improper
+		   (fun symb_proc_2 ->
 		    let simplified_symb_proc = Process.simplify symb_proc_2 in
 		    if not (Process.is_bottom simplified_symb_proc)
 		    then right_out_internal := simplified_symb_proc::!right_out_internal
 		   ) proc_right_out;
-		 
+
 
 		 (* We pass those alternatives to the next step which consists in:
                     1. put all csys in a row matrix
@@ -752,35 +752,35 @@ let apply_strategy_one_transition_por (* given .... *)
 
 		 if !left_out_internal <> [] || !right_out_internal <> []
 		 then next_function_output !left_out_internal !right_out_internal;
-	       end; 
+	       end;
 	   end;
     end
 
 
 (*************************************
  ***         The strategies         ***
- **************************************)  
+ **************************************)
 
-(** The complete unfolding strategy *)
+(* The complete unfolding strategy *)
 
-let rec apply_complete_unfolding left_symb_proc_list right_symb_proc_list = 
-  let next_function left_list right_list = 
-    
+let rec apply_complete_unfolding left_symb_proc_list right_symb_proc_list =
+  let next_function left_list right_list =
+
     (***[Statistic]***)
     Statistic.start_transition left_list right_list;
-    
+
     apply_strategy_for_matrices (fun _ _ -> ()) Strategy.apply_full_strategy left_list right_list;
-    
+
     (***[Statistic]***)
     Statistic.end_transition ();
-    
+
     apply_complete_unfolding left_list right_list
-			     
+
   in
 
   apply_strategy_one_transition next_function next_function left_symb_proc_list right_symb_proc_list
-				
-(** The alternating strategy *)
+
+(* The alternating strategy *)
 
 let rec apply_alternating left_symb_proc_list right_symb_proc_list =
   (* 'next_function [some Strategy]' will be applied on every pairs resulting from
@@ -788,74 +788,74 @@ let rec apply_alternating left_symb_proc_list right_symb_proc_list =
   let next_function f_strat_m left_list right_list =
     (***[Statistic]***)
     Statistic.start_transition left_list right_list;
-    
-    apply_strategy_for_matrices (fun index_right_process matrix -> 
+
+    apply_strategy_for_matrices (fun index_right_process matrix ->
 				 partionate_matrix apply_alternating left_list right_list index_right_process matrix
 				) f_strat_m left_list right_list;
-    
+
     (***[Statistic]***)
     Statistic.end_transition ()
-			     
+
   in let strategy_one_transition = if !option_compr (* if we use at least the weakest POR technique, we need
                                                        to use a dedicated actions-exploring function *)
 				   then apply_strategy_one_transition_por
 				   else apply_strategy_one_transition
      and next_out = next_function
 		      (if !option_compr
-		       then Strategy.apply_full_strategy 
+		       then Strategy.apply_full_strategy
 		       else Strategy.apply_strategy_output)
      and next_in = next_function
 		     (if !option_compr
-		      then Strategy.apply_full_strategy 
+		      then Strategy.apply_full_strategy
 		      else Strategy.apply_strategy_input)
      in
      (* We call strategy_one_transition: it non-deterministically applies a symbolic action and call
         the corresponding next_out/next_in continuation on the results. Those continuations apply constraints
         resolution procedure and call apply_alternating on the leaves. *)
-     strategy_one_transition 
+     strategy_one_transition
        next_out
        next_in
        left_symb_proc_list
        right_symb_proc_list
 
-       
+
 (*****************************************
  ***      Decide trace equivalence      ***
- ******************************************)  
-       
-let decide_trace_equivalence process1 process2 =  
+ ******************************************)
+
+let decide_trace_equivalence process1 process2 =
   (* We assume at this point that all name in the process are distinct *)
-  
+
   (* Get the free names *)
   let free_names_1 = Process.get_free_names process1 in
   let free_names_2 = Process.get_free_names process2 in
-  
+
   (* Exclusive concatenation *)
-  let free_names = 
-    List.fold_left (fun l n -> 
+  let free_names =
+    List.fold_left (fun l n ->
       if List.exists (Term.is_equal_name n) free_names_2
       then l
       else n::l
     ) free_names_2 free_names_1
-  in 
-  
+  in
+
   (* Creation of the constraint system *)
-  let csys = 
-    List.fold_left (fun csys n -> 
+  let csys =
+    List.fold_left (fun csys n ->
       Constraint_system.add_new_axiom csys (Term.term_of_name n)
     ) Constraint_system.empty free_names
   in
-  
-  let assoc_axiom_free_names,_ = 
+
+  let assoc_axiom_free_names,_ =
     List.fold_left (fun (l,i) n ->
       (Recipe.recipe_of_axiom (Recipe.axiom i), Term.term_of_name n)::l,i+1
     ) ([],1) free_names
   in
-  
+
   (* Creation of the two symbolic process *)
   let symb_proc1 = Process.create_symbolic assoc_axiom_free_names process1 csys
   and symb_proc2 = Process.create_symbolic assoc_axiom_free_names process2 csys in
-  
+
   (* Application of the strategy *)
   try
     if !option_alternating_strategy

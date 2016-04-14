@@ -1,4 +1,4 @@
-%{ 
+%{
 
 open Parser_function
 
@@ -20,7 +20,7 @@ open Parser_function
 %token IF THEN ELSE
 %token CST ARGS LBRACE RBRACE TUPLE
 
-%token EQUIVALENCE LENGTH
+%token EQUIVALENCE LENGTH SECRET PRESERVE
 %token EOF
 %token <int * int>PROJ
 
@@ -34,13 +34,13 @@ open Parser_function
 
 %start main /* the entry point */
 
-%type <Parser_function.declaration> main 
-%% 
+%type <Parser_function.declaration> main
+%%
 /***********************************
 ***           Main Entry         ***
 ************************************/
 
-main: 
+main:
   | FUN ident SLASH INT DOT
       { FuncDecl ($2,$4) }
   | LET ident argument_list EQ process DOT
@@ -55,6 +55,8 @@ main:
       { Equivalence($2,$4) }
   | EQUIVALENCE LENGTH process AND process DOT
       { EquivalenceLength($3,$5) }
+  | PRESERVE SECRET process DOT
+      { Secrecy($3) }
   | EOF
       { raise End_of_file }
   | error
@@ -62,9 +64,9 @@ main:
 
 /***********************************
 ***       Length definition      ***
-************************************/     
-      
-float_def: 
+************************************/
+
+float_def:
   | INT DOT INT
       { let n = float_of_int $1 in
         let acc = ref (float_of_int $3) in
@@ -84,18 +86,18 @@ length_definition:
       { ($3,[]) }
   | CST EQ float_def PVIR ARGS EQ length_arguments
       { ($3,$7) }
-  
+
 length_arguments:
   | float_def
       { [$1] }
   | float_def VIR length_arguments
       { $1::$3 }
-      
+
 /***********************************
 ***       Terms definition       ***
 ************************************/
 
-ident : 
+ident :
   | STRING
       { ($1,(Parsing.symbol_start_pos ()).Lexing.pos_lnum) }
 
@@ -145,11 +147,11 @@ pattern_arguments :
       { [$1] }
   | pattern VIR pattern_arguments
       { $1::$3 }
- 
+
 /***********************************
 ***      Formula definition      ***
-************************************/      
-      
+************************************/
+
 formula:
   | term NEQ term
       { Neq($1,$3) }
@@ -158,7 +160,7 @@ formula:
   | formula ANDECO formula
       { And($1,$3) }
   | formula ORECO formula
-      { Or($1,$3) }      
+      { Or($1,$3) }
 
 /***********************************
 *** Definition du Process ***
@@ -169,7 +171,7 @@ call_arguments:
       { [$1] }
   | term call_arguments
       { $1::$2 }
-      
+
 process:
   | INT
       { if $1 = 0 then Nil else error_message (Parsing.symbol_start_pos ()).Lexing.pos_lnum "Syntax Error" }
@@ -183,6 +185,8 @@ process:
       { Par($1,$3) }
   | process PLUS process
       { Choice($1,$3) }
+  | SECRET term PVIR process
+      { Secret($2,$4) }
   | NEW ident PVIR process
       { New($2,$4) }
   | IN LPAR term VIR ident RPAR PVIR process

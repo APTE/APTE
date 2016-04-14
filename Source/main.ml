@@ -2,7 +2,7 @@
 ***      Help     ***
 *********************)
 
-let print_help () = 
+let print_help () =
   Printf.printf "Name : APTE\n";
   Printf.printf "   Algorithm for Proving Trace Equivalence\n\n";
   Printf.printf "Version 0.4beta\n\n";
@@ -40,35 +40,35 @@ let print_help () =
   Printf.printf "      -verbose [<int>] : Display some statistics on the matrices generated at the.\n";
   Printf.printf "          end of the execution. When an integer <int> is given, the statistics are displayed\n";
   Printf.printf "          every <int> matrices generated.\n\n"
-  
+
 (************************
 ***       Parsing     ***
 *************************)
 
-let parse_file path = 
+let parse_file path =
   Parser.Parser_function.initialise_environment ();
   Parser.Parser_function.equivalence_request := [];
-    
+
   Printf.printf "Opening file %s\n" path;
-  
+
   let channel_in = open_in path in
   let lexbuf = Lexing.from_channel channel_in in
-  
+
   Debug.display_debug "Start loop";
-  
-  let _ = 
+
+  let _ =
     try
       while true do
         Debug.display_debug "Start parsing a declaration";
         Parser.Parser_function.parse_one_declaration (Parser.Grammar.main Parser.Lexer.token lexbuf)
       done
-    with 
+    with
       | Failure msg -> Printf.printf "%s\n" msg; exit 0
       | End_of_file -> () in
-      
-      
+
+
   close_in channel_in
-  
+
 (**************************************
 ***    Decide trace equivalence     ***
 ***************************************)
@@ -104,19 +104,19 @@ let decide_trace_equivalence process1 process2 =
 	then display_channel_and_stdout channel
 					(ps "OPTIMIZATION: Compression is enabled%s%s. Make sure processes are action-determinate.\n"
 					    text_improper text_nouse));
-  
+
   display_channel_and_stdout channel "Equivalence between the two following processes:\n\n";
-  
-  
+
+
   display_channel_and_stdout channel "Process 1 =\n";
   display_channel_and_stdout channel (Standard_library.Process.display_process process1);
-  
+
   display_channel_and_stdout channel "\n\nProcess2 =\n";
   display_channel_and_stdout channel (Standard_library.Process.display_process process2);
-  
+
   display_channel_and_stdout channel "\n\nStarting the decision procedure...\n";
   flush_all ();
-  
+
   let begin_time = Sys.time () in
   let result = Trace_equivalence.Algorithm.decide_trace_equivalence process1 process2 in
   let end_time = Sys.time () in
@@ -128,26 +128,26 @@ let decide_trace_equivalence process1 process2 =
   Trace_equivalence.Statistic.end_of_checking ();
   flush_all ();
   close_out channel
-  
+
 (****************************************************
 ***    Decide trace equivalence w.r.t. length     ***
 *****************************************************)
 
 let decide_trace_equivalence_length process1 process2 =
   let channel = Trace_equivalence.Statistic.reset_statistic () in
-  
+
   display_channel_and_stdout channel "------------\n";
   display_channel_and_stdout channel "Trace equivalence w.r.t. length between the two following processes:\n\n";
-  
+
   display_channel_and_stdout channel "Process 1 =\n";
   display_channel_and_stdout channel (Standard_library.Process.display_process process1);
-  
+
   display_channel_and_stdout channel "\n\nProcess2 =\n";
   display_channel_and_stdout channel (Standard_library.Process.display_process process2);
-  
+
   display_channel_and_stdout channel "\n\nStarting the decision procedure...\n";
   flush_all ();
-  
+
   let begin_time = Sys.time () in
   let result = Length_equivalence.Algorithm.decide_trace_equivalence process1 process2 in
   let end_time = Sys.time () in
@@ -157,19 +157,44 @@ let decide_trace_equivalence_length process1 process2 =
   Trace_equivalence.Statistic.display_statistic ();
   flush_all ();
   close_out channel
-  
+
+(****************************************************
+***                 Decide Secrecy                ***
+*****************************************************)
+
+let decide_secrecy process =
+  let channel = Trace_equivalence.Statistic.reset_statistic () in
+
+  display_channel_and_stdout channel "------------\n";
+  display_channel_and_stdout channel "Preservation of secrecy in the following process:\n\n";
+
+  display_channel_and_stdout channel (Standard_library.Process.display_process process);
+
+  display_channel_and_stdout channel "\n\nStarting the decision procedure...\n";
+  flush_all ();
+
+  let begin_time = Sys.time () in
+  let result = Secrecy.Algorithm.decide_secrecy process in
+  let end_time = Sys.time () in
+  let time_spent = end_time -. begin_time in
+  display_channel_and_stdout channel (Printf.sprintf "Result : The preservation of secrecy is %b\n" result);
+  display_channel_and_stdout channel (Printf.sprintf "Result obtained in %f seconds\n" time_spent);
+  Trace_equivalence.Statistic.display_statistic ();
+  flush_all ();
+  close_out channel
+
 (************************
 ***        Main       ***
-*************************)  
-  
-let _ = 			
+*************************)
+
+let _ =
   let path = ref "" in
   let arret = ref false in
   let i = ref 1 in
 
   while !i < Array.length Sys.argv && not !arret do
     match (Sys.argv).(!i) with
-      | "-with_por" -> 
+      | "-with_por" ->
 	 (* Recall the usage: -with_por [compr|red] [improper] [nouse] *)
 	 Trace_equivalence.Algorithm.option_compr := true;
 	 if not(!i+1 = (Array.length Sys.argv))
@@ -186,7 +211,7 @@ let _ =
 		       Trace_equivalence.Algorithm.option_nouse := true;
 		     end;
 	   end
-	 else begin 
+	 else begin
 	     Trace_equivalence.Algorithm.option_red := true;
 	     Trace_equivalence.Algorithm.option_improper := true;
 	     Trace_equivalence.Algorithm.option_nouse := true;
@@ -206,13 +231,13 @@ let _ =
 		end
       | "-no_comm" -> Trace_equivalence.Algorithm.option_internal_communication := false;
 		      i := !i + 1
-      | "-unfold" -> 
+      | "-unfold" ->
          Trace_equivalence.Algorithm.option_erase_double := false;
          Trace_equivalence.Algorithm.option_alternating_strategy := false;
           i := !i + 1
       | "-no_erase" -> Trace_equivalence.Algorithm.option_erase_double := false;
           i := !i + 1
-      | "-debug" when not (!i+1 = (Array.length Sys.argv)) -> 
+      | "-debug" when not (!i+1 = (Array.length Sys.argv)) ->
           if (Sys.argv).(!i+1) = "none"
           then Debug.initialise_debugging Debug.None
           else if (Sys.argv).(!i+1) = "high"
@@ -221,15 +246,15 @@ let _ =
           then Debug.initialise_debugging Debug.Low
           else arret := true;
 	  i := !i + 2
-      | "-verbose" -> 
-          begin try 
+      | "-verbose" ->
+          begin try
             Trace_equivalence.Statistic.initialise_statistic (Trace_equivalence.Statistic.Periodic (int_of_string (Sys.argv).(!i+1)));
             i := !i + 2
           with _ ->
             Trace_equivalence.Statistic.initialise_statistic Trace_equivalence.Statistic.Final;
             i := !i + 1
           end
-      | "-display" when not (!i+1 = (Array.length Sys.argv)) -> 
+      | "-display" when not (!i+1 = (Array.length Sys.argv)) ->
           if (Sys.argv).(!i+1) = "size"
           then Trace_equivalence.Statistic.initialise_display Trace_equivalence.Statistic.Per_size
           else if (Sys.argv).(!i+1) = "step"
@@ -238,34 +263,40 @@ let _ =
 	  then Trace_equivalence.Algorithm.display_traces := true
           else arret := true;
 	  i := !i + 2
-      | "-log" when not (!i+1 = (Array.length Sys.argv)) -> 
-          begin try 
+      | "-log" when not (!i+1 = (Array.length Sys.argv)) ->
+          begin try
             Trace_equivalence.Statistic.initialise_log (int_of_string (Sys.argv).(!i+1))
           with _ -> arret := true
           end;
 	  i := !i + 2
-      | str_path -> 
+      | str_path ->
           if !i = Array.length Sys.argv - 1
           then path := str_path
           else arret := true;
 	  i := !i + 1
   done;
-  
+
   if Array.length Sys.argv <= 1
   then arret := true;
-	
+
   if !arret || !path = ""
   then print_help ()
-  else 
+  else
     begin
       parse_file !path;
-     
+
+      if (!Parser.Parser_function.equivalence_request <> [] || !Parser.Parser_function.equivalence_request <> []) && !Parser.Parser_function.is_secrecy_request
+      then (Printf.printf "Parsing error: the processes should not contain Secrecy and Equivalence at the same time\n" ; exit 0);
+
       (* Trace equivalence *)
       List.iter (fun (p1,p2) -> decide_trace_equivalence p1 p2) !Parser.Parser_function.equivalence_request;
-      
+
       (* Complete the length functions *)
       Length_equivalence.Length.complete_length_functions ();
-      
+
       (* Trace equivalence w.r.t. length *)
-      List.iter (fun (p1,p2) -> decide_trace_equivalence_length p1 p2) !Parser.Parser_function.equivalence_length_request
+      List.iter (fun (p1,p2) -> decide_trace_equivalence_length p1 p2) !Parser.Parser_function.equivalence_length_request;
+
+      (* Secrecy *)
+      List.iter decide_secrecy !Parser.Parser_function.secrecy_request;
     end

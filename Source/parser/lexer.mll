@@ -1,10 +1,10 @@
-(* File lexer.mll *) 
-{ 
-open Grammar (* The type token is defined in parser.mli *) 
-	
+(* File lexer.mll *)
+{
+open Grammar (* The type token is defined in parser.mli *)
+
 let keyword_table = Hashtbl.create 10
 
-let _ = 
+let _ =
   List.iter (fun (kwd,tok) -> Hashtbl.add keyword_table kwd tok)
     [
       "new", NEW;
@@ -15,25 +15,27 @@ let _ =
       "out", OUT;
       "fun", FUN;
       "free", FREE;
-		
+
       "let", LET;
       "and", AND;
-		
+
       "equivalence" , EQUIVALENCE;
-      
+			"secrecy", SECRET;
+      "preserve", PRESERVE;
+
       "length" , LENGTH;
       "constant", CST;
       "arguments", ARGS;
       "tuple", TUPLE
     ]
-	
+
 let newline lexbuf =
       let pos = lexbuf.Lexing.lex_curr_p in
       lexbuf.Lexing.lex_curr_p <-
         { pos with Lexing.pos_lnum = pos.Lexing.pos_lnum + 1;
                    Lexing.pos_bol = pos.Lexing.pos_cnum }
-}               
-rule token = parse 
+}
+rule token = parse
 | '#' [^ '\n']* '\n' { newline lexbuf; token lexbuf }
 | "(*" [^ '\n']* "*)" { newline lexbuf; token lexbuf }
 |[' ' '\t'] { token lexbuf } (* skip blanks *)
@@ -62,19 +64,19 @@ rule token = parse
       with Not_found -> STRING(id)
 		}
 | ([ '0'-'9' ]) +
-    { 
-      try 
+    {
+      try
         INT (int_of_string(Lexing.lexeme lexbuf))
       with Failure _ ->
 	let pos = lexbuf.Lexing.lex_curr_p in
 	let msg = Printf.sprintf "Line %d : Syntax Error\n" (pos.Lexing.pos_lnum) in
-	
+
 	raise (Failure msg)
-    }		
+    }
 | eof { EOF }
-| _  { 
+| _  {
 	let pos = lexbuf.Lexing.lex_curr_p in
 	let msg = Printf.sprintf "Line %d : Syntax Error\n" (pos.Lexing.pos_lnum) in
-	
+
 	raise (Failure msg)
 }
