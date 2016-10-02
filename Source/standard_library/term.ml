@@ -287,6 +287,11 @@ let rec is_equal_and_closed_term t1 t2 = match t1,t2 with
 
 let is_equal_name n1 n2 = n1 == n2
 
+let rec name_occurs n = function
+  | Name(n') when is_equal_name n n' -> true
+  | Func(_,args) -> List.exists (name_occurs n) args
+  | _ -> false
+
 let is_variable t = match t with
   | Var(_) -> true
   | _ -> false

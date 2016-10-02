@@ -78,7 +78,7 @@ let apply_strategy_for_matrices next_function strategy_for_matrix proc_symb =
 
   (** Strategy for the complete unfolding without POR *)
 
-  let apply_strategy_one_transition next_function_output next_function_input symb_proc =
+  let apply_strategy_one_transition pub_channels next_function_output next_function_input symb_proc =
 
     (* ** First step : apply the internal transitions (including conditionals) *)
 
@@ -90,7 +90,9 @@ let apply_strategy_for_matrices next_function strategy_for_matrix proc_symb =
      all those alternatives together in left/right_internal lists. *)
     List.iter (fun symb_proc_1 ->
       Process.apply_internal_transition
-        ~with_comm:!Trace_equivalence.Algorithm.option_internal_communication ~with_por:false ~with_improper:false (fun symb_proc_2 ->
+        !Algorithm.option_semantics
+        pub_channels
+        ~with_por:false ~with_improper:false (fun symb_proc_2 ->
         internal := symb_proc_2::!internal
       ) symb_proc_1
     ) [symb_proc];
@@ -148,13 +150,13 @@ let apply_strategy_for_matrices next_function strategy_for_matrix proc_symb =
     if !input_set <> []
     then List.iter next_function_input !input_set
 
-let rec apply_alternating symb_proc =
+let rec apply_alternating pub_channels symb_proc =
     let next_function f_strat_m symb_proc_1 =
       (***[Statistic]***)
       Trace_equivalence.Statistic.start_transition [symb_proc_1] [];
 
       apply_strategy_for_matrices (fun matrix ->
-          partionate_matrix apply_alternating symb_proc_1 matrix
+          partionate_matrix (apply_alternating pub_channels) symb_proc_1 matrix
         ) f_strat_m symb_proc_1;
 
       (***[Statistic]***)
@@ -162,6 +164,7 @@ let rec apply_alternating symb_proc =
     in
 
     apply_strategy_one_transition
+      pub_channels
       (next_function Trace_equivalence.Strategy.apply_strategy_output)
       (next_function Trace_equivalence.Strategy.apply_strategy_input)
       symb_proc
@@ -172,6 +175,12 @@ let decide_secrecy process =
 
   (* Get the free names *)
   let free_names = Process.get_free_names process in
+
+  let pub_channels =
+    match Process.is_well_typed process with
+      | None -> Algorithm.option_semantics := Process.Classic; []
+      | Some l -> Algorithm.option_semantics := Process.Private; l
+  in
 
   (* Creation of the constraint system *)
   let csys =
@@ -191,7 +200,7 @@ let decide_secrecy process =
 
   (* Application of the strategy *)
   try
-    apply_alternating symb_proc;
+    apply_alternating pub_channels symb_proc;
     true
   with
     | Not_secrecy sym_proc ->

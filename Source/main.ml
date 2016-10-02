@@ -28,10 +28,10 @@ let print_help () =
   Printf.printf "          improve performance. It is possible to choose a specific POR technique (compressed\n";
   Printf.printf "          or reduced semantics), improper and nouse are optional. Without extra argument, -with_por option\n";
   Printf.printf "          will enable the best POR technique (i.e., reduced semantics with improper and nouse).\n";
-  Printf.printf "          Note : This option automatically activates the option '-no_comm'.\n";
+  Printf.printf "          Note : This option automatically activates the classic semantics.\n";
   Printf.printf "          WARNING : This option should only be used for action-determinate processes.\n\n";
-  Printf.printf "      -no_comm : Does not consider the internal communication in the trace equivalence.\n";
-  Printf.printf "          WARNING : This option should not be used in presence of private channel.\n\n";
+  Printf.printf "      -semantics [classic|private|eavesdrop]: Select the semantics to consider.\n";
+  Printf.printf "          WARNING : In the private and eavesdrop semantics, we require well-typed processes.\n\n";
   Printf.printf "      -no_erase : Does not consider a slight optimisation that consists of removing\n";
   Printf.printf "          symbolic processes with the same process during the execution of the algirithm.\n";
   Printf.printf "          Note : This option is automatically activated when -unfold is used.\n\n";
@@ -229,14 +229,21 @@ let _ =
 		  Trace_equivalence.Algorithm.option_nouse := true;
 		  i := !i + 1;
 		end
-      | "-no_comm" -> Trace_equivalence.Algorithm.option_internal_communication := false;
-		      i := !i + 1
       | "-unfold" ->
          Trace_equivalence.Algorithm.option_erase_double := false;
          Trace_equivalence.Algorithm.option_alternating_strategy := false;
           i := !i + 1
       | "-no_erase" -> Trace_equivalence.Algorithm.option_erase_double := false;
           i := !i + 1
+      | "-semantics" when not (!i+1 = (Array.length Sys.argv)) ->
+          if (Sys.argv).(!i+1) = "classic"
+          then Trace_equivalence.Algorithm.option_semantics := Standard_library.Process.Classic
+          else if (Sys.argv).(!i+1) = "private"
+          then Trace_equivalence.Algorithm.option_semantics := Standard_library.Process.Private
+          else if (Sys.argv).(!i+1) = "eavesdrop"
+          then Trace_equivalence.Algorithm.option_semantics := Standard_library.Process.Eavesdrop
+          else arret := true;
+          i := !i + 2
       | "-debug" when not (!i+1 = (Array.length Sys.argv)) ->
           if (Sys.argv).(!i+1) = "none"
           then Debug.initialise_debugging Debug.None
@@ -245,7 +252,7 @@ let _ =
           else if (Sys.argv).(!i+1) = "low"
           then Debug.initialise_debugging Debug.Low
           else arret := true;
-	  i := !i + 2
+	        i := !i + 2
       | "-verbose" ->
           begin try
             Trace_equivalence.Statistic.initialise_statistic (Trace_equivalence.Statistic.Periodic (int_of_string (Sys.argv).(!i+1)));

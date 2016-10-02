@@ -1,16 +1,18 @@
 (** {2 Process} *)
 
+type semantics = Classic | Private | Eavesdrop
+
 type label
 
 val fresh_label : unit -> label
 
-type formula = 
+type formula =
   | Eq of Term.term * Term.term
   | Neq of Term.term * Term.term
   | And of formula * formula
   | Or of formula * formula
-  
-type pattern = 
+
+type pattern =
   | Var of Term.variable
   | Tuple of Term.symbol * pattern list
 
@@ -30,13 +32,15 @@ val rename : process -> process
 
 val iter_term_process : process -> (Term.term -> Term.term) -> process
 
+val is_well_typed : process -> Term.name list option
+
 val get_free_names : process -> Term.name list
 
 val display_process : process -> string
 
 (** {2 Symbolic process} *)
 
-type symbolic_process 
+type symbolic_process
 
 val create_symbolic : (Recipe.recipe * Term.term) list -> process -> Constraint_system.constraint_system -> symbolic_process
 
@@ -79,7 +83,7 @@ val instanciate_trace : symbolic_process -> symbolic_process
     has_focus and improper accordingly. Note that, it also stores the fact that processes coming from parallel compositions
     must be labelled into the 'toLabel' flag. Flags: booleans: with_comm, with_por, with_improper. *)
 val apply_internal_transition :
-  with_comm:bool -> with_por:bool -> with_improper:bool ->
+  semantics -> Term.name list -> with_por:bool -> with_improper:bool ->
   (symbolic_process -> unit) -> symbolic_process -> unit
 
 (** boolean: with_por (if true we only consider the process under focus, ie, the first one in the list)),
@@ -89,6 +93,7 @@ val apply_input : bool -> ((symbolic_process*Term.term) -> unit) -> Recipe.varia
 (** boolean: with_por, next_function takes the pair (continuation,channel of produced action) *)
 val apply_output : bool -> ((symbolic_process*Term.term) -> unit) -> Recipe.variable -> symbolic_process -> unit
 
+val apply_eavesdrop : ((symbolic_process * Term.term) -> unit) -> Recipe.variable -> symbolic_process -> unit
 
 (** {3 Optimisation} *)
 
@@ -185,6 +190,7 @@ val must_generate_dep_csts : symbolic_process -> bool
 
 
 (** {4 Debugging tools} *)
+
 (** [is_subtrace traceinfo size symP] Returns true if symP has executed a trace whose the [size] first actions are
     the same as in [traceinfo] *)
 val is_subtrace : int list -> int -> symbolic_process -> bool
@@ -192,4 +198,3 @@ val is_subtrace : int list -> int -> symbolic_process -> bool
 val display_symb_process : symbolic_process -> unit
 
 val display_dep_csts : symbolic_process -> string
-

@@ -243,6 +243,9 @@ val exists_var : quantifier -> term -> bool
 (** [for_all_var q t] returns [true] iff all variables in the term [t] are quantified as [q]. *)
 val for_all_var : quantifier -> term -> bool
 
+(** [name_occurs n t] returns [true] iff the name [v] occurs in the term [t].*)
+val name_occurs : name -> term -> bool
+
 (** [exists_name s t] returns [true] iff there exists a name in [t] with status [s]. *)
 val exists_name_with_status : name_status -> term -> bool
 

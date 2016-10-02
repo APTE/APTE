@@ -5,6 +5,8 @@ exception Not_equivalent_right of Process.symbolic_process
 
 (** Option for the algorithm *)
 
+val option_semantics : Process.semantics ref
+
 (** true if POR technique with compression will be used (only for action-determinate proc.) *)
 val option_compr : bool ref
 
@@ -17,7 +19,7 @@ val option_improper : bool ref
 (** true if POR technique with NoUse criterion (only for action-determinate proc.) *)
 val option_nouse : bool ref
 
-val option_internal_communication : bool ref
+(*val option_internal_communication : bool ref*)
 
 val option_erase_double : bool ref
 
@@ -45,15 +47,17 @@ val apply_strategy_for_matrices :
   Process.symbolic_process list ->
   Process.symbolic_process list ->
   unit
-  
+
 val apply_strategy_one_transition  :
+  Term.name list ->
+  (Process.symbolic_process list -> Process.symbolic_process list -> unit) ->
   (Process.symbolic_process list -> Process.symbolic_process list -> unit) ->
   (Process.symbolic_process list -> Process.symbolic_process list -> unit) ->
   Process.symbolic_process list ->
   Process.symbolic_process list ->
   unit
-  
-(** The strategy *)  
+
+(** The strategy *)
 
 val decide_trace_equivalence : Process.process -> Process.process -> bool
 

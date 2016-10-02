@@ -1,0 +1,23 @@
+free c.
+free d.
+free e.
+
+
+let P_1 x s_1 s_2 =
+    (if x = s_1 then in(d,z); if z = s_1 then out(d,s_2))
+  | (if x = s_2 then out(e,x)).
+
+let P_2 x s_1 s_2 = 
+  if x = s_1 then in(d,z); if z = s_1 then out(d,s_2).
+
+let A = new s_1; new s_2; (
+    out(c,s_1);in(c,x);P_1 x s_1 s_2
+  | in(c,y);P_2 y s_1 s_2
+  ).
+
+let B = new s_1; new s_2; (
+    out(c,s_1);in(c,x);P_2 x s_1 s_2
+  | in(c,y);P_1 y s_1 s_2
+  ).
+
+equivalence A and B.

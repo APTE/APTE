@@ -17,6 +17,8 @@ exception Not_equivalent_right of Process.symbolic_process
 
 (** Parameters *)
 
+let option_semantics = ref Process.Classic
+
 let option_compr = ref false
 
 let option_red = ref false
@@ -25,7 +27,7 @@ let option_nouse = ref false
 
 let option_improper = ref false
 
-let option_internal_communication = ref true
+(* option no_comm no longer available --- let option_internal_communication = ref true *)
 
 let option_erase_double = ref true
 
@@ -213,7 +215,7 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
 
 (** Strategy for the complete unfolding without POR *)
 
-let apply_strategy_one_transition next_function_output next_function_input left_symb_proc_list right_symb_proc_list =
+let apply_strategy_one_transition pub_channels next_function_output next_function_input next_function_eavesdrop left_symb_proc_list right_symb_proc_list =
   (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
   incr(final_test_count);
 
@@ -246,14 +248,18 @@ let apply_strategy_one_transition next_function_output next_function_input left_
    all those alternatives together in left/right_internal lists. *)
   List.iter (fun symb_proc_1 ->
     Process.apply_internal_transition
-      ~with_comm:!option_internal_communication ~with_por:false ~with_improper:false (fun symb_proc_2 ->
-      left_internal := symb_proc_2::!left_internal
-    ) symb_proc_1
+      !option_semantics
+      pub_channels
+      ~with_por:false
+      ~with_improper:false
+      (fun symb_proc_2 -> left_internal := symb_proc_2::!left_internal)
+      symb_proc_1
   ) left_erase_set;
 
   List.iter (fun symb_proc_1 ->
     Process.apply_internal_transition
-      ~with_comm:!option_internal_communication
+      !option_semantics
+      pub_channels
       ~with_por:false
       ~with_improper:false
       (fun symb_proc_2 -> right_internal := symb_proc_2::!right_internal)
@@ -337,8 +343,49 @@ let apply_strategy_one_transition next_function_output next_function_input left_
 
   (* We pass those alternatives to the next step (same desc. as for out.) *)
   if !left_input_set <> [] || !right_input_set <> []
-  then next_function_input !left_input_set !right_input_set
+  then next_function_input !left_input_set !right_input_set;
 
+  (* ** Fourth step : apply the eaves transitions *)
+
+  if !option_semantics = Process.Eavesdrop
+  then begin
+    let left_eavesdrop_set = ref []
+    and right_eavesdrop_set = ref [] in
+
+    let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
+
+    (* Scan all symbolic processes and look for one starting with an output and
+     apply function_next to the resulting symbolic process. We thus store in
+     left/right_output_set all the alternatives of performing an output. *)
+    List.iter (fun symb_proc_1 ->
+  	     Process.apply_eavesdrop
+  	       (fun (symb_proc_2,_) ->
+  			     let simplified_symb_proc = Process.simplify symb_proc_2 in
+  			     if not (Process.is_bottom simplified_symb_proc)
+  			     then left_eavesdrop_set := simplified_symb_proc::!left_eavesdrop_set
+  			   ) var_r_ch symb_proc_1
+  	    ) !left_internal;
+
+    List.iter (fun symb_proc_1 ->
+  	     Process.apply_eavesdrop
+  	       (fun (symb_proc_2,_) ->
+  			    let simplified_symb_proc = Process.simplify symb_proc_2 in
+  			    if not (Process.is_bottom simplified_symb_proc)
+  			    then right_eavesdrop_set := simplified_symb_proc::!right_eavesdrop_set
+  			   ) var_r_ch symb_proc_1
+  	    ) !right_internal;
+
+    (* We pass those alternatives to the next step which consists in:
+       1. put all csys in a row matrix
+       2. apply Strategy.apply_strategy_input/output resulting in a branching
+          process ending with many matrices (for leaves: in solved form)
+       3. apply final_test_on_matrix on all those leaves, if OK:
+       4. apply partitionate_matrix giving many pairs of symbolic processes
+       5. recursive calls on each of them to keep exploring actions
+     *)
+    if !left_eavesdrop_set <> [] || !right_eavesdrop_set <> []
+    then next_function_eavesdrop !left_eavesdrop_set !right_eavesdrop_set;
+  end
 
 (** Handles exceptions that Process.process.ml may raise and raises the corresponding algorithm.ml exception *)
 let try_P symproc_left symproc_right expr =
@@ -422,7 +469,8 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
          all those alternatives together in left/right_internal lists. *)
       List.iter (fun symb_proc_1 ->
 		 Process.apply_internal_transition
-		   ~with_comm:false
+		   Process.Classic
+       []
 		   ~with_por:true
 		   ~with_improper:!option_improper
 		   (fun symb_proc_2 ->
@@ -434,7 +482,8 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
 
       List.iter (fun symb_proc_1 ->
 		 Process.apply_internal_transition
-		   ~with_comm:false
+       Process.Classic
+       []
 		   ~with_por:true
 		   ~with_improper:!option_improper
 		   (fun symb_proc_2 ->
@@ -512,14 +561,16 @@ let apply_strategy_one_transition_por (* given .... *)
 	if !print_debug_por then Printf.printf "Trace is empty, we thus apply internal_transition before starting.\n";
 	let ps = ref [] in
 	Process.apply_internal_transition
-	  ~with_comm:false
+    Process.Classic
+    []
 	  ~with_por:true
 	  ~with_improper:!option_improper
 	  (fun symb_proc_2 -> ps := symb_proc_2 :: !ps)
 	  (List.hd left_symb_proc_list);
 	let qs = ref [] in
 	Process.apply_internal_transition
-	  ~with_comm:false
+    Process.Classic
+    []
 	  ~with_por:true
 	  ~with_improper:!option_improper
 	  (fun symb_proc_2 -> qs := symb_proc_2 :: !qs)
@@ -716,7 +767,8 @@ let apply_strategy_one_transition_por (* given .... *)
                     to satisfy the  conditional's test. Thanks to our "function_next", we then pu
                     all those alternatives together in left/right_internal lists. *)
 		 Process.apply_internal_transition
-		   ~with_comm:false
+       Process.Classic
+       []
 		   ~with_por:true
 		   ~with_improper:!option_improper
 		   (fun symb_proc_2 ->
@@ -726,7 +778,8 @@ let apply_strategy_one_transition_por (* given .... *)
 		   ) proc_left_out;
 
 		 Process.apply_internal_transition
-		   ~with_comm:false
+       Process.Classic
+       []
 		   ~with_por:true
 		   ~with_improper:!option_improper
 		   (fun symb_proc_2 ->
@@ -763,7 +816,7 @@ let apply_strategy_one_transition_por (* given .... *)
 
 (* The complete unfolding strategy *)
 
-let rec apply_complete_unfolding left_symb_proc_list right_symb_proc_list =
+let rec apply_complete_unfolding pub_channels left_symb_proc_list right_symb_proc_list =
   let next_function left_list right_list =
 
     (***[Statistic]***)
@@ -774,15 +827,15 @@ let rec apply_complete_unfolding left_symb_proc_list right_symb_proc_list =
     (***[Statistic]***)
     Statistic.end_transition ();
 
-    apply_complete_unfolding left_list right_list
+    apply_complete_unfolding pub_channels left_list right_list
 
   in
 
-  apply_strategy_one_transition next_function next_function left_symb_proc_list right_symb_proc_list
+  apply_strategy_one_transition pub_channels next_function next_function next_function left_symb_proc_list right_symb_proc_list
 
 (* The alternating strategy *)
 
-let rec apply_alternating left_symb_proc_list right_symb_proc_list =
+let rec apply_alternating pub_channels left_symb_proc_list right_symb_proc_list =
   (* 'next_function [some Strategy]' will be applied on every pairs resulting from
    the execution of one symbolic action *)
   let next_function f_strat_m left_list right_list =
@@ -790,33 +843,36 @@ let rec apply_alternating left_symb_proc_list right_symb_proc_list =
     Statistic.start_transition left_list right_list;
 
     apply_strategy_for_matrices (fun index_right_process matrix ->
-				 partionate_matrix apply_alternating left_list right_list index_right_process matrix
+				 partionate_matrix (apply_alternating pub_channels) left_list right_list index_right_process matrix
 				) f_strat_m left_list right_list;
 
     (***[Statistic]***)
     Statistic.end_transition ()
 
-  in let strategy_one_transition = if !option_compr (* if we use at least the weakest POR technique, we need
-                                                       to use a dedicated actions-exploring function *)
-				   then apply_strategy_one_transition_por
-				   else apply_strategy_one_transition
-     and next_out = next_function
-		      (if !option_compr
-		       then Strategy.apply_full_strategy
-		       else Strategy.apply_strategy_output)
-     and next_in = next_function
-		     (if !option_compr
-		      then Strategy.apply_full_strategy
-		      else Strategy.apply_strategy_input)
-     in
-     (* We call strategy_one_transition: it non-deterministically applies a symbolic action and call
-        the corresponding next_out/next_in continuation on the results. Those continuations apply constraints
-        resolution procedure and call apply_alternating on the leaves. *)
-     strategy_one_transition
-       next_out
-       next_in
-       left_symb_proc_list
-       right_symb_proc_list
+  in
+
+  let next_out = next_function
+	  (if !option_compr
+		 then Strategy.apply_full_strategy
+		 else Strategy.apply_strategy_output)
+
+  and next_in = next_function
+		(if !option_compr
+		 then Strategy.apply_full_strategy
+		 else Strategy.apply_strategy_input)
+
+  and next_eavesdrop = next_function Strategy.apply_full_strategy
+
+  in
+
+  (* We call strategy_one_transition: it non-deterministically applies a symbolic action and call
+     the corresponding next_out/next_in continuation on the results. Those continuations apply constraints
+     resolution procedure and call apply_alternating on the leaves. *)
+
+  if !option_compr (* if we use at least the weakest POR technique, we need
+                                                          to use a dedicated actions-exploring function *)
+  then apply_strategy_one_transition_por next_out next_in left_symb_proc_list right_symb_proc_list
+  else apply_strategy_one_transition pub_channels next_out next_in next_eavesdrop left_symb_proc_list right_symb_proc_list
 
 
 (*****************************************
@@ -839,6 +895,20 @@ let decide_trace_equivalence process1 process2 =
     ) free_names_2 free_names_1
   in
 
+  let pub_channels = match !option_semantics with
+    | Process.Classic -> []
+    | Process.Private | Process.Eavesdrop ->
+        begin match Process.is_well_typed process1, Process.is_well_typed process2 with
+          | None,_ | _, None -> failwith "The processes should be well-typed when using the Private or Eavesdrop semantics"
+          | Some l1, Some l2 ->
+              List.fold_left (fun l n ->
+                if List.exists (Term.is_equal_name n) l2
+                then l
+                else n::l
+              ) l2 l1
+        end
+  in
+
   (* Creation of the constraint system *)
   let csys =
     List.fold_left (fun csys n ->
@@ -859,8 +929,8 @@ let decide_trace_equivalence process1 process2 =
   (* Application of the strategy *)
   try
     if !option_alternating_strategy
-    then apply_alternating [symb_proc1] [symb_proc2]
-    else apply_complete_unfolding [symb_proc1] [symb_proc2];
+    then apply_alternating pub_channels [symb_proc1] [symb_proc2]
+    else apply_complete_unfolding pub_channels [symb_proc1] [symb_proc2];
     true
   with
   | Not_equivalent_left sym_proc ->

@@ -1,0 +1,31 @@
+free c.
+free d.
+free e.
+free f.
+free a.
+
+fun h/1.
+
+let P_1 = out(e,a).
+
+let P_2 = out(f,a); out(e,a) | in(f,x).
+
+let A = new s_1; new s_2; (
+    out(c,h(s_1))
+  | out(c,h(s_2))
+  | in(d,x); (
+      (if x = h(s_1) then P_1)
+    | (if x = h(s_2) then P_2)
+    )
+  ).
+
+let B = new s_1; new s_2; (
+    out(c,h(s_1))
+  | out(c,h(s_2))
+  | in(d,x); (
+      (if x = h(s_1) then P_2)
+    | (if x = h(s_2) then P_2)
+    )
+  ).
+
+equivalence A and B.
