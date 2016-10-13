@@ -125,7 +125,6 @@ let decide_trace_equivalence process1 process2 =
   display_channel_and_stdout channel (Printf.sprintf "Number of explorations: %d.\n" (!Trace_equivalence.Algorithm.final_test_count));
   display_channel_and_stdout channel (Printf.sprintf "Result obtained in %f seconds\n" time_spent);
   Trace_equivalence.Statistic.display_statistic ();
-  Trace_equivalence.Statistic.end_of_checking ();
   flush_all ();
   close_out channel
 
