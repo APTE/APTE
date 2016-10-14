@@ -49,7 +49,7 @@ let processB_1 k_S k_B k_A =
     then
     in(c_4,z);
     if z = N_b
-    then out(bad,bad).
+    then out(c_s,bad).
 
 
 let processB_2 k_S k_B k_A =
