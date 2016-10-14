@@ -1,0 +1,37 @@
+# Private Authentication Protocol
+
+free c.
+free c_1.
+free c_2.
+
+### Description of the role of Alice
+
+let process_Alice k_a k_b =
+  new N_a;
+  out(c_1,aenc((N_a,pk(k_a)),pk(k_b))); 
+  in(c_2,x).
+
+
+### Description of the role of Bob
+
+let process_Bob k_a k_b =
+  in(c_1,x); 
+  let (na,pka) = adec(x,k_b) in	
+  if pka = pk(k_a)
+  then new N_b; out(c_2,aenc((na,N_b,pk(k_b)),pk(k_a)))
+  else new N; out(c_2,aenc(N,pk(k_a))).
+		
+### Main
+
+let instance1 =
+  new k_a ; new k_b ; new k_c ; out(c,pk(k_a)) ; out(c,pk(k_b)) ; out(c,pk(k_c)); 
+  ( process_Alice k_a k_b | process_Bob k_a k_b | process_Alice k_c k_b | process_Bob k_c k_b | process_Alice k_b k_b | process_Bob k_b k_b).
+
+let instance2 =
+  new k_a ; new k_b ; new k_c ; out(c,pk(k_a)) ; out(c,pk(k_b)) ; out(c,pk(k_c)); 
+  ( process_Alice k_c k_b | process_Bob k_c k_b | process_Alice k_c k_b | process_Bob k_c k_b | process_Alice k_b k_b | process_Bob k_b k_b).
+  
+  
+equivalence length instance1 and instance2.
+
+equivalence instance1 and instance2.
