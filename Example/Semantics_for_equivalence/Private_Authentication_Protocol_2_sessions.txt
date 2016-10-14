@@ -31,7 +31,4 @@ let instance2 =
   new k_a ; new k_b ; new k_c ; out(c,pk(k_a)) ; out(c,pk(k_b)) ; out(c,pk(k_c)); 
   ( process_Alice k_c k_b | process_Bob k_c k_b | process_Alice k_c k_b | process_Bob k_c k_b).
   
-  
-equivalence length instance1 and instance2.
-
 equivalence instance1 and instance2.
