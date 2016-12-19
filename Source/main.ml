@@ -110,9 +110,11 @@ let decide_trace_equivalence process1 process2 =
 
   display_channel_and_stdout channel "Process 1 =\n";
   display_channel_and_stdout channel (Standard_library.Process.display_process process1);
+  flush_all ();
 
   display_channel_and_stdout channel "\n\nProcess2 =\n";
   display_channel_and_stdout channel (Standard_library.Process.display_process process2);
+  flush_all ();
 
   display_channel_and_stdout channel "\n\nStarting the decision procedure...\n";
   flush_all ();

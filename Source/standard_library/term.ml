@@ -153,7 +153,7 @@ let get_tuple ar =
     List.find (fun symb -> symb.arity = ar) !all_tuple
   with Not_found ->
     begin
-      let symb = { name = ""; arity = ar; cat = Tuple } in
+      let symb = { name = "tuple"; arity = ar; cat = Tuple } in
       all_constructors := symb::!all_constructors;
       all_tuple := symb::!all_tuple;
       number_of_constructors := !number_of_constructors + 1;

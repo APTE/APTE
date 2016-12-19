@@ -1190,7 +1190,7 @@ let rec sub_display_process n_tab prev_choice prev_par prev_in_out = function
        if prev_in_out
        then ""
        else
-         let tab = create_depth_tabulation (n_tab-1) in
+         let tab = create_depth_tabulation n_tab in
          tab^"0\n"
   | Choice(p1,p2) when prev_choice ->
       let tab = create_depth_tabulation (n_tab-1) in
