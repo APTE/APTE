@@ -1482,6 +1482,7 @@ let labelise_consistently mapS symb_proc =
        }
 
 let list_of_choices_focus symP =
+  Printf.printf "deb list_of_choices_focus \n";
   let listChoices = ref [] in
   let rec buildList pre = function
     | [] -> ()
@@ -1531,7 +1532,8 @@ let display_symb_process symP =
   Printf.printf "##################### Symbolic Process ###########################\n";
   List.iter (fun (p,pl) -> Printf.printf "## Process (index %s):\n%s\n" (display_parlab (fst pl)) (display_process p))
 	    symP.process;
-  Printf.printf "%s" (display_trace_blocks symP)
+  Printf.printf "%s" (display_trace_blocks symP);
+  Printf.printf "System of constraints: %s" (Constraint_system.display (symP.constraint_system))
 
 
 let debug_f = ref false          (* Do we print debugging information for the 'reduced' work  *)

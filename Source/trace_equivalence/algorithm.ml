@@ -17,6 +17,8 @@ exception Not_equivalent_right of Process.symbolic_process
 
 (** Parameters *)
 
+let printNotEquiv () = Printf.printf "NOT EQUIVALENT\n\n"
+
 let option_semantics = ref Process.Classic
 
 let option_compr = ref false
@@ -33,9 +35,9 @@ let option_erase_double = ref true
 
 let option_alternating_strategy = ref true
 
-let print_debug_por = ref false
+let print_debug_por = ref true
 
-let display_traces = ref false
+let display_traces = ref true
 
 (** Statistics info *)
 let final_test_count = ref 0
@@ -48,10 +50,10 @@ let final_test_count = ref 0
 (* Use the following function to print all information about symP when its trace
    match the given witness. Write your witness as a list of integers (one integer
    per action accordingly to how Apte numbers/parses processes. *)
-let witness = [2;3;4;27;28] 		(* example of witness *)
+let witness = [] 		(* example of witness *)
 let size = 4				(* example of the 'looking' size *)
 let displayIfWitness message symP =
-  if (Process.is_subtrace witness size symP)
+  if true or (Process.is_subtrace witness size symP)
   then begin
       Printf.printf "%s%s" message (Process.display_trace symP);
       Printf.printf "%s" (Process.display_trace_blocks symP);
@@ -180,11 +182,14 @@ let final_test_on_matrix index_right_process left_set right_set matrix =
 
 let apply_strategy_for_matrices next_function strategy_for_matrix left_set right_set =
 
+  Printf.printf "deb de apply_strategy_for_matrices \n";
   let number_left_symb_proc = List.length left_set
   and number_right_symb_proc = List.length right_set in
 
   let index_right_process = number_left_symb_proc + 1 in
 
+  Printf.printf "mid1 de apply_strategy_for_matrices \n";
+  
   (* ** Creation of the matrix *)
 
   let complete_csys_list =
@@ -202,15 +207,25 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
 
   (* ** Application of the strategy on matrices *)
 
+  Printf.printf "mid2 de apply_strategy_for_matrices \n";
+  
   strategy_for_matrix (fun matrix_1 ->
-    if Constraint_system.Matrix.is_empty matrix_1
+     Printf.printf "fin apply_full_strategy_on_matrix\n";
+     if Constraint_system.Matrix.is_empty matrix_1
     then ()
     else
       begin
-        final_test_on_matrix index_right_process left_set right_set matrix_1;
-        next_function index_right_process matrix_1
+	Printf.printf "AVANT test_final_on_matrix\n";
+        try begin
+	    final_test_on_matrix index_right_process left_set right_set matrix_1;
+	    Printf.printf "APRES test_final_on_matrix\n";
+            next_function index_right_process matrix_1;
+	  end with
+	| Process.Not_eq_left q -> printNotEquiv ()
+	| Process.Not_eq_right q -> printNotEquiv ()
+	| Stack_overflow -> Printf.printf "STACK OVERFLOW!!!!!!\n"
       end
-  ) matrix
+		      ) matrix
 
 
 (** Strategy for the complete unfolding without POR *)
@@ -716,16 +731,21 @@ let apply_strategy_one_transition_por (* given .... *)
                    to true, find a process with same skeleton on the right, do the same
                    and perform this input *)
 		 if !print_debug_por then Printf.printf "[REL] We are going to start a new positive phase and thus choose a focus.\n";
-
+		 displayIfWitness "DEBUG_left: " proc_left;
+		 displayIfWitness "DEBUG_right: " proc_right;
+		 
 		 (* we build a list (P_i,ski) list of alternatives of choices of focused process with the corresponding
 	            focused process' skeleton ski*)
 		 let left_choose_focus = Process.list_of_choices_focus proc_left_label_red_up in
 		 (* using the latter we build a list (P_i,Q_i) list where Q_i is a choice of focus such that sk(P_i)=sk(Q_i) *)
+		 Printf.printf "1 \n";
 		 let listPairProc = Process.assemble_choices_focus left_choose_focus proc_right_label_red_up in
+		 Printf.printf "2 \n";
 		 (* in listPairProc : (symbolic_process^2) list, we apply input_focus on each pair with a List.iter *)
 		 List.iter (fun (p_left,p_right) ->
 			    apply_input_on_focused next_function_input p_left p_right)
 			   listPairProc;
+		 Printf.printf "3 \n";
 	       end
 	     else if isNotSingleton !left_output_set
 	     then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] In a negative phase, we end up with more than one alternatives after performing an output. This should not happen."
@@ -822,7 +842,9 @@ let rec apply_complete_unfolding pub_channels left_symb_proc_list right_symb_pro
     (***[Statistic]***)
     Statistic.start_transition left_list right_list;
 
-    apply_strategy_for_matrices (fun _ _ -> ()) Strategy.apply_full_strategy left_list right_list;
+    apply_strategy_for_matrices (fun _ _ -> ())
+				(fun matrix -> Printf.printf "deb apply_full_strategy"; Strategy.apply_full_strategy matrix)
+				left_list right_list;
 
     (***[Statistic]***)
     Statistic.end_transition ();
@@ -839,29 +861,39 @@ let rec apply_alternating pub_channels left_symb_proc_list right_symb_proc_list 
   (* 'next_function [some Strategy]' will be applied on every pairs resulting from
    the execution of one symbolic action *)
   let next_function f_strat_m left_list right_list =
+    Printf.printf "deb de next_function\n";
     (***[Statistic]***)
     Statistic.start_transition left_list right_list;
-
+    Printf.printf "mid1 de next_function\n";
     apply_strategy_for_matrices (fun index_right_process matrix ->
-				 partionate_matrix (apply_alternating pub_channels) left_list right_list index_right_process matrix
-				) f_strat_m left_list right_list;
+				 Printf.printf "deb de partition_matrix \n";
+				 partionate_matrix (fun l r -> Printf.printf "fin de partition_matrix \n"; apply_alternating pub_channels l r)
+						   left_list right_list index_right_process matrix
+				) (fun f ->  Printf.printf "deb de strategy_on_matrix\n";
+					     f_strat_m f)
+				left_list right_list;
 
-    (***[Statistic]***)
-    Statistic.end_transition ()
+    Printf.printf "mid2 de next_function\n";
+     (***[Statistic]***)
+    Statistic.end_transition ();
+    Printf.printf "end de next_function\n"
+
 
   in
 
   let next_out = next_function
-	  (if !option_compr
-		 then Strategy.apply_full_strategy
-		 else Strategy.apply_strategy_output)
-
+		   (Printf.printf "deb apply_full_strategy (out)\n";
+		    if !option_compr
+		    then Strategy.apply_full_strategy
+		    else Strategy.apply_strategy_output)
+		   
   and next_in = next_function
-		(if !option_compr
+		  (Printf.printf "deb apply_full_strategy (in)\n";
+	    if !option_compr
 		 then Strategy.apply_full_strategy
 		 else Strategy.apply_strategy_input)
 
-  and next_eavesdrop = next_function Strategy.apply_full_strategy
+  and next_eavesdrop = next_function (Printf.printf "deb apply_full_strategy (eave)\n";Strategy.apply_full_strategy)
 
   in
 

@@ -430,10 +430,12 @@ let apply_pre_cycle_b_c support matrix =
   Rules.apply_eqll support matrix
 
 let rec apply_step_b_phase_1 support column_k f_next matrix =
+  Printf.printf "deb apply_step_b_phase_1 \n";
 
   let modification = ref false in
 
   let apply_on_row row =
+    Printf.printf "deb apply_on_row in apply_step_b_phase_1 \n";
     let new_row_list = ref [] in
 
     let get_list_apps csys =
@@ -467,6 +469,8 @@ let rec apply_step_b_phase_1 support column_k f_next matrix =
     let add_row row = new_row_list := row :: !new_row_list in
 
     let rec apply_cons_axiom row =
+      Printf.printf "deb apply_cons_axiom in apply_step_b_phase_1 \n";
+	
       let csys = Constraint_system.Row.get row column_k in
 
       if Constraint_system.is_bottom csys
@@ -500,9 +504,10 @@ let rec apply_step_b_phase_1 support column_k f_next matrix =
       let matrix' = Constraint_system.Matrix.replace_row apply_on_row matrix in
 
       if !modification
-      then apply_step_b_phase_1 support column_k f_next matrix'
+      then begin       Printf.printf "was modif in apply_step_b_phase_1 \n"; apply_step_b_phase_1 support column_k f_next matrix'; end
       else
         begin
+	  Printf.printf "wasn't modif apply_step_b_phase_1 \n";
           try
             let matrix'' = search_and_apply_dedsubterm support column_k matrix in
             let matrix''' = Constraint_system.Matrix.normalise matrix'' in
@@ -841,9 +846,11 @@ let apply_step_e_phase_1 support matrix =
 **************************************)
 
 let rec apply_cycle_b_c_phase_1 support column function_next matrix =
+  Printf.printf "deb apply_cycle_b_c_phase_1 \n";
   apply_step_b_phase_1 support column (fun matrix' ->
     (***[Statistic]***)
-    Statistic.record_matrix Statistic.POne_SB matrix';
+   Printf.printf "find step_b_phase1 apply_cycle_b_c_phase_1 \n";
+   Statistic.record_matrix Statistic.POne_SB matrix';
 
     try
       apply_step_c_phase_1 support column (fun matrix'' ->
@@ -857,17 +864,19 @@ let rec apply_cycle_b_c_phase_1 support column function_next matrix =
   ) matrix
 
 let rec apply_step_b_c_d_phase_1 support column function_next matrix =
+  Printf.printf "deb apply_step_b_c_d_phase1\n";
   if column > Constraint_system.Matrix.get_number_column matrix
-  then function_next matrix
-  else
+  then  begin Printf.printf "then apply_step_b_c_d_phase1\n"; function_next matrix; end
+  else begin
+    Printf.printf "else apply_step_b_c_d_phase1\n";
     apply_cycle_b_c_phase_1 support column (fun matrix_1 ->
-      apply_step_d_phase_1 support column (fun matrix_2 ->
+					    Printf.printf "reste d apply_step_b_c_d_phase1\n";      apply_step_d_phase_1 support column (fun matrix_2 ->
         (***[Statistic]***)
         Statistic.record_matrix Statistic.POne_SD matrix_2;
-
+    Printf.printf "+reste d apply_step_b_c_d_phase1\n";
         apply_step_b_c_d_phase_1 support (column + 1) function_next matrix_2
       ) matrix_1
-    ) matrix
+    ) matrix; end
 
 let rec apply_step_d_all_column_phase_1 support column function_next matrix =
   (***[BEGIN DEBUG]***)
@@ -886,6 +895,7 @@ let rec apply_step_d_all_column_phase_1 support column function_next matrix =
 (******* Phase 1 of the strategy after an output ********)
 
 let apply_phase_1_output support function_next matrix =
+  Printf.printf "deb apply_phase1\n";
   apply_step_d_all_column_phase_1 (support-1) 1 (fun matrix_0 ->
     (***[Statistic]***)
     Statistic.record_matrix Statistic.POne_SD matrix_0;
@@ -923,28 +933,31 @@ let apply_phase_1_input support function_next matrix =
 (******* Phase 1 of the strategy ********)
 
 let apply_phase_1 function_next matrix =
-
+  Printf.printf "deb apply_phase1\n";
   let max_support = Constraint_system.Matrix.get_maximal_support matrix in
-
+  Printf.printf "mid apply_phase1\n";
   let rec apply_each_support support matrix_1 =
     if support > max_support
     then function_next matrix_1
     else
       begin
-      let matrix_2 = apply_step_a_phase_1 support matrix_1 in
-
+	Printf.printf "else apply_phase1\n";
+	let matrix_2 = apply_step_a_phase_1 support matrix_1 in
+	Printf.printf "mid1 else apply_phase1\n";
       (***[Statistic]***)
       Statistic.record_matrix Statistic.POne_SA matrix_2;
-
+	Printf.printf "mid2 else apply_phase1\n";
       let matrix_3 = apply_pre_cycle_b_c support matrix_2 in
       let matrix_4 = Constraint_system.Matrix.normalise matrix_3 in
+      Printf.printf "mid3 else apply_phase1\n";
       apply_step_b_c_d_phase_1 support 1 (fun matrix_5 ->
-        let matrix_6 = Constraint_system.Matrix.map Constraint_system.unset_semi_solved_form matrix_5 in
+					  Printf.printf "fin step b c d apply_phase1\n";
+					  let matrix_6 = Constraint_system.Matrix.map Constraint_system.unset_semi_solved_form matrix_5 in
         let matrix_7 = apply_step_e_phase_1 support matrix_6 in
-
+					  Printf.printf "+fin step b c d apply_phase1\n";
         (***[Statistic]***)
         Statistic.record_matrix Statistic.POne_SE matrix_7;
-
+					  Printf.printf "++fin step b c d apply_phase1\n";
         apply_each_support (support + 1) matrix_7
       ) matrix_4
       end
@@ -1487,6 +1500,7 @@ let rec apply_cycle_b_c_phase_2 function_next matrix =
   ) matrix
 
 let apply_phase_2 function_next matrix =
+  Printf.printf "deb apply_phase2\n";
   (***[BEGIN DEBUG]***)
   Debug.high_debugging (fun () ->
     Constraint_system.Matrix.iter (fun csys ->
@@ -1548,11 +1562,14 @@ let apply_strategy_output function_next matrix =
   ) matrix
 
 let apply_full_strategy function_next matrix =
+  Printf.printf "deb vrai de apply_full_strategy\n";
   apply_phase_1 (fun matrix_1 ->
-    apply_phase_2 (fun matrix_2 ->
-      (***[Statistic]***)
+		 Printf.printf "phase1 apply_full_strategy \n";
+		 apply_phase_2 (fun matrix_2 ->
+	Printf.printf "phase2 apply_full_strategy \n";
+(***[Statistic]***)
       Statistic.record_matrix Statistic.Leaf matrix_2;
-
+	Printf.printf "phase22 apply_full_strategy \n";
       function_next (phase_2_to_phase_1 matrix_2)
     ) (phase_1_to_phase_2 matrix_1)
   ) matrix
