@@ -431,6 +431,10 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
      their first input in case they have the same skeleton and raise an exception otherwise.
      We assume here that focus have been removed as soon as a negative pop out.*)
 
+  Printf.printf "deb apply_input_on_focused on: \n";
+  displayIfWitness "DEBUG_left: " proc_left_label;
+  displayIfWitness "DEBUG_right: " proc_right_label;
+
   let sk_left, sk_right = (Process.sk_of_symp proc_left_label, Process.sk_of_symp proc_right_label) in
   if not(Process.equal_skeleton sk_left sk_right)
   then begin
@@ -451,6 +455,7 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
 	(fun (symb_proc_2,_) ->
 	 (* We do not simplify symbolic processes because it will be done
 	  in the next step when performing conditionals/splittings. *)
+	 let symb_proc_2 = Process.simplify symb_proc_2 in
 	 left_input_set := symb_proc_2::!left_input_set)
 	var_r_ch
 	var_r_t
@@ -460,6 +465,7 @@ let apply_input_on_focused next_function_input proc_left_label proc_right_label 
 	true             (* true: only the first process (that is under focus) is considered *)
 	(fun (symb_proc_2,_) ->
 	 (* same as above *)
+	 let symb_proc_2 = Process.simplify symb_proc_2 in
 	 right_input_set := symb_proc_2::!right_input_set)
 	var_r_ch
 	var_r_t
@@ -580,7 +586,7 @@ let apply_strategy_one_transition_por (* given .... *)
     []
 	  ~with_por:true
 	  ~with_improper:!option_improper
-	  (fun symb_proc_2 -> ps := symb_proc_2 :: !ps)
+	  (fun symb_proc_2 -> 	 let symb_proc_2 = Process.simplify symb_proc_2 in ps := symb_proc_2 :: !ps)
 	  (List.hd left_symb_proc_list);
 	let qs = ref [] in
 	Process.apply_internal_transition
@@ -588,7 +594,7 @@ let apply_strategy_one_transition_por (* given .... *)
     []
 	  ~with_por:true
 	  ~with_improper:!option_improper
-	  (fun symb_proc_2 -> qs := symb_proc_2 :: !qs)
+	  (fun symb_proc_2 -> 	 let symb_proc_2 = Process.simplify symb_proc_2 in qs := symb_proc_2 :: !qs)
 	  (List.hd right_symb_proc_list);
 	if (isNotSingleton !ps)|| (isNotSingleton !qs)
 	then Debug.internal_error "[algorithm.ml >> apply_strategy_one_transition_por] The sets of pocesses after reducing conditionals are not singletons. It may be the case that inputted processes start with conditionals at top level (which is forbidden)."
@@ -720,6 +726,7 @@ let apply_strategy_one_transition_por (* given .... *)
 	       (fun (symb_proc_2,c) ->
 		(* We do not simplify symbolic processes because it will be done
 	  in the next step when performing conditionals/splittings. *)
+	 let symb_proc_2 = Process.simplify symb_proc_2 in
 		left_output_set := (symb_proc_2,c)::!left_output_set)
 	       var_r_ch
 	       proc_left_label_red_up;
@@ -758,6 +765,7 @@ let apply_strategy_one_transition_por (* given .... *)
 		   ch
 		   (fun symb_proc_2 ->
 		    (* same as above *)
+		    let symb_proc_2 = Process.simplify symb_proc_2 in
 		    right_output_set := symb_proc_2::!right_output_set)
 		   var_r_ch
 		   proc_right_label_red_up;
