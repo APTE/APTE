@@ -7,8 +7,10 @@ VERSION = 0.4beta
 # For bytecode compilation, unset NATIVECODE below or run:
 #  make NATIVECODE="" <target>
 NATIVECODE=yes
+DEBUG=yes
 
 OCAMLC=$(if $(NATIVECODE),ocamlopt,ocamlc)
+DEBUGOPT=$(if $(DEBUG),-g,)
 OCAMLC_UC=$(shell echo $(OCAMLC) | tr a-z A-Z)
 CMO=$(if $(NATIVECODE),cmx,cmo)
 OCAMLDEP=ocamldep $(if $(NATIVECODE),-native)
@@ -20,7 +22,7 @@ OCAMLDOC=ocamldoc
 INCLUDES = -I standard_library -I parser -I trace_equivalence -I length_equivalence -I secrecy
 # Compiler options specific to OCaml version >= 4
 V4OPTIONS=$(if $(shell $(OCAMLC) -version | grep '^4'),-bin-annot)
-OCAMLFLAGS = $(INCLUDES) $(INCLUDES_MOD) $(V4OPTIONS) -w Ae
+OCAMLFLAGS = $(INCLUDES) $(INCLUDES_MOD) $(V4OPTIONS) $(DEBUGOPT) -w Ae 
 
 
 ### Makefile verbosity
