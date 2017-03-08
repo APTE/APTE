@@ -431,7 +431,11 @@ let apply_pre_cycle_b_c support matrix =
 
 let rec apply_step_b_phase_1 support column_k f_next matrix =
   Printf.printf "deb apply_step_b_phase_1 \n";
-
+  Printf.printf "Nb column: %d, Nb. line: %d, Support: %d, Max support: %d.\n"
+		(Constraint_system.Matrix.get_number_column matrix)
+		(Constraint_system.Matrix.get_number_line matrix)
+		support
+		(Constraint_system.Matrix.get_maximal_support matrix);
   let modification = ref false in
 
   let apply_on_row row =

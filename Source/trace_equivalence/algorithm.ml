@@ -223,7 +223,12 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
 	  end with
 	| Process.Not_eq_left q -> printNotEquiv ()
 	| Process.Not_eq_right q -> printNotEquiv ()
-	| Stack_overflow -> Printf.printf "STACK OVERFLOW!!!!!!\n"
+	| Stack_overflow ->
+	   begin
+	     Printf.printf "STACK OVERFLOW!!!!!!\n";
+	     Printf.printf "MATRIX DEBUG: %s\n" (Constraint_system.Matrix.display matrix);
+	     failwith "STOP"
+	   end
       end
 		      ) matrix
 
