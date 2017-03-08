@@ -505,20 +505,32 @@ let rec apply_step_b_phase_1 support column_k f_next matrix =
       apply_step_b_phase_1 support column_k f_next matrix_1') matrix
   with
     Not_found ->
-      let matrix' = Constraint_system.Matrix.replace_row apply_on_row matrix in
+    let matrix' = Constraint_system.Matrix.replace_row apply_on_row matrix in
 
-      if !modification
-      then begin       Printf.printf "was modif in apply_step_b_phase_1 \n"; apply_step_b_phase_1 support column_k f_next matrix'; end
-      else
-        begin
-	  Printf.printf "wasn't modif apply_step_b_phase_1 \n";
-          try
-            let matrix'' = search_and_apply_dedsubterm support column_k matrix in
-            let matrix''' = Constraint_system.Matrix.normalise matrix'' in
-            apply_step_b_phase_1 support column_k f_next matrix'''
-          with Not_found ->
-            f_next matrix
-        end
+    if !modification
+    then begin
+	Printf.printf "was modif in apply_step_b_phase_1 \n";
+	apply_step_b_phase_1 support column_k f_next matrix';
+      end
+    else
+      begin
+	Printf.printf "wasn't modif apply_step_b_phase_1 \n";
+        try
+	  if Constraint_system.Matrix.get_maximal_support matrix > support
+	  then raise Not_found
+	  else begin
+	      Printf.printf "WARNING APPLICATION OF DED-SUBTERM: Nb column: %d, Nb. line: %d, Support: %d, Max support: %d.\n"
+			    (Constraint_system.Matrix.get_number_column matrix)
+			    (Constraint_system.Matrix.get_number_line matrix)
+			    support
+			    (Constraint_system.Matrix.get_maximal_support matrix);
+	      let matrix'' = search_and_apply_dedsubterm support column_k matrix in
+	      let matrix''' = Constraint_system.Matrix.normalise matrix'' in
+	      apply_step_b_phase_1 support column_k f_next matrix''';
+	    end
+        with Not_found ->
+          f_next matrix
+      end
 
 (************************************************
 ***            Step c of  Phase 1             ***
