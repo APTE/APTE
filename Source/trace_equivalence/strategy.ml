@@ -504,9 +504,13 @@ let rec apply_step_b_phase_1 support column_k f_next matrix =
       else
         begin
           try
-            let matrix'' = search_and_apply_dedsubterm support column_k matrix in
-            let matrix''' = Constraint_system.Matrix.normalise matrix'' in
-            apply_step_b_phase_1 support column_k f_next matrix'''
+	    if Constraint_system.Matrix.get_maximal_support matrix > support
+	    then raise Not_found
+	    else begin
+		let matrix'' = search_and_apply_dedsubterm support column_k matrix in
+		let matrix''' = Constraint_system.Matrix.normalise matrix'' in
+		apply_step_b_phase_1 support column_k f_next matrix''';
+	      end
           with Not_found ->
             f_next matrix
         end
