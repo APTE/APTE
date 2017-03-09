@@ -431,6 +431,10 @@ let apply_pre_cycle_b_c support matrix =
 
 let rec apply_step_b_phase_1 support column_k f_next matrix =
 
+  (** DEBUG **)
+
+  Printf.printf "Support of the rule apply_step_b_phase_1 = %d\n" support;
+
   let modification = ref false in
 
   let apply_on_row row =

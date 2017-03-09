@@ -399,7 +399,7 @@ struct
 
   type dedsubterm_flag =
     | NoDedSubterm of int
-    | YesDedSubterm of int
+    | YesDedSubterm
 
   type dest_flag =
     | NoDest of int
@@ -463,7 +463,7 @@ struct
       match fc.noDedSubterm with
         | None -> {fc with noDedSubterm = Some(NoDedSubterm support_flag) }
         | Some(NoDedSubterm(s)) when s < support_flag -> {fc with noDedSubterm = Some(NoDedSubterm support_flag) }
-        | Some(YesDedSubterm s) when s <= support_flag -> Debug.internal_error (Printf.sprintf "[constraint.ml >> Frame.add_noDedSubterm] The flag YesDedSubterm(%d) should not be present when the support %d is given as argument" s support_flag)
+        | Some(YesDedSubterm) -> Debug.internal_error (Printf.sprintf "[constraint.ml >> Frame.add_noDedSubterm] The flag YesDedSubterm should not be present")
         | _ -> fc
     else fc
 
@@ -480,14 +480,13 @@ struct
       then Debug.internal_error "[constraint.ml >> Frame.add_yesDedSubterm] The flag NoUse is already present.";
 
       match fc.noDedSubterm with
+        | Some(YesDedSubterm) when Term.is_equal_symbol symbol (Term.top fc.message) -> Debug.internal_error (Printf.sprintf "[constraint.ml >> Frame.add_yesDedSubterm] The flag YesDedSubterm should not be present")
         | Some(NoDedSubterm(s')) when s' >= support_flag && Term.is_equal_symbol symbol (Term.top fc.message)-> Debug.internal_error (Printf.sprintf "[constraint.ml >> Frame.add_yesDedSubterm] The flag NoDedSubterm(%d) should not be present when the support %d is given as argument" s' support_flag)
         | _ -> ()
     );
     (***[END DEBUG]***)
 
-    match fc.noDedSubterm with
-      | Some(YesDedSubterm s') when s' < support_flag -> fc
-      | _ -> {fc with noDedSubterm = Some(YesDedSubterm support_flag) }
+    {fc with noDedSubterm = Some(YesDedSubterm) }
 
   let add_noDest fc symbol support_flag =
     (***[BEGIN DEBUG]***)
@@ -550,9 +549,7 @@ struct
   | Some(NoDedSubterm i) when i >= support_flag -> true
   | _ -> false
 
-  let is_yesDedSubterm fc support_flag = match fc.noDedSubterm with
-  | Some(YesDedSubterm i) when i <= support_flag -> true
-  | _ -> false
+  let is_yesDedSubterm fc support_flag = fc.noDedSubterm = Some(YesDedSubterm)
 
   (********* Testing on frame *********)
 
@@ -563,10 +560,10 @@ struct
       frame_elt1.noUse = frame_elt2.noUse &&
       begin
         match frame_elt1.noDedSubterm,frame_elt2.noDedSubterm with
-        | Some(YesDedSubterm s),Some(YesDedSubterm s') when s = s' ->
+        | Some(YesDedSubterm),Some(YesDedSubterm) ->
             Term.is_equal_symbol (Term.top frame_elt1.message) (Term.top frame_elt2.message)
-        | Some(YesDedSubterm _),_ -> false
-        | _, Some(YesDedSubterm _) -> false
+        | Some(YesDedSubterm),_ -> false
+        | _, Some(YesDedSubterm) -> false
         | Some(NoDedSubterm s), Some(NoDedSubterm s') ->
             if Term.is_equal_symbol (Term.top frame_elt1.message) (Term.top frame_elt2.message)
             then s = s'
@@ -598,7 +595,7 @@ struct
 
   let display_dedsubterm = function
     | NoDedSubterm(i) -> Printf.sprintf "NDed(%d)" i
-    | YesDedSubterm(i) -> Printf.sprintf "YDed(%d)" i
+    | YesDedSubterm -> Printf.sprintf "YDed"
 
   let display_dest = function
     | NoDest(i) -> Printf.sprintf "NDes(%d)" i
