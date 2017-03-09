@@ -1532,8 +1532,8 @@ let phase_1_to_phase_2 matrix =
 *********************************************)
 
 let apply_strategy_input function_next matrix =
-  Debug.display_debug "apply_strategy_input\n";
-  Debug.display_debug (Constraint_system.Matrix.display matrix);
+  (* Debug.display_debug "apply_strategy_input\n"; *)
+  (* Debug.display_debug (Constraint_system.Matrix.display matrix); *)
   apply_phase_1_input (Constraint_system.Matrix.get_maximal_support matrix) (fun matrix_1 ->
     apply_phase_2 (fun matrix_2 ->
       (***[Statistic]***)
@@ -1544,23 +1544,23 @@ let apply_strategy_input function_next matrix =
   ) matrix
 
 let apply_strategy_output function_next matrix =
-  Debug.display_debug "Enter apply_strategy_output\n";
-  Debug.display_debug (Constraint_system.Matrix.display matrix);
-  Debug.display_debug "Start apply_phase_1_output\n";
+  (* Debug.display_debug "Enter apply_strategy_output\n"; *)
+  (* Debug.display_debug (Constraint_system.Matrix.display matrix); *)
+  (* Debug.display_debug "Start apply_phase_1_output\n"; *)
   let res = apply_phase_1_output (Constraint_system.Matrix.get_maximal_support matrix) (fun matrix_1 ->
-    Debug.display_debug "Next apply_phase_1_output\n";
-    Debug.display_debug (Constraint_system.Matrix.display matrix_1);
-    Debug.display_debug "Start apply_phase_2_output\n";
+    (* Debug.display_debug "Next apply_phase_1_output\n"; *)
+    (* Debug.display_debug (Constraint_system.Matrix.display matrix_1); *)
+    (* Debug.display_debug "Start apply_phase_2_output\n"; *)
     let res = apply_phase_2 (fun matrix_2 ->
       (***[Statistic]***)
       Statistic.record_matrix Statistic.Leaf matrix_2;
 
       function_next (phase_2_to_phase_1 matrix_2)
     ) (phase_1_to_phase_2 matrix_1) in
-    Debug.display_debug "End apply_phase_2_output\n";
+    (* Debug.display_debug "End apply_phase_2_output\n"; *)
     res
   ) matrix in
-  Debug.display_debug "End apply_phase_1_output\n";
+  (* Debug.display_debug "End apply_phase_1_output\n"; *)
   res
 
 let apply_full_strategy function_next matrix =
