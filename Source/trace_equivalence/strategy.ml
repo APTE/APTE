@@ -433,7 +433,7 @@ let rec apply_step_b_phase_1 support column_k f_next matrix =
 
   (** DEBUG **)
 
-  Printf.printf "Support of the rule apply_step_b_phase_1 = %d\n" support;
+  (*  Printf.printf "Support of the rule apply_step_b_phase_1 = %d\n" support;*)
 
   let modification = ref false in
 
@@ -1565,7 +1565,7 @@ let apply_strategy_output function_next matrix =
 
 let apply_full_strategy function_next matrix =
   (* Debug *)
-  Printf.printf "------------------------\n %s\n" (Constraint_system.Matrix.display matrix);
+  (* Printf.printf "------------------------\n %s\n" (Constraint_system.Matrix.display matrix); *)
 
   apply_phase_1 (fun matrix_1 ->
     apply_phase_2 (fun matrix_2 ->

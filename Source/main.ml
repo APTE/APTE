@@ -54,12 +54,12 @@ let parse_file path =
   let channel_in = open_in path in
   let lexbuf = Lexing.from_channel channel_in in
 
-  Debug.display_debug "Start loop";
+  (* Debug.display_debug "Start loop"; *)
 
   let _ =
     try
       while true do
-        Debug.display_debug "Start parsing a declaration";
+        (* Debug.display_debug "Start parsing a declaration"; *)
         Parser.Parser_function.parse_one_declaration (Parser.Grammar.main Parser.Lexer.token lexbuf)
       done
     with
