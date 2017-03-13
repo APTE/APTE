@@ -1,0 +1,81 @@
+# Needham Schroeder public key
+
+# 1.  	A	->	B	:  	{Na, A}KPb
+# 2.  	B	->	A	:  	{Na, Nb}KPa
+# 3.  	A	->	B	:  	{Nb}KPb
+
+# Strong secrecy of Nb
+# 6.  B      ->     : {m}Nb versus {m}K with K fresh
+
+
+
+
+free a.
+free b.
+free c.
+
+free skc.
+free m.
+
+free c0.
+free cA1.
+free cB1.
+free cA2.
+free cB2.
+
+
+let A ca a b ska pkb =
+ in(ca,xinit);
+ new na;
+ out(ca, aenc((na,a),pkb));
+ in(ca,xenc);
+ let (x1,x2) = adec(xenc,ska) in
+ if x1 =na then
+ out(ca, aenc(x2,pkb)).
+
+
+let Breal cb b a skb pka =
+ in(cb,yenc);
+ let (y1,y2) = adec(yenc,skb) in
+ if y2 = a then (
+    new nb;
+    out(cb,aenc((y1,nb),pka));
+    in(cb,ychall);
+    let y = adec(ychall,skb) in
+    if y = nb then out(cb, senc(m,nb))).
+  
+
+let Bideal cb b a skb pka =
+ in(cb,yenc);
+ let (y1,y2) = adec(yenc,skb) in
+ if y2 = a then (
+    new nb;
+    out(cb,aenc((y1,nb),pka));
+    in(cb,ychall);
+    let y = adec(ychall,skb) in
+    if y = nb then new k; out(cb, senc(m,k))).
+
+
+let System ska skb skc cA cB =
+ let pka = pk(ska) in let pkb = pk(skb) in  let pkc = pk(skc) in
+  ((A cA a c ska pkc) | (Breal cB b a skb pka)).
+
+let SystemIdeal ska skb skc cA cB =
+ let pka = pk(ska) in let pkb = pk(skb) in  let pkc = pk(skc) in
+  ((A cA a c ska pkc) | (Bideal cB b a skb pka)).
+
+
+let P =
+ new ska; new skb; let pka= pk(ska) in let pkb = pk(skb) in let pkc = pk(skc) in
+ (in(c0,z);out(c0,pka);out(c0,pkb) |
+ (System ska skb skc cA1 cB1) |
+ (System ska skb skc cA2 cB2)).
+
+let Q =
+ new ska; new skb; let pka= pk(ska) in let pkb = pk(skb) in let pkc = pk(skc) in
+ (in(c0,z);out(c0,pka);out(c0,pkb) |
+ (System ska skb skc cA1 cB1) |
+ (SystemIdeal ska skb skc cA2 cB2)).
+ 
+
+equivalence P and Q.
