@@ -9,7 +9,8 @@ VERSION = 0.4beta
 NATIVECODE=yes
 DEBUG=yes
 
-OCAMLC=$(if $(NATIVECODE),ocamlopt,ocamlc)
+OCAMLC_=$(if $(NATIVECODE),ocamlopt,ocamlc)
+OCAMLC=ocamlfind $(OCAMLC_) -package alcotest
 DEBUGOPT=$(if $(DEBUG),-g,)
 OCAMLC_UC=$(shell echo $(OCAMLC) | tr a-z A-Z)
 CMO=$(if $(NATIVECODE),cmx,cmo)
