@@ -30,6 +30,10 @@ let print_help () =
   Printf.printf "          will enable the best POR technique (i.e., reduced semantics with improper and nouse).\n";
   Printf.printf "          Note : This option automatically activates the classic semantics.\n";
   Printf.printf "          WARNING : This option should only be used for action-determinate processes.\n\n";
+  Printf.printf "      -with_por_gen: [!Experimental!] Uses generic Partial Order Reductions techniques to significantly\n";
+  Printf.printf "          improve performance. Contrary to '-with_por', those optimizations do not assume anything about\n";
+  Printf.printf "          protocols given as iputs.\n";
+  Printf.printf "          Note : This option automatically activates the classic semantics.\n\n";
   Printf.printf "      -semantics [classic|private|eavesdrop]: Select the semantics to consider.\n";
   Printf.printf "          WARNING : In the private and eavesdrop semantics, we require well-typed processes.\n\n";
   Printf.printf "      -no_erase : Does not consider a slight optimisation that consists of removing\n";
@@ -116,7 +120,10 @@ let decide_trace_equivalence process1 process2 =
   display_channel_and_stdout channel (Standard_library.Process.display_process process2);
   flush_all ();
 
-  display_channel_and_stdout channel "\n\nStarting the decision procedure...\n";
+  if !Trace_equivalence.Algorithm.option_por2
+  then display_channel_and_stdout channel "\n\nStarting the decision procedure using generalized POR techniques (experimental) ...\n"
+  else  display_channel_and_stdout channel "\n\nStarting the decision procedure...\n";
+
   flush_all ();
 
   let begin_time = Sys.time () in
@@ -230,6 +237,8 @@ let _ =
 		  Trace_equivalence.Algorithm.option_nouse := true;
 		  i := !i + 1;
 		end
+      | "-with_por_gen" -> Trace_equivalence.Algorithm.option_por2 := true;
+			   i := !i + 1			   
       | "-unfold" ->
          Trace_equivalence.Algorithm.option_erase_double := false;
          Trace_equivalence.Algorithm.option_alternating_strategy := false;

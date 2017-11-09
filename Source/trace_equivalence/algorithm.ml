@@ -27,6 +27,8 @@ let option_nouse = ref false
 
 let option_improper = ref false
 
+let option_por2 = ref false
+
 (* option no_comm no longer available --- let option_internal_communication = ref true *)
 
 let option_erase_double = ref true

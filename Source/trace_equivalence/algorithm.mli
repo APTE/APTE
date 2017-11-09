@@ -19,6 +19,9 @@ val option_improper : bool ref
 (** true if POR technique with NoUse criterion (only for action-determinate proc.) *)
 val option_nouse : bool ref
 
+(** true if generalized POR technique will be used (no assumption on protocols given as inputs is required) *)
+val option_por2 : bool ref
+
 (*val option_internal_communication : bool ref*)
 
 val option_erase_double : bool ref
