@@ -20,7 +20,7 @@ val option_improper : bool ref
 val option_nouse : bool ref
 
 (** true if generalized POR technique will be used (no assumption on protocols given as inputs is required) *)
-val option_por2 : bool ref
+val option_por_gen : bool ref
 
 (*val option_internal_communication : bool ref*)
 
@@ -67,5 +67,3 @@ val decide_trace_equivalence : Process.process -> Process.process -> bool
 (** Debugging tools *)
 val displayIfWitness : string -> Process.symbolic_process -> unit
 val ifWitness : Process.symbolic_process -> bool
-
-open Lpor

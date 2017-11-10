@@ -15,22 +15,22 @@ let importPat = function
 
 let rec importTerm = function
   | Term.Func (symb,tl) ->
-     (match symb.name with
-      | "enc" when List.length tl = 2 ->
-	 let t1, t2 = List.hd tl, List.hd (List.tl tl) in
-	 Term_.senc (importTerm t1) (importTerm t2)
-      | "dec" when List.length tl = 2 ->
-	 let t1, t2 = List.hd tl, List.hd (List.tl tl) in
-	 Term_.sdec (importTerm t1) (importTerm t2)
-      (* other constructors *)
-      | _ when symb.cat = Tuple -> Term_.tuple (List.map importTerm tl)
-      | _ when tl = [] -> Term_.ok ()       (* todo: generic constants *)
-     )
+     if Term.is_equal_symbol Term.senc symb
+     then let t1, t2 = List.hd tl, List.hd (List.tl tl) in
+	  Term_.senc (importTerm t1) (importTerm t2)
+     else if Term.is_equal_symbol Term.sdec symb
+     then let t1, t2 = List.hd tl, List.hd (List.tl tl) in
+	  Term_.sdec (importTerm t1) (importTerm t2)
+     (* other constructors *)
+     else if Term.is_tuple symb
+     then Term_.tuple (List.map importTerm tl)
+     else if tl = [] then Term_.ok ()       (* todo: generic constants *)
+     else exit 0			    (* TODO *)
   | Term.Var x ->  importVar x
   | Term.Name n -> importName n
 
 let importFormula = function
-  | _ -> (Term_.ok (), Term_.ok ())
+  | _ -> (Term_.ok (), Term_.ok ()) (* TODO *)
     
 let importProcess proc =
   let rec flatten_choice = function
