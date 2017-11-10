@@ -20,7 +20,7 @@ OCAMLDOC=ocamldoc
 
 ### Compiler options
 
-INCLUDES = -I standard_library -I parser -I trace_equivalence -I length_equivalence -I secrecy
+INCLUDES = -I standard_library -I parser -I por -I trace_equivalence -I length_equivalence -I secrecy
 # Compiler options specific to OCaml version >= 4
 V4OPTIONS=$(if $(shell $(OCAMLC) -version | grep '^4'),-bin-annot)
 OCAMLFLAGS = $(INCLUDES) $(INCLUDES_MOD) $(V4OPTIONS) $(DEBUGOPT) -w Ae 

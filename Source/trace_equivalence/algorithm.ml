@@ -27,7 +27,7 @@ let option_nouse = ref false
 
 let option_improper = ref false
 
-let option_por2 = ref false
+let option_por_gen = ref false
 
 (* option no_comm no longer available --- let option_internal_communication = ref true *)
 
@@ -883,6 +883,13 @@ let rec apply_alternating pub_channels left_symb_proc_list right_symb_proc_list 
 
 let decide_trace_equivalence process1 process2 =
   (* We assume at this point that all name in the process are distinct *)
+
+  (* If generalized POR is enable, compute symbolic traces to be explred *)
+  if !option_por_gen
+  then begin
+      Printf.printf "Applying generalized POR engine amd computing set of reduced, symbolic traces to be explored...";
+      Apte.process1
+    end;
 
   (* Get the free names *)
   let free_names_1 = Process.get_free_names process1 in

@@ -120,7 +120,7 @@ let decide_trace_equivalence process1 process2 =
   display_channel_and_stdout channel (Standard_library.Process.display_process process2);
   flush_all ();
 
-  if !Trace_equivalence.Algorithm.option_por2
+  if !Trace_equivalence.Algorithm.option_por_gen
   then display_channel_and_stdout channel "\n\nStarting the decision procedure using generalized POR techniques (experimental) ...\n"
   else  display_channel_and_stdout channel "\n\nStarting the decision procedure...\n";
 
@@ -237,7 +237,7 @@ let _ =
 		  Trace_equivalence.Algorithm.option_nouse := true;
 		  i := !i + 1;
 		end
-      | "-with_por_gen" -> Trace_equivalence.Algorithm.option_por2 := true;
+      | "-with_por_gen" -> Trace_equivalence.Algorithm.option_por_gen := true;
 			   i := !i + 1			   
       | "-unfold" ->
          Trace_equivalence.Algorithm.option_erase_double := false;
