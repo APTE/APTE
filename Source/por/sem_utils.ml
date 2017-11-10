@@ -9,19 +9,19 @@ let iter2 f a b =
     for i = 0 to Array.length a - 1 do f (unsafe_get a i) (unsafe_get b i) done
 
 (** Lists of terms, hash-consed. *)
-module TermList : sig
-  type 'l lst = Nil | Cons of Term.term * 'l
+module Term_List : sig
+  type 'l lst = Nil | Cons of Term_.term * 'l
   type t = private { id : int ; contents : t lst }
   val hash : t -> int
   val equal : t -> t -> bool
   val compare : t -> t -> int
   val nil : t
-  val cons : (Term.term*t) -> t
+  val cons : (Term_.term*t) -> t
   val prefix : t -> t -> bool
   val pp : Format.formatter -> t -> unit
 end = struct
 
-  type 'l lst = Nil | Cons of Term.term * 'l
+  type 'l lst = Nil | Cons of Term_.term * 'l
 
   type t = { id : int ; contents : t lst }
 
@@ -33,12 +33,12 @@ end = struct
 
   (** HashedType instance for non-empty lists whose sublist is hash-consed. *)
   module PT = struct
-    type _t = Term.term * t
+    type _t = Term_.term * t
     type t = _t
     let equal (t,l) (t',l') =
-      Term.equal t t' && l.id = l'.id
+      Term_.equal t t' && l.id = l'.id
     let hash (t,l) =
-      Hashtbl.hash (Term.hash t,l.id)
+      Hashtbl.hash (Term_.hash t,l.id)
   end
 
   module M = Memo.Make(PT)
@@ -56,19 +56,19 @@ end = struct
 
   let rec pp ch t = match t.contents with
     | Nil -> Format.fprintf ch "ø"
-    | Cons (t,l) -> Format.fprintf ch "%a,%a" Term.pp t pp l
+    | Cons (t,l) -> Format.fprintf ch "%a,%a" Term_.pp t pp l
 
 end
 
 (** Frames, hash-consed. *)
 module Frame : sig
-  type t = private { id : int ; contents : TermList.t array }
+  type t = private { id : int ; contents : Term_List.t array }
   val hash : t -> int
   val equal : t -> t -> bool
   val compare : t -> t -> int
   val pp : Format.formatter -> t -> unit
   val empty : t
-  val append : t -> Channel.t -> Term.term -> t
+  val append : t -> Channel.t -> Term_.term -> t
   val prefix : t -> t -> bool
 end = struct
 
@@ -77,21 +77,21 @@ end = struct
     * with one cell per channel, containing the list of outputs on
     * that channel, with the latest output at the head.
     * Frames have a unique identifier. *)
-  type t = { id : int ; contents : TermList.t array }
+  type t = { id : int ; contents : Term_List.t array }
 
   let equal t1 t2 = t1.id = t2.id
   let hash t = Hashtbl.hash t.id
   let compare t1 t2 = Pervasives.compare t1.id t2.id
 
   module PF = struct
-    type t = TermList.t array
+    type t = Term_List.t array
     let hash f =
       (* TODO avoid Array.map *)
-      Hashtbl.hash (Array.map (fun x -> x.TermList.id) f)
+      Hashtbl.hash (Array.map (fun x -> x.Term_List.id) f)
     let equal f g =
       try
         iter2
-          (fun x y -> if not (TermList.equal x y) then raise Exit)
+          (fun x y -> if not (Term_List.equal x y) then raise Exit)
           f g ;
         true
       with
@@ -114,14 +114,14 @@ end = struct
           frame
 
   (** The empty frame. *)
-  let empty = mk_frame (Array.make Channel.nb_chan TermList.nil)
+  let empty = mk_frame (Array.make Channel.nb_chan Term_List.nil)
 
   (** Return a new frame containing one more term for the given channel. *)
   let append frame channel term =
     let channel = Channel.to_int channel in
       mk_frame
         (Array.mapi
-           (fun i l -> if i = channel then TermList.cons (term,l) else l)
+           (fun i l -> if i = channel then Term_List.cons (term,l) else l)
            frame.contents)
 
   let prefix phi psi =
@@ -129,13 +129,13 @@ end = struct
     let psi = psi.contents in
     let rec aux i =
       if i = Channel.nb_chan then true else
-        TermList.prefix phi.(i) psi.(i) && aux (i+1)
+        Term_List.prefix phi.(i) psi.(i) && aux (i+1)
     in aux 0
 
   let pp ch phi =
     let phi = phi.contents in
     for i = 0 to Channel.nb_chan - 1 do
-      Format.fprintf ch ";%d=%a" i TermList.pp phi.(i)
+      Format.fprintf ch ";%d=%a" i Term_List.pp phi.(i)
     done
 
 end
@@ -148,21 +148,21 @@ module Constraints : sig
   val compare : t -> t -> int
   val empty : t
   val pp : Format.formatter -> t -> unit
-  val add_eq : t -> Term.term -> Term.term -> t option
-  val add_neq : t -> Term.term -> Term.term -> t option
+  val add_eq : t -> Term_.term -> Term_.term -> t option
+  val add_neq : t -> Term_.term -> Term_.term -> t option
   val compatible : t -> t -> bool
 end = struct
 
   (* The list is ordered and equalities are ordered too. *)
-  type t = (Term.term * Term.term * bool) list
+  type t = (Term_.term * Term_.term * bool) list
 
-  let hash t = Hashtbl.hash (List.map (fun (s,t,b) -> s.Term.id, t.Term.id, b) t)
+  let hash t = Hashtbl.hash (List.map (fun (s,t,b) -> s.Term_.id, t.Term_.id, b) t)
   let rec compare t1 t2 =
     match t1,t2 with
       | (s1,t1,b1)::l1, (s2,t2,b2)::l2 ->
-          let c = Term.compare s1 s2 in
+          let c = Term_.compare s1 s2 in
             if c <> 0 then c else
-              let c = Term.compare t1 t2 in
+              let c = Term_.compare t1 t2 in
                 if c <> 0 then c else
                   let c = Pervasives.compare b1 b2 in
                     if c <> 0 then c else
@@ -180,7 +180,7 @@ end = struct
     match c with
       | [] -> [s,t,true]
       | (s',t',b')::tl ->
-          match Term.compare s s', Term.compare t t' with
+          match Term_.compare s s', Term_.compare t t' with
             | 0,0 ->
                 if b = b' then c else raise Conflict
             | 1,_ | 0,1 ->
@@ -189,7 +189,7 @@ end = struct
                 (s',t',b') :: add_cstr tl s t b
 
   let add_cstr c s t b =
-    match Term.compare s t with
+    match Term_.compare s t with
       | 0 -> if b then Some c else None
       | 1 -> (try Some (add_cstr c s t b) with Conflict -> None)
       | _ -> (try Some (add_cstr c t s b) with Conflict -> None)
@@ -201,7 +201,7 @@ end = struct
     match c1,c2 with
       | [],_ | _,[] -> true
       | (s1,t1,b1)::c1', (s2,t2,b2)::c2' ->
-          match Term.compare s1 s2, Term.compare t1 t2 with
+          match Term_.compare s1 s2, Term_.compare t1 t2 with
             | 0,0 ->
                 b1 = b2 && compatible c1' c2'
             | 1,_ | 0,1 ->
@@ -213,68 +213,68 @@ end = struct
     List.iter
       (fun (s,t,b) ->
          Format.fprintf ch "/%a%s%a"
-           Term.pp s
+           Term_.pp s
            (if b then "=" else "!=")
-           Term.pp t)
+           Term_.pp t)
       t
 
 end
 
-(** Processes with constraints and elementary semantics. *)
+(** Process_es with constraints and elementary semantics. *)
 module SymProc = struct
 
   type t = {
-    process : Process.t ;
+    process : Process_.t ;
     constraints : Constraints.t
   }
 
   let hash t =
-    Hashtbl.hash (t.process.Process.id, Constraints.hash t.constraints)
+    Hashtbl.hash (t.process.Process_.id, Constraints.hash t.constraints)
 
   let compare t1 t2 =
-    let c = Process.compare t1.process t2.process in
+    let c = Process_.compare t1.process t2.process in
       if c = 0 then Constraints.compare t1.constraints t2.constraints else c
 
   let equal t1 t2 = compare t1 t2 = 0
 
   let pp ch t =
-    Process.pp ch t.process ;
+    Process_.pp ch t.process ;
     Constraints.pp ch t.constraints
 
   (** Preliminary representation of all possible transition outcomes.
     * Substitutions are suspended, represented as a function.
     * Duplicates will be removed in the next stages, in Semantics. *)
   type trans_table = {
-    output : (Term.term*t) list array ;
-    input : (Term.term->t) list array
+    output : (Term_.term*t) list array ;
+    input : (Term_.term->t) list array
   }
 
   (* TODO memoize ? *)
   let transitions t =
-    let output : (Term.term*t) list array = Array.make Channel.nb_chan [] in
+    let output : (Term_.term*t) list array = Array.make Channel.nb_chan [] in
     let input = Array.make Channel.nb_chan [] in
     let add_input c f = input.(Channel.to_int c) <- f::input.(Channel.to_int c) in
     let add_output c t p = output.(Channel.to_int c) <- (t,p)::output.(Channel.to_int c) in
-    let rec aux context constraints proc = match proc.Process.contents with
-      | Process.Zero -> ()
-      | Process.Input (c,x,p) ->
+    let rec aux context constraints proc = match proc.Process_.contents with
+      | Process_.Zero -> ()
+      | Process_.Input (c,x,p) ->
           add_input c
             (fun y ->
                { process =
-                   Process.par (Process.subst p x y :: context) ;
+                   Process_.par (Process_.subst p x y :: context) ;
                  constraints })
-      | Process.Output (c,t,p) ->
+      | Process_.Output (c,t,p) ->
           add_output c t { process = p ; constraints }
-      | Process.Plus l ->
+      | Process_.Plus l ->
           List.iter (aux context constraints) l
-      | Process.Par l ->
+      | Process_.Par l ->
           let rec try_all context = function
             | [] -> ()
             | p::l ->
                 aux (List.rev_append l context) constraints p ;
                 try_all (p::context) l
           in try_all context l
-      | Process.If (a,b,t,e) ->
+      | Process_.If (a,b,t,e) ->
           begin match Constraints.add_eq constraints a b with
             | Some c' -> aux context c' t
             | None -> ()
@@ -283,7 +283,7 @@ module SymProc = struct
             | Some c' -> aux context c' e
             | None -> ()
           end
-      | Process.Bottom i -> ()
+      | Process_.Bottom i -> ()
     in
       aux [] t.constraints t.process ;
       { output ; input }
@@ -293,20 +293,20 @@ end
 (** A configuration is a pair of a process and a frame,
   * straightforwardly implemented as such. *)
 module Config : sig
-  type t = Process.t * Frame.t
+  type t = Process_.t * Frame.t
   val hash : t -> int
   val equal : t -> t -> bool
   val compare : t -> t -> int
   val pp : Format.formatter -> t -> unit
 end = struct
-  type t = Process.t * Frame.t
-  let hash (p,phi) = Hashtbl.hash (Process.hash p,phi.Frame.id)
-  let equal (p,phi) (q,psi) = Process.equal p q && Frame.equal phi psi
+  type t = Process_.t * Frame.t
+  let hash (p,phi) = Hashtbl.hash (Process_.hash p,phi.Frame.id)
+  let equal (p,phi) (q,psi) = Process_.equal p q && Frame.equal phi psi
   let compare (p,phi) (q,psi) =
-    let c = Process.compare p q in
+    let c = Process_.compare p q in
       if c = 0 then Frame.compare phi psi else c
   let pp ch (p,phi) =
-    Format.fprintf ch "<%a%a>" Process.pp p Frame.pp phi
+    Format.fprintf ch "<%a%a>" Process_.pp p Frame.pp phi
 end
 
 (** Sets of configurations. *)
@@ -372,9 +372,9 @@ let () =
     ("Configs",
      [ "list round-trip", `Quick,
        (fun () ->
-          let c0 = Process.bottom 0,Frame.empty in
-          let c1 = Process.bottom 1,Frame.empty in
-          let c2 = Process.bottom 1,Frame.empty in
+          let c0 = Process_.bottom 0,Frame.empty in
+          let c1 = Process_.bottom 1,Frame.empty in
+          let c2 = Process_.bottom 1,Frame.empty in
           let s = Configs.add c0 (Configs.add c1 (Configs.add c2 Configs.empty)) in
           let s1 = Configs.add c1 (Configs.add c0 (Configs.add c2 Configs.empty)) in
           let s2 = Configs.add c2 (Configs.add c1 (Configs.add c0 Configs.empty)) in

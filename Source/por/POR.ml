@@ -20,7 +20,7 @@ module Make (T:S) = struct
         (fun b s' res ->
            if indep_ee s a b then
              let fc' = fc a s' in
-               if Debug.first then
+               if Debug_.first then
                Format.printf "fc(%a,%a)=%a\n"
                  State.pp s'
                  Action.pp a
@@ -37,7 +37,7 @@ module Make (T:S) = struct
         (fun b s' res ->
            if indep_de s a b then
              let fe' = fe a s' in
-               if Debug.first then
+               if Debug_.first then
                Format.printf "fe(%a,%a)=%a\n"
                  State.pp s'
                  Action.pp a
@@ -68,7 +68,7 @@ module Make (T:S) = struct
                 let frontier =
                   if may_be_enabled s a then
                     let fc = first_conflicts a s in
-                      if Debug.first then
+                      if Debug_.first then
                         Format.printf
                           "fc(%a,%a) = %a\n"
                           State.pp s
@@ -81,7 +81,7 @@ module Make (T:S) = struct
                 let frontier =
                   if may_be_disabled s a then
                     let fe = first_enabling a s in
-                      if Debug.first then
+                      if Debug_.first then
                         Format.printf
                           "fe(%a,%a) = %a\n"
                           State.pp s
@@ -105,7 +105,7 @@ module Make (T:S) = struct
       (fun a res ->
          let ssa = stubborn s a in
          let res' = ActionSet.inter enabled ssa in
-           if Debug.stubborn then
+           if Debug_.stubborn then
            Format.printf
              "S(%a,%a)=%a\n =E(%a)\n"
              State.pp s

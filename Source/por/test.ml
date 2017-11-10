@@ -42,27 +42,27 @@ let test ?(show_sleep=false) s =
   if show_sleep then
     Stats.show_traces s
 
-let io c p = Process.input c () (Process.output c () p)
-let p = io 'c' Process.zero
-let q = io 'd' Process.zero
-let r = io 'e' Process.zero
+let io c p = Process_.input c () (Process_.output c () p)
+let p = io 'c' Process_.zero
+let q = io 'd' Process_.zero
+let r = io 'e' Process_.zero
 
 let () =
-  let s = Process.par [p;q;r] in
+  let s = Process_.par [p;q;r] in
   let s = Semantics.StateSet.singleton (s,0) in
     Printf.printf "*** Action-deterministic ***\n" ;
     test s
 
 let () =
-  let s = Process.par [p;p;q;q;(Process.output 'd' () q)] in
+  let s = Process_.par [p;p;q;q;(Process_.output 'd' () q)] in
   let s = Semantics.StateSet.singleton (s,0) in
     Printf.printf "*** NOT action-deterministic ***\n" ;
     test s
 
 let () =
-  let open Process in
+  let open Process_ in
   let p c = input c () (input c () (output c () (output c () zero))) in
-  let s = Process.par [p 'c'; p 'd'] in
+  let s = Process_.par [p 'c'; p 'd'] in
   let s = Semantics.StateSet.singleton (s,0) in
     Printf.printf "*** Sleep details ***\n" ;
     test ~show_sleep:true s

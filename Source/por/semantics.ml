@@ -42,7 +42,7 @@ module Action = struct
     * refers to. *)
   type t =
     | Out of Channel.t * int
-    | In of Channel.t * Term.invar list
+    | In of Channel.t * Term_.invar list
   let equal = (=)
   let compare = Pervasives.compare
   let hash = Hashtbl.hash
@@ -92,13 +92,13 @@ let rec split_list split c l sk fk = match l with
   * together with enriched constraints.
   * This amounts to pull the conditionals at toplevel, by permuting
   * them with plus and par operations. *)
-let rec split_process c p sk fk = match p.Process.contents with
-  | Process.Zero | Process.Input _ | Process.Output _ -> sk (p,c) fk
-  | Process.Par l ->
-      split_list split_process c l (fun (l,c) k -> sk (Process.par l, c) k) fk
-  | Process.Plus l ->
-      split_list split_process c l (fun (l,c) k -> sk (Process.plus l, c) k) fk
-  | Process.If (a,b,t,e) ->
+let rec split_process c p sk fk = match p.Process_.contents with
+  | Process_.Zero | Process_.Input _ | Process_.Output _ -> sk (p,c) fk
+  | Process_.Par l ->
+      split_list split_process c l (fun (l,c) k -> sk (Process_.par l, c) k) fk
+  | Process_.Plus l ->
+      split_list split_process c l (fun (l,c) k -> sk (Process_.plus l, c) k) fk
+  | Process_.If (a,b,t,e) ->
       let fk_else () =
         match Constraints.add_neq c a b with
           | Some c -> split_process c e sk fk
@@ -108,7 +108,7 @@ let rec split_process c p sk fk = match p.Process.contents with
           | Some c -> split_process c t sk fk_else
           | None -> fk_else ()
         end
-  | Process.Bottom _ -> assert false
+  | Process_.Bottom _ -> assert false
 
 let split_config c (p,phi) sk fk =
   split_process c p
@@ -132,41 +132,41 @@ let () =
     ("Semantics",
      [ "Size of split_process", `Quick,
        (fun () ->
-          let u = Term.var "u" in
-          let v = Term.var "v" in
-          let w = Term.var "w" in
+          let u = Term_.var "u" in
+          let v = Term_.var "v" in
+          let w = Term_.var "w" in
           let c = Channel.of_int 0 in
           let d = Channel.of_int 1 in
-          let p = Process.input c (Term.var "x") Process.zero in
-          let q = Process.input d (Term.var "x") Process.zero in
-          let r = Process.output c u Process.zero in
-          let s = Process.output c v Process.zero in
+          let p = Process_.input c (Term_.var "x") Process_.zero in
+          let q = Process_.input d (Term_.var "x") Process_.zero in
+          let r = Process_.output c u Process_.zero in
+          let s = Process_.output c v Process_.zero in
           let cstr = Constraints.empty in
           let count p = List.length (list_of (split_process cstr p)) in
             Alcotest.(check int) "nb of splits for (if u=u then P else Q)"
               1
-              (count (Process.if_eq u u p q)) ;
+              (count (Process_.if_eq u u p q)) ;
             Alcotest.(check int) "nb of splits for (if u=v then P else Q)"
               2
-              (count (Process.if_eq u v p q)) ;
+              (count (Process_.if_eq u v p q)) ;
             Alcotest.(check int) "nb of splits for (if v=u then P else Q)"
               2
-              (count (Process.if_eq v u p q)) ;
+              (count (Process_.if_eq v u p q)) ;
             Alcotest.(check int) "nb of splits for (if v=u then P else Q | if u=v then R else S)"
               2
-              (count (Process.par [Process.if_eq v u p q; Process.if_eq u v r s])) ;
+              (count (Process_.par [Process_.if_eq v u p q; Process_.if_eq u v r s])) ;
             Alcotest.(check int) "nb of splits for (if u=v then (if v=w then P else R) else Q)"
               3
-              (count (Process.if_eq u v (Process.if_eq v w p r) q)) ;
+              (count (Process_.if_eq u v (Process_.if_eq v w p r) q)) ;
             Alcotest.(check int) "nb of splits for (if v=u then P else Q | if u=w then R else S)"
               4
-              (count (Process.par [Process.if_eq v u p q; Process.if_eq u w r s])) ;
+              (count (Process_.par [Process_.if_eq v u p q; Process_.if_eq u w r s])) ;
             Alcotest.(check int) "nb of splits for (if v=u then P else 0 | if u=w then R else S)"
               4
-              (count (Process.par [Process.if_eq v u p Process.zero; Process.if_eq u w r s])) ;
+              (count (Process_.par [Process_.if_eq v u p Process_.zero; Process_.if_eq u w r s])) ;
             Alcotest.(check int) "nb of splits for (if v=u then P else Q + if u=w then R else S)"
               4
-              (count (Process.plus [Process.if_eq v u p q; Process.if_eq u w r s])) ;
+              (count (Process_.plus [Process_.if_eq v u p q; Process_.if_eq u w r s])) ;
        ) ;
      ] )
 
@@ -176,8 +176,8 @@ let alive_frames s =
     List.map snd
       (List.filter
          (fun (p,phi) ->
-            match p.Process.contents with
-              | Process.Bottom _ -> false
+            match p.Process_.contents with
+              | Process_.Bottom _ -> false
               | _ -> true)
          (List.rev_append t.left t.right))
   in
@@ -187,8 +187,8 @@ let age s =
   let dead =
     List.filter
       (fun (p,phi) ->
-         match p.Process.contents with
-           | Process.Bottom _ -> true
+         match p.Process_.contents with
+           | Process_.Bottom _ -> true
            | _ -> false)
       (List.rev_append t.left t.right)
   in
@@ -196,8 +196,8 @@ let age s =
     List.length dead
 
 let post_process s =
-  let left = List.map Process.compute_quiescents s.left in
-  let right = List.map Process.compute_quiescents s.right in
+  let left = List.map Process_.compute_quiescents s.left in
+  let right = List.map Process_.compute_quiescents s.right in
 
 (** Source of fresh input variables.
   * We could also use unique identifiers of configurations
@@ -232,7 +232,7 @@ let pre_transitions = SMemo.make (fun s ->
   let incorporate results table phi side =
     let alternatives = get_action table in
       if alternatives = [] then
-        List.map (fun s -> States.insert side (Process.bottom age)) results
+        List.map (fun s -> States.insert side (Process_.bottom age)) results
       else
 
 
@@ -241,7 +241,7 @@ let pre_transitions = SMemo.make (fun s ->
           else
             List.fold_left
               (fun results f ->
-                 let symproc = f (Term.invar (c,phi.Frame.id,n)) in
+                 let symproc = f (Term_.invar (c,phi.Frame.id,n)) in
                    Configs.add (symproc,phi) results)
               results
               table.input.(i)
@@ -254,11 +254,11 @@ let pre_transitions = SMemo.make (fun s ->
          *)
                  (*
 let enabled = SMemo.make_rec (fun enabled (p,i) ->
-  match p.Process.contents with
-  | Process.Zero -> ActionSet.empty
-  | Process.Input (c,_,_) -> ActionSet.singleton (Action.Input (c,i))
-  | Process.Output (c,_,_) -> ActionSet.singleton (Action.Output c)
-  | Process.Par l | Process.Plus l ->
+  match p.Process_.contents with
+  | Process_.Zero -> ActionSet.empty
+  | Process_.Input (c,_,_) -> ActionSet.singleton (Action.Input (c,i))
+  | Process_.Output (c,_,_) -> ActionSet.singleton (Action.Output c)
+  | Process_.Par l | Process_.Plus l ->
       List.fold_left
         (fun s p -> ActionSet.union s (enabled (p,i)))
         ActionSet.empty
@@ -267,13 +267,13 @@ let enabled = SMemo.make_rec (fun enabled (p,i) ->
 (** Compute successor states
   * as a mapping from actions to sets of processes. *)
 let successors = SMemo.make_rec (fun successors (p,i) ->
-  match p.Process.contents with
-  | Process.Zero -> ActionMap.empty
-  | Process.Input (c,_,p) ->
+  match p.Process_.contents with
+  | Process_.Zero -> ActionMap.empty
+  | Process_.Input (c,_,p) ->
       ActionMap.singleton (Action.Input (c,i)) (StateSet.singleton (p,i))
-  | Process.Output (c,_,p) ->
+  | Process_.Output (c,_,p) ->
       ActionMap.singleton (Action.Output c) (StateSet.singleton (p,i+1))
-  | Process.Plus l ->
+  | Process_.Plus l ->
       List.fold_left
         (ActionMap.merge
            (fun _ x y -> match x,y with
@@ -281,12 +281,12 @@ let successors = SMemo.make_rec (fun successors (p,i) ->
               | Some l, Some l' -> Some (StateSet.union l l')))
         ActionMap.empty
         (List.map (fun p -> successors (p,i)) l)
-  | Process.Par l ->
+  | Process_.Par l ->
       let rec aux acc ll l : StateSet.t ActionMap.t list = match l with
         | p::l ->
             let m = successors (p,i) in
             let add_par (q,j) =
-              (Process.par (List.rev_append ll (q::l)),j)
+              (Process_.par (List.rev_append ll (q::l)),j)
             in
             let m = ActionMap.map (StateSet.map add_par) m in
               aux (m::acc) (p::ll) l
