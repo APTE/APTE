@@ -67,3 +67,5 @@ val decide_trace_equivalence : Process.process -> Process.process -> bool
 (** Debugging tools *)
 val displayIfWitness : string -> Process.symbolic_process -> unit
 val ifWitness : Process.symbolic_process -> bool
+
+open Lpor

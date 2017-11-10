@@ -20,7 +20,7 @@ OCAMLDOC=ocamldoc
 
 ### Compiler options
 
-INCLUDES = -I standard_library -I parser -I por -I trace_equivalence -I length_equivalence -I secrecy
+INCLUDES = -I standard_library -I parser -I lpor -I trace_equivalence -I length_equivalence -I secrecy
 # Compiler options specific to OCaml version >= 4
 V4OPTIONS=$(if $(shell $(OCAMLC) -version | grep '^4'),-bin-annot)
 OCAMLFLAGS = $(INCLUDES) $(INCLUDES_MOD) $(V4OPTIONS) $(DEBUGOPT) -w Ae 
@@ -54,13 +54,12 @@ LENGTH_ML = length_equivalence/length.ml length_equivalence/length_algorithm.ml 
 SECRECY_ML = secrecy/secrecy_algorithm.ml secrecy/secrecy.ml
 PARSER_ML = parser/parser_function.ml parser/grammar.ml parser/lexer.ml \
 			parser/parser.ml
-POR= # por/apte.ml  por/channel.ml  por/check_main.ml  por/check.ml  por/debug_.ml  por/lprocess.ml \
-     # por/lterm.ml  por/LTS.ml  por/memo.ml  por/POR.ml  por/process_.ml  por/semantics.ml  \
-     # por/sem_utils.ml  por/term_.ml  por/test.ml
+POR = lpor/apte.ml  lpor/channel.ml lpor/debug_.ml  \
+      lpor/LTS.ml  lpor/memo.ml  lpor/POR.ml  lpor/process_.ml  lpor/semantics.ml  \
+      lpor/sem_utils.ml  lpor/term_.ml
 
 ML = debug.ml $(STD_ML) $(POR) $(TRACE_ML) $(LENGTH_ML) $(SECRECY_ML) $(PARSER_ML) main.ml
 OBJ = $(ML:.ml=.$(CMO))
-
 
 ### Targets
 
