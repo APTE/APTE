@@ -1,7 +1,6 @@
 (************************
 ***       Types       ***
 *************************)
-
 type quantifier =
   | Free
   | Existential

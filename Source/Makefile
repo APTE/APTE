@@ -54,7 +54,11 @@ LENGTH_ML = length_equivalence/length.ml length_equivalence/length_algorithm.ml 
 SECRECY_ML = secrecy/secrecy_algorithm.ml secrecy/secrecy.ml
 PARSER_ML = parser/parser_function.ml parser/grammar.ml parser/lexer.ml \
 			parser/parser.ml
-ML = debug.ml $(STD_ML) $(TRACE_ML) $(LENGTH_ML) $(SECRECY_ML) $(PARSER_ML) main.ml
+POR= # por/apte.ml  por/channel.ml  por/check_main.ml  por/check.ml  por/debug_.ml  por/lprocess.ml \
+     # por/lterm.ml  por/LTS.ml  por/memo.ml  por/POR.ml  por/process_.ml  por/semantics.ml  \
+     # por/sem_utils.ml  por/term_.ml  por/test.ml
+
+ML = debug.ml $(STD_ML) $(POR) $(TRACE_ML) $(LENGTH_ML) $(SECRECY_ML) $(PARSER_ML) main.ml
 OBJ = $(ML:.ml=.$(CMO))
 
 

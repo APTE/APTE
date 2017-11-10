@@ -888,7 +888,9 @@ let decide_trace_equivalence process1 process2 =
   if !option_por_gen
   then begin
       Printf.printf "Applying generalized POR engine amd computing set of reduced, symbolic traces to be explored...";
-      Apte.process1
+      let p1 = Por.Apte.importProcess process1 in
+      let p2 = Por.Apte.importProcess process1 in
+      ()
     end;
 
   (* Get the free names *)

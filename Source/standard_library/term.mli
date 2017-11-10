@@ -9,7 +9,51 @@
 (** A symbol can be a destructor or a constructor.*)
 
 (** The type [symbol] represents the type of function symbol.*)
-type symbol
+type quantifier =
+  | Free
+  | Existential
+  | Universal
+
+type symbol_cat =
+  | Tuple
+  | Constructor
+  | Destructor of term list * term
+
+and symbol =
+  {
+    name : string;
+    arity : int;
+    cat : symbol_cat
+  }
+
+and link =
+  | NoLink
+  | TLink of term
+  | VLink of variable
+
+and variable =
+  {
+    id_v : string;
+    number_v : int;
+    mutable link : link;
+    quantifier : quantifier
+  }
+
+and name_status =
+  | Public
+  | Private
+
+and name =
+  {
+    id_n : string;
+    number_n : int;
+    status : name_status
+  }
+
+and term =
+  | Func of symbol * term list
+  | Var of variable
+  | Name of name
 
 (** {3 Built-in signature} *)
 
@@ -121,25 +165,18 @@ val display_symbol_with_arity  : symbol -> string
 (** {2 Messages} *)
 
 (** The type [quantifier] is associated to a variable to quantify it.*)
-type quantifier =
-  | Free
-  | Existential
-  | Universal
 
 (** A [variable] is always quantified. {% It corresponds to the set $\Xun$ in~\thesis. %} *)
-type variable
+(* type variable *)
 
 (** A [name] is can be either public or private. *)
-type name_status =
-  | Public
-  | Private
-
+(* name *)
 (** The type [name] corresponds to the set {% $\N$ in~\thesis. %} *)
-type name
+(* type name *)
 
 (** The type [term] corresponds to the set {% $\T(\F,\N \cup \Xun)$ in~\thesis. %} *)
-type term
-
+(* type term *)
+	      
 (** Comparison function over names *)
 val compare_name : name -> name -> int
 
