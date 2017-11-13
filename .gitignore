@@ -4,6 +4,7 @@ depend
 *.cmo
 *.cma
 *.cmi
+*.cmti
 *.a
 *.o
 *.cmx
