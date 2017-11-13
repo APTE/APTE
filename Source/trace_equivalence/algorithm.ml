@@ -227,6 +227,9 @@ let apply_strategy_one_transition pub_channels next_function_output next_functio
 		       else List.hd right_symb_proc_list in
 	Printf.printf "%s\n" (Process.display_trace_simple one_proc));
 
+  (* ** Generalized POR: stop exploration if trace explores so far is not in the reduced set of traces computed by Porridge *)
+  (* TODO-POR *)
+
   (* ** Option Erase Double *)
   let left_erase_set =
     if !option_erase_double
@@ -887,10 +890,14 @@ let decide_trace_equivalence process1 process2 =
   (* If generalized POR is enable, compute symbolic traces to be explred *)
   if !option_por_gen
   then begin
-      Printf.printf "Applying generalized POR engine amd computing set of reduced, symbolic traces to be explored...";
-      let p1 = Por.importProcess process1 in
-      let p2 = Por.importProcess process2 in
-      ()
+      Printf.printf "[POR] Applying generalized POR engine amd computing set of reduced, symbolic traces to be explored...\n";
+      let t = Sys.time() in
+      let p1 = Por.importProcess process1
+      and p2 = Por.importProcess process2 in
+      Printf.printf "[POR] Symbolic processes living in the synbolic LTS have been computed in %fs.\n" (Sys.time() -. t);
+      Por.computeTraces p1 p2;
+      (* Todo: compute set of synbolic traces *)
+      Printf.printf "[POR] A set of symbolic traces to be explored has been computed in %fs.\n" (Sys.time() -. t);
     end;
 
   (* Get the free names *)

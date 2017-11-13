@@ -8,7 +8,7 @@ let importChannel = function
   | Term.Func (s,[]) -> 
      let strCh = Term.display_symbol_without_arity s in
      let intCh = int_of_string (Term.display_symbol_without_arity s) in
-     Channel.of_int intCh
+     Porridge.Channel.of_int intCh
   | _ -> err "In generalized POR mode, channels must be constants."
 	     
 let importVar x = Porridge.Term.var (Term.display_variable x)
