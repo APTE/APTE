@@ -87,8 +87,4 @@ let importProcess proc =
 
 
 (* Cannot pen trace_equiv because then it exposes the interface term.mli -> clash with standard library*)
-(* module POR = POR.Make(Trace_equiv) *)
-(* module Persistent = POR.Persistent *)
-(* module Sleep = POR.Sleep *)
-
-let computeTraces p1 p2 = ()
+let computeTraces p1 p2 = POR.tracesPersistentSleepEquiv p1 p2
