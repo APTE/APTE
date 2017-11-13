@@ -21,6 +21,7 @@ OCAMLDOC=ocamldoc
 ### Compiler options
 
 INCLUDES = -I ../Porridge -I standard_library -I parser -I trace_equivalence -I length_equivalence -I secrecy 
+INCLUDES_DEP = -I standard_library -I parser -I trace_equivalence -I length_equivalence -I secrecy 
 # Compiler options specific to OCaml version >= 4
 V4OPTIONS=$(if $(shell $(OCAMLC) -version | grep '^4'),-bin-annot)
 OCAMLFLAGS = $(INCLUDES) $(INCLUDES_MOD) $(V4OPTIONS) $(DEBUGOPT) # -w Ae 
@@ -97,7 +98,7 @@ clean:
 	$(V)$(OCAMLC) $(OCAMLFLAGS) -c $<
 
 .mli.cmi:
-	$(NV)echo $(OCAMLC_UC) -c $<
+	$(NV)echo $(OCAMLC_UC) $(OCAMLFLAGS) -c $<
 	$(V)$(OCAMLC) $(OCAMLFLAGS) -c $<
 
 .mll.ml:
@@ -113,6 +114,6 @@ SOURCES = $(wildcard *.ml) $(wildcard *.mli) \
           $(wildcard */*.ml) $(wildcard */*.mli)
 .depend: $(SOURCES) $(GENERATED_SOURCES) Makefile
 	$(NV)echo OCAMLDEP
-	$(V)$(OCAMLDEP) $(INCLUDES) $(SOURCES) $(GENERATED_SOURCES) > .depend
+	$(V)$(OCAMLDEP) $(INCLUDES_DEP) $(SOURCES) $(GENERATED_SOURCES) > .depend
 
 -include .depend

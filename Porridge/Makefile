@@ -59,6 +59,9 @@ test: porridge.cmxa test.cmx
 clean:
 	rm -f *.cmi *.cmo *.cma *.cmx *.cmxa check test
 
+cleanPorridge:
+	rm -f *.cmi *.cmo check test
+
 plot.txt: stats
 	./stats > $@
 plot.pdf: plot.plot plot.txt
