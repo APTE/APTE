@@ -15,7 +15,7 @@ let importChannel = function
 					 incr(intChannel);
 					 !intChannel - 1;
 				   end in
-     Channel.of_int intCh
+     Porridge.Channel.of_int intCh
   | _ -> err "In generalized POR mode, channels must be constants."
 	     
 let importVar x = Term_.var (Term.display_variable x)
