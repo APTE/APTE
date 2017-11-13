@@ -1,13 +1,20 @@
 open Process_
 open Standard_library
 
+let tblChannel = Hashtbl.create 5
+let intChannel = ref 0
+		     
 let err s = Debug.internal_error s
 let pp s = Printf.printf s
 	   
 let importChannel = function
-  | Term.Func (s,[]) -> 
-     let strCh = Term.display_symbol_without_arity s in
-     let intCh = int_of_string (Term.display_symbol_without_arity s) in
+  | Term.Name n -> (* Term.Func (s,[]) ->  *)
+     let strCh = Term.display_name n in
+     let intCh = try Hashtbl.find tblChannel n
+		 with Not_found -> begin Hashtbl.add tblChannel n !intChannel;
+					 incr(intChannel);
+					 !intChannel - 1;
+				   end in
      Channel.of_int intCh
   | _ -> err "In generalized POR mode, channels must be constants."
 	     
@@ -80,3 +87,66 @@ let importProcess proc =
        | _ -> err "In generalized POR mode, tests in conditionals must be equality or disequality (no OR or AND)."
   in
   build proc
+
+
+module POR = POR.Make(Trace_equiv)
+module Persistent = POR.Persistent
+module Sleep = POR.Sleep
+
+let runPOR ?(show_sleep=false) s =
+
+  let module S = Trace_equiv in
+
+  let pp_persistent ch s =
+    let t0 = Unix.gettimeofday () in
+    let set = POR.persistent s in
+      Format.fprintf ch "%a (%.2fs)"
+        S.ActionSet.pp set (Unix.gettimeofday () -. t0) ;
+  in
+
+  (* Some transitions and persistent set computations *)
+  Format.printf "s = %a@.@." S.State.pp s ;
+  S.fold_successors s ()
+    (fun a s' () ->
+         Format.printf
+           "s -%a-> s'=%a@."
+           S.Action.pp a
+           S.State.pp s' ;
+         Format.printf
+           "P(s') = %a@.@."
+           pp_persistent s') ;
+  Format.printf
+    "P(s) = %a@."
+    pp_persistent s ;
+
+  (* Number of states and traces in successive transition systems *)
+
+  Format.printf "@." ;
+
+  let module Stats = LTS.Make(Trace_equiv) in
+  Format.printf "Equivalence LTS: %d states, %d traces.\n"
+    (Stats.StateSet.cardinal (Stats.reachable_states s))
+    (Stats.nb_traces s) ;
+
+  let module Stats = LTS.Make(Persistent) in
+  Format.printf "Persistent: %d states, %d traces.\n"
+    (Stats.StateSet.cardinal (Stats.reachable_states s))
+    (Stats.nb_traces s) ;
+  let module Stats = LTS.Make(Sleep) in
+
+  let s = Sleep.from_state s in
+  Format.printf "Sleep: %d states, %d traces.\n"
+    (Stats.StateSet.cardinal (Stats.reachable_states s))
+    (Stats.nb_traces s) ;
+  if show_sleep then
+    Stats.show_traces s ;
+
+  Format.printf "@."
+
+let make_state p1 p2 =
+  { Trace_equiv.State.
+    left = Sem_utils.Configs.of_process p1 ;
+    right = Sem_utils.Configs.of_process p2;
+    constraints = Sem_utils.Constraints.empty }
+
+let computeTraces p1 p2 = runPOR (make_state p1 p2)
