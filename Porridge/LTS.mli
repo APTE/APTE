@@ -63,4 +63,6 @@ module Make : functor (T:Simple) -> sig
   val reachable_states : T.State.t -> StateSet.t
   val nb_traces : T.State.t -> int
   val show_traces : T.State.t -> unit
+  type traces = Traces of (T.Action.t*traces) list
+  val traces : T.State.t -> traces
 end

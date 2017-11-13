@@ -15,6 +15,7 @@ val sdec : term -> term -> term
 val aenc : term -> term -> term
 val adec : term -> term -> term
 val pk : term -> term
+val hash_tm : term -> term
 val sign : term -> term -> term
 val checksign : term -> term -> term
 val vk : term -> term

@@ -180,7 +180,7 @@ module Make (T:S) = struct
         let c = State.compare s s' in
           if c <> 0 then c else
             ActionMap.compare State.compare z z'
-      let hash x = Hashtbl.hash x (* TODO FIXME incorrect! *)
+      let hash x = assert false ; Hashtbl.hash x (* TODO FIXME incorrect! *)
     end
 
     let from_state s = s,ActionMap.empty

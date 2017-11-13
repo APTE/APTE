@@ -20,7 +20,7 @@ end = struct
   type t = { id : int ; contents : t lst }
 
   let equal t1 t2 = t1.id = t2.id
-  let hash t = Hashtbl.hash t.id
+  let hash t = t.id
   let compare t1 t2 = Pervasives.compare t1.id t2.id
 
   let nil = { id = 0 ; contents = Nil }
@@ -84,7 +84,7 @@ end = struct
   type t = { id : int ; contents : TermList.t array }
 
   let equal t1 t2 = t1.id = t2.id
-  let hash t = Hashtbl.hash t.id
+  let hash t = t.id
   let compare t1 t2 = Pervasives.compare t1.id t2.id
 
   module PF = struct
@@ -265,7 +265,7 @@ module Configs = struct
   type t = { id : int ; contents : contents }
 
   let equal t1 t2 = t1.id = t2.id
-  let hash t = Hashtbl.hash t.id
+  let hash t = t.id
   let compare t1 t2 = Pervasives.compare t1.id t2.id
 
   let rec pp ch = function

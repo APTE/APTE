@@ -22,10 +22,10 @@ let () =
           let id = Process.input Channel.d (Term.var "x") Process.zero in
           let oc = Process.output Channel.c (Term.ok ()) Process.zero in
           let st p =
-            { State.
-              left = Configs.of_process p ;
-              right = Configs.empty ;
-              constraints = Constraints.empty }
+            State.make
+              ~left:(Configs.of_process p)
+              ~right:Configs.empty
+              ~constraints:Constraints.empty
           in
             Alcotest.(check (module ActionSet))
               "persistent set for Oc"

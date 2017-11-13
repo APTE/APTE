@@ -68,22 +68,22 @@ let test ?(show_sleep=false) s =
     (Stats.nb_traces s) ;
   let module Stats = LTS.Make(Sleep) in
 
-  let s = Sleep.from_state s in
+  (* let s = Sleep.from_state s in
   Format.printf "Sleep: %d states, %d traces.\n"
     (Stats.StateSet.cardinal (Stats.reachable_states s))
     (Stats.nb_traces s) ;
   if show_sleep then
-    Stats.show_traces s ;
+    Stats.show_traces s ; *)
 
   Format.printf "@."
 
 (** Test instances *)
 
 let make_state p =
-  { Trace_equiv.State.
-    left = Sem_utils.Configs.of_process p ;
-    right = Sem_utils.Configs.empty ;
-    constraints = Sem_utils.Constraints.empty }
+  Trace_equiv.State.make
+    ~left:(Sem_utils.Configs.of_process p)
+    ~right:Sem_utils.Configs.empty
+    ~constraints:Sem_utils.Constraints.empty
 
 let io c p = Process.input c (Term.var "x") (Process.output c (Term.var "x") p)
 let p = io Channel.c Process.zero

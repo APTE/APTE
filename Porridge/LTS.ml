@@ -100,6 +100,13 @@ module Make (T:Simple) = struct
       | None -> 1
       | Some n -> n)
 
+  type traces = Traces of (Action.t*traces) list
+
+  let rec traces s =
+    Traces
+      (fold_successors s []
+         (fun a s' l -> (a, traces s')::l))
+
   (** Type of traces, represented in reverse order. *)
   type trace = {
     dest : State.t ;

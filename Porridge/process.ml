@@ -52,9 +52,9 @@ module PProc : Hashtbl.HashedType with type t = (proc,term) _proc = struct
          | Zero -> Zero
          | Par l -> Par (List.map (fun x -> x.id) l)
          | Plus l -> Plus (List.map (fun x -> x.id) l)
-         | If (a,b,t,e) -> If (Term.hash a, Term.hash b,t.id,e.id)
-         | Input (c,t,p) -> Input (c,Term.hash t,p.id)
-         | Output (c,t,p) -> Output (c,Term.hash t,p.id)
+         | If (a,b,t,e) -> If (a.Term.id,b.Term.id,t.id,e.id)
+         | Input (c,t,p) -> Input (c,t.Term.id,p.id)
+         | Output (c,t,p) -> Output (c,t.Term.id,p.id)
          | Bottom i -> Bottom i)
 
 end

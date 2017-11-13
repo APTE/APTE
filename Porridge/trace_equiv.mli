@@ -1,11 +1,12 @@
 open Sem_utils
 
 module State : sig
-  type t = { left : Configs.t ; right : Configs.t ; constraints : Constraints.t }
+  type t = { hash : int ; left : Configs.t ; right : Configs.t ; constraints : Constraints.t }
   val compare : t -> t -> int
   val equal : t -> t -> bool
   val hash : t -> int
   val pp : Format.formatter -> t -> unit
+  val make : left:Configs.t -> right:Configs.t -> constraints:Constraints.t -> t
 end
 module Action : sig
   type t =

@@ -7,6 +7,7 @@ module State = struct
   (** The ghosts are part of the sets of configurations,
     * with special processes bottom_i. *)
   type t = {
+    hash : int ;
     left : Configs.t ;
     right : Configs.t ;
     constraints : Constraints.t
@@ -21,10 +22,16 @@ module State = struct
 
   let equal t1 t2 = compare t1 t2 = 0
 
-  let hash t =
-    Hashtbl.hash (t.left.Configs.id,
-                  t.right.Configs.id,
-                  Constraints.hash t.constraints)
+  let mk_hash left right constraints =
+    Hashtbl.hash (left.Configs.id,
+                  right.Configs.id,
+                  Constraints.hash constraints)
+
+  let make ~left ~right ~constraints =
+    { hash = mk_hash left right constraints ;
+      left ; right ; constraints }
+
+  let hash t = t.hash
 
   let pp ch t =
     Format.fprintf ch "(%a≈%a%a)"
@@ -180,10 +187,10 @@ let split_state s sk fk =
     (fun (l',c') k ->
        split_list split_config c' (Configs.to_list s.State.right)
          (fun (r',c'') k ->
-            sk { State.
-                 left = Configs.of_list l' ;
-                 right = Configs.of_list r' ;
-                 constraints = c'' } k)
+            sk (State.make
+                 ~left:(Configs.of_list l')
+                 ~right:(Configs.of_list r')
+                 ~constraints:c'') k)
          k)
     fk
 
@@ -247,10 +254,12 @@ let pre_steps ~get_action_entries ~config_of_entry s =
       Configs.empty
       tables
   in
-  let s = { State.
-            left = configs left_tables ;
-            right = configs right_tables ;
-            constraints = s.State.constraints } in
+  let s =
+    State.make
+      ~left:(configs left_tables)
+      ~right:(configs right_tables)
+      ~constraints:s.State.constraints
+  in
     if State.alive_frames s = [] then
       fun sk fk -> fk ()
     else
@@ -490,10 +499,12 @@ let () =
           let c = Channel.of_int 0 in
           let o = Process.output c (Term.ok ()) Process.zero in
           let io = Process.input c (Term.var "x") o in
-          let s = { State.
-                    left = Configs.of_process io ;
-                    right = Configs.of_process o ;
-                    constraints = Constraints.empty } in
+          let s =
+            State.make
+              ~left:(Configs.of_process io)
+              ~right:(Configs.of_process o)
+              ~constraints:Constraints.empty
+          in
           Format.printf "s = %a\n" State.pp s ;
           let tbl = transitions s in
           Alcotest.(check int)
@@ -514,14 +525,13 @@ let () =
             (List.hd (snd tbl.output.(0))) ;
           let s' = List.hd (snd tbl.input.(0)) in
           Format.printf "s.in = %a\n" State.pp s' ;
-          Alcotest.(check bool)
+          Alcotest.(check (module State))
             "correct value for s.in.out"
-            true
-            (State.equal s'
-               { State.
-                 left = Configs.of_process (Process.output c (Term.ok ()) Process.zero) ;
-                 right = Configs.of_process (Process.bottom 0) ;
-                 constraints = Constraints.empty }) ;
+            s'
+            (State.make
+               ~left:(Configs.of_process (Process.output c (Term.ok ()) Process.zero))
+               ~right:(Configs.of_process (Process.bottom 0))
+               ~constraints:(Constraints.empty)) ;
           let tbl' = transitions s' in
           Alcotest.(check int)
             "one in(0).out(0) trace"
@@ -533,10 +543,10 @@ let () =
             "correct value for s.in.out"
             true
             (State.equal s''
-               { State.
-                 left = Configs.add (Process.zero, Frame.append Frame.empty c (Term.ok ())) Configs.empty ;
-                 right = Configs.of_process (Process.bottom 0) ;
-                 constraints = Constraints.empty }) ;
+               (State.make
+                 ~left:(Configs.add (Process.zero, Frame.append Frame.empty c (Term.ok ())) Configs.empty)
+                 ~right:(Configs.of_process (Process.bottom 0))
+                 ~constraints:Constraints.empty)) ;
           let tbl'' = transitions s'' in
           Alcotest.(check int)
             "nothing on 0 after in(0).out(0)"
@@ -551,10 +561,12 @@ let () =
           let p = Process.if_eq (Term.var "x") (Term.ok ()) o Process.zero in
           let q = Process.input c (Term.var "x") p in
           let r = Process.input c (Term.var "x") Process.zero in
-          let s = { State.
-                    left = Configs.of_process (Process.par [q;r]) ;
-                    right = Configs.empty ;
-                    constraints = Constraints.empty } in
+          let s =
+            State.make
+              ~left:(Configs.of_process (Process.par [q;r]))
+              ~right:(Configs.empty)
+              ~constraints:Constraints.empty
+          in
           let l = (snd (transitions s).input.(0)) in
             List.iter
               (fun s' -> Format.printf "%a -in(0)-> %a\n" State.pp s State.pp s')
@@ -570,10 +582,12 @@ let () =
           let p = Process.if_eq (Term.var "x") (Term.ok ()) o Process.zero in
           let q = Process.input c (Term.var "x") p in
           let r = Process.input c (Term.var "x") Process.zero in
-          let s = { State.
-                    left = Configs.of_process (Process.par [q;r]) ;
-                    right = Configs.of_process (Process.par [q;r]) ;
-                    constraints = Constraints.empty } in
+          let s =
+           State.make
+             ~left:(Configs.of_process (Process.par [q;r]))
+             ~right:(Configs.of_process (Process.par [q;r]))
+             ~constraints:Constraints.empty
+          in
           let l = snd (transitions s).input.(0) in
             List.iter
               (fun s' -> Format.printf "%a -in(0)-> %a\n" State.pp s State.pp s')
@@ -587,10 +601,12 @@ let () =
           let c = Channel.of_int 0 in
           let o = Process.output c (Term.ok ()) Process.zero in
           let io = Process.input c (Term.var "x") o in
-          let s = { State.
-                    left = Configs.of_process o ;
-                    right = Configs.of_process io ;
-                    constraints = Constraints.empty } in
+          let s =
+           State.make
+             ~left:(Configs.of_process o)
+             ~right:(Configs.of_process io)
+             ~constraints:Constraints.empty
+          in
             Alcotest.(check int)
               "cardinal of enabled"
               2
@@ -604,10 +620,12 @@ let () =
           let c = Channel.of_int 0 in
           let o = Process.output c (Term.ok ()) Process.zero in
           let io = Process.input c (Term.var "x") o in
-          let s = { State.
-                    left = Configs.of_process (Process.par [io;o]) ;
-                    right = Configs.empty ;
-                    constraints = Constraints.empty } in
+          let s =
+           State.make
+             ~left:(Configs.of_process (Process.par [io;o]))
+             ~right:Configs.empty
+             ~constraints:Constraints.empty
+          in
           let a_out = Action.Out (c,0) in
           let a_in = Action.In (c,[c,Frame.empty.Frame.id,0]) in
             Alcotest.(check bool)
