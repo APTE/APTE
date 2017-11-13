@@ -89,64 +89,9 @@ let importProcess proc =
   build proc
 
 
-module POR = POR.Make(Trace_equiv)
-module Persistent = POR.Persistent
-module Sleep = POR.Sleep
+(* Cannot pen trace_equiv because then it exposes the interface term.mli -> clash with standard library*)
+(* module POR = POR.Make(Trace_equiv) *)
+(* module Persistent = POR.Persistent *)
+(* module Sleep = POR.Sleep *)
 
-let runPOR ?(show_sleep=false) s =
-
-  let module S = Trace_equiv in
-
-  let pp_persistent ch s =
-    let t0 = Unix.gettimeofday () in
-    let set = POR.persistent s in
-      Format.fprintf ch "%a (%.2fs)"
-        S.ActionSet.pp set (Unix.gettimeofday () -. t0) ;
-  in
-
-  (* Some transitions and persistent set computations *)
-  Format.printf "s = %a@.@." S.State.pp s ;
-  S.fold_successors s ()
-    (fun a s' () ->
-         Format.printf
-           "s -%a-> s'=%a@."
-           S.Action.pp a
-           S.State.pp s' ;
-         Format.printf
-           "P(s') = %a@.@."
-           pp_persistent s') ;
-  Format.printf
-    "P(s) = %a@."
-    pp_persistent s ;
-
-  (* Number of states and traces in successive transition systems *)
-
-  Format.printf "@." ;
-
-  let module Stats = LTS.Make(Trace_equiv) in
-  Format.printf "Equivalence LTS: %d states, %d traces.\n"
-    (Stats.StateSet.cardinal (Stats.reachable_states s))
-    (Stats.nb_traces s) ;
-
-  let module Stats = LTS.Make(Persistent) in
-  Format.printf "Persistent: %d states, %d traces.\n"
-    (Stats.StateSet.cardinal (Stats.reachable_states s))
-    (Stats.nb_traces s) ;
-  let module Stats = LTS.Make(Sleep) in
-
-  let s = Sleep.from_state s in
-  Format.printf "Sleep: %d states, %d traces.\n"
-    (Stats.StateSet.cardinal (Stats.reachable_states s))
-    (Stats.nb_traces s) ;
-  if show_sleep then
-    Stats.show_traces s ;
-
-  Format.printf "@."
-
-let make_state p1 p2 =
-  { Trace_equiv.State.
-    left = Sem_utils.Configs.of_process p1 ;
-    right = Sem_utils.Configs.of_process p2;
-    constraints = Sem_utils.Constraints.empty }
-
-let computeTraces p1 p2 = runPOR (make_state p1 p2)
+let computeTraces p1 p2 = ()

@@ -66,7 +66,7 @@ OBJ = $(ML:.ml=.$(CMO))
 	@echo The executable :
 	@echo
 	$(NV)echo $(OCAMLC_UC) -o $(EXECUTABLE)
-	$(V)$(OCAMLC) -o $(EXECUTABLE) $(OCAMLFLAGS) $(OBJ)
+	$(V)$(OCAMLC) -o $(EXECUTABLE) $(OCAMLFLAGS)  -linkpkg ../Porridge/porridge.cmxa  $(OBJ)
 	@echo
 	@echo ----- Some Statistics -----
 	@echo

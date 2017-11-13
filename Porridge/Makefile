@@ -60,7 +60,7 @@ clean:
 	rm -f *.cmi *.cmo *.cma *.cmx *.cmxa check test
 
 cleanPorridge:
-	rm -f term.cmi process.cmi debug.cmi *.cmo check test
+	rm -f channel.cmi  check.cmi  check_main.cmi  LTS.cmi  memo.cmi  POR.cmi  sem_utils.cmi  test.cmi  trace_equiv.cmi term.cmi process.cmi  debug.cmi check test *.cmt *.cmo
 
 plot.txt: stats
 	./stats > $@
