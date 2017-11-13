@@ -9,7 +9,7 @@ VERSION = 0.4beta
 NATIVECODE=yes
 DEBUG=yes
 
-OCAMLC_=$(if $(NATIVECODE),ocamlopt,ocamlc) -linkpkg porridge.cmxa
+OCAMLC_=$(if $(NATIVECODE),ocamlopt,ocamlc) -package alcotest
 OCAMLC=ocamlfind $(OCAMLC_)
 DEBUGOPT=$(if $(DEBUG),-g,)
 OCAMLC_UC=$(shell echo $(OCAMLC) | tr a-z A-Z)
@@ -20,7 +20,7 @@ OCAMLDOC=ocamldoc
 
 ### Compiler options
 
-INCLUDES = -I standard_library -I parser -I trace_equivalence -I length_equivalence -I secrecy
+INCLUDES = -I ../Porridge -I standard_library -I parser -I trace_equivalence -I length_equivalence -I secrecy 
 # Compiler options specific to OCaml version >= 4
 V4OPTIONS=$(if $(shell $(OCAMLC) -version | grep '^4'),-bin-annot)
 OCAMLFLAGS = $(INCLUDES) $(INCLUDES_MOD) $(V4OPTIONS) $(DEBUGOPT) # -w Ae 
