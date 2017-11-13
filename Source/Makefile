@@ -9,8 +9,8 @@ VERSION = 0.4beta
 NATIVECODE=yes
 DEBUG=yes
 
-OCAMLC_=$(if $(NATIVECODE),ocamlopt,ocamlc)
-OCAMLC=ocamlfind $(OCAMLC_) -package alcotest
+OCAMLC_=$(if $(NATIVECODE),ocamlopt,ocamlc) -linkpkg porridge.cmxa
+OCAMLC=ocamlfind $(OCAMLC_)
 DEBUGOPT=$(if $(DEBUG),-g,)
 OCAMLC_UC=$(shell echo $(OCAMLC) | tr a-z A-Z)
 CMO=$(if $(NATIVECODE),cmx,cmo)
@@ -46,8 +46,7 @@ GENERATED_SOURCES = parser/grammar.ml parser/lexer.ml parser/grammar.mli
 STD_ML = standard_library/term.ml standard_library/recipe.ml standard_library/constraint.ml \
 		 standard_library/constraint_system.ml standard_library/process.ml \
 		 standard_library/standard_library.ml
-TRACE_ML = trace_equivalence/check.ml trace_equivalence/channel.ml trace_equivalence/term_.ml trace_equivalence/process_.ml trace_equivalence/por.ml \
-                   trace_equivalence/statistic.ml trace_equivalence/rules.ml trace_equivalence/invariant.ml \
+TRACE_ML = trace_equivalence/por.ml trace_equivalence/statistic.ml trace_equivalence/rules.ml trace_equivalence/invariant.ml \
 		   trace_equivalence/strategy.ml trace_equivalence/algorithm.ml \
 		   trace_equivalence/trace_equivalence.ml
 LENGTH_ML = length_equivalence/length.ml length_equivalence/length_algorithm.ml \

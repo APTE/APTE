@@ -1,4 +1,4 @@
-open Process_
+open Porridge.Process			(* Generic POR engine *)
 open Standard_library
 
 let err s = Debug.internal_error s
@@ -11,34 +11,34 @@ let importChannel = function
      Channel.of_int intCh
   | _ -> err "In generalized POR mode, channels must be constants."
 	     
-let importVar x = Term_.var (Term.display_variable x)
+let importVar x = Porridge.Term.var (Term.display_variable x)
 
 (* We suppose here that processes have been alpha-renamed in order
    to avoid any clash variable-name or name-name. *)
-let importName n = Term_.var (Term.display_name n)
+let importName n = Porridge.Term.var (Term.display_name n)
     
 let rec importPat = function
   | Process.Var x -> importVar x
-  | Process.Tuple (s, tl) when Term.is_tuple s -> Term_.tuple (List.map importPat tl)
+  | Process.Tuple (s, tl) when Term.is_tuple s -> Porridge.Term.tuple (List.map importPat tl)
   | _ -> err "In generalized POR mode, in let p = t in ..., p must be made of tuples and variables only."
 
 let importSymb s t1 = 		(* ugly workaround fo get a more compact function *)
-  if Term.is_equal_symbol Term.senc s then 2, Term_.senc t1
-  else if Term.is_equal_symbol Term.sdec s then 2, Term_.sdec t1
-  else if Term.is_equal_symbol Term.aenc s then 2, Term_.aenc t1
-  else if Term.is_equal_symbol Term.adec s then 2, Term_.adec t1
-  else if Term.is_equal_symbol Term.hash s then 1, Term_.hash
-  else if Term.is_equal_symbol Term.pk s then 1, Term_.pk
+  if Term.is_equal_symbol Term.senc s then 2, Porridge.Term.senc t1
+  else if Term.is_equal_symbol Term.sdec s then 2, Porridge.Term.sdec t1
+  else if Term.is_equal_symbol Term.aenc s then 2, Porridge.Term.aenc t1
+  else if Term.is_equal_symbol Term.adec s then 2, Porridge.Term.adec t1
+  else if Term.is_equal_symbol Term.hash s then 1, Porridge.Term.hash
+  else if Term.is_equal_symbol Term.pk s then 1, Porridge.Term.pk
   (* TODO: add those constructors in POR. *)
-  (* else if Term.is_equal_symbol Term.sk s then Term_.sk *)
-  (* else if Term.is_equal_symbol Term.sign s then Term_.sign *)
-  (* else if Term.is_equal_symbol Term.checksign s then Term_.checksign *)
+  (* else if Term.is_equal_symbol Term.sk s then Porridge.Term.sk *)
+  (* else if Term.is_equal_symbol Term.sign s then Porridge.Term.sign *)
+  (* else if Term.is_equal_symbol Term.checksign s then Porridge.Term.checksign *)
   else raise Not_found
 	     
 let rec importTerm = function
   | Term.Func (symb, tl) when Term.is_tuple symb ->
-     Term_.tuple (List.map importTerm tl)
-  | Term.Func (symb, []) -> Term_.ok () (* TODO: generic constants != ok *)
+     Porridge.Term.tuple (List.map importTerm tl)
+  | Term.Func (symb, []) -> Porridge.Term.ok () (* TODO: generic constants != ok *)
   | Term.Func (symb, tl) ->
      let t1 = List.hd tl in
      let pt1 = importTerm t1 in
@@ -54,7 +54,7 @@ let rec importTerm = function
   | Term.Name n -> importName n
 
 let importFormula = function
-  | _ -> (Term_.ok (), Term_.ok ()) (* TODO *)
+  | _ -> (Porridge.Term.ok (), Porridge.Term.ok ()) (* TODO *)
     
 let importProcess proc =
   let rec flatten_choice = function
