@@ -37,14 +37,14 @@ let importSymb s t1 = 		(* ugly workaround fo get a more compact function *)
 	     
 let rec importTerm = function
   | Term.Func (symb, tl) when Term.is_tuple symb ->
-     Term_.tuple (List,map importTerm tl)
-  | Term.Func (symb, []) -> ok () (* TODO: generic constants != ok *)
+     Term_.tuple (List.map importTerm tl)
+  | Term.Func (symb, []) -> Term_.ok () (* TODO: generic constants != ok *)
   | Term.Func (symb, tl) ->
      let t1 = List.hd tl in
      let pt1 = importTerm t1 in
-     (try (match importSymb symb pt with
+     (try (match importSymb symb pt1 with
 	   | 1,f -> f pt1
-	   | 2,f ->  let t2 = List.hd tl, List.hd (List.tl tl) in
+	   | 2,f ->  let t2 = List.hd (List.tl tl) in
 		     let pt2 = importTerm t2 in
 		     f pt2)
       with
@@ -77,6 +77,6 @@ let importProcess proc =
        match formula with
        | Process.Eq (t1,t2) -> if_eq (importTerm t1) (importTerm t2) (build proc_then) (build proc_else)
        | Process.Neq (t1,t2) -> if_neq (importTerm t1) (importTerm t2) (build proc_then) (build proc_else)
-       | _ -> "In generalized POR mode, tests in conditionals must be equality or disequality (no OR or AND)."
+       | _ -> err "In generalized POR mode, tests in conditionals must be equality or disequality (no OR or AND)."
   in
   build proc
