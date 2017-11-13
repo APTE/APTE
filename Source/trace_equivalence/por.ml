@@ -20,8 +20,6 @@ let importChannel = function
 	     
 let importVar x = Porridge.Term.var (Term.display_variable x)
 
-(* We suppose here that processes have been alpha-renamed in order
-   to avoid any clash variable-name or name-name. *)
 let importName n = Porridge.Term.var (Term.display_name n)
     
 let rec importPat = function
@@ -36,16 +34,15 @@ let importSymb s t1 = 		(* ugly workaround fo get a more compact function *)
   else if Term.is_equal_symbol Term.adec s then 2, Porridge.Term.adec t1
   else if Term.is_equal_symbol Term.hash s then 1, Porridge.Term.hash
   else if Term.is_equal_symbol Term.pk s then 1, Porridge.Term.pk
-  (* TODO: add those constructors in POR. *)
-  (* else if Term.is_equal_symbol Term.sk s then Porridge.Term.sk *)
-  (* else if Term.is_equal_symbol Term.sign s then Porridge.Term.sign *)
-  (* else if Term.is_equal_symbol Term.checksign s then Porridge.Term.checksign *)
+  else if Term.is_equal_symbol Term.vk s then 1,Porridge.Term.vk
+  else if Term.is_equal_symbol Term.sign s then 2,Porridge.Term.sign t1
+  else if Term.is_equal_symbol Term.checksign s then 2,Porridge.Term.checksign t1
   else raise Not_found
 	     
 let rec importTerm = function
   | Term.Func (symb, tl) when Term.is_tuple symb ->
      Porridge.Term.tuple (List.map importTerm tl)
-  | Term.Func (symb, []) -> Porridge.Term.ok () (* TODO: generic constants != ok *)
+  | Term.Func (symb, []) -> Porridge.Term.var (Term.display_symbol_without_arity symb) (* constants are abstacted away by variables *)
   | Term.Func (symb, tl) ->
      let t1 = List.hd tl in
      let pt1 = importTerm t1 in
@@ -76,7 +73,7 @@ let importProcess proc =
     | Process.Nil -> zero
     | Process.Choice(p1,p2) -> plus ((flatten_choice p1) @ (flatten_choice p2))
     | Process.Par(p1,p2) -> par ((flatten_par p1) @ (flatten_par p2))
-    | Process.New(n,p,label) -> build p
+    | Process.New(n,p,label) -> build p (* names will be abstracted away by variables *)
     | Process.In(t,pat,proc,label) -> input (importChannel t) (importVar pat) (build proc)
     | Process.Out(t1,t2,proc,label) -> output (importChannel t1) (importTerm t2) (build proc)
     | Process.Let(pat,t,proc,label) -> if_eq (importPat pat) (importTerm t) (build proc) zero
