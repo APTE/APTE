@@ -147,7 +147,6 @@ module Make (T:Simple) = struct
        Format.printf " * " ; show_trace t ; Format.printf "\n")
       s
 
-  (* TODO: use format to create increasing indentation *)
   let rec display_setTraces = function
     | Traces tl ->
        List.iter

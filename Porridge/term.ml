@@ -130,6 +130,7 @@ let () =
   end : Alcotest.TESTABLE with type t = term) in
   Check.add_suite
     ("Term",
+     let hash = hash_tm in
      [ "Initial size", `Quick,
        (fun () ->
           reset () ;
