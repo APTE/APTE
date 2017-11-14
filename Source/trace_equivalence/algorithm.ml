@@ -39,7 +39,7 @@ let print_debug_por = ref false
 
 let print_debug_por_gen = ref true
 
-let print_debug_por_gen_showExplo = ref true
+let print_debug_por_gen_showExplo = ref false
 
 let display_traces = ref false
 
@@ -253,8 +253,8 @@ let apply_strategy_one_transition (* given .... *)
     if !option_por_gen
     then begin
 	(* ** [Generalized POR] stop exploration if trace explores so far is not in the reduced set of traces computed by Porridge *)
-	if !print_debug_por_gen_showExplo then
-	  Printf.printf "Current set of symbolic traces to explore: \n"; Por.displaySetTraces trs; Printf.printf "\n%!";
+	if !print_debug_por_gen_showExplo
+	then begin Printf.printf "Current set of symbolic traces to explore: \n"; Por.displaySetTraces trs; Printf.printf "\n%!"; end;
 	let proc = if left_symb_proc_list = []
 		   then List.hd right_symb_proc_list
 		   else List.hd right_symb_proc_list in
@@ -945,7 +945,7 @@ let decide_trace_equivalence process1 process2 =
 	(* Porridge.Process_.pp Format.std_formatter p1; *)
 	let trs = Por.computeTraces p1 p2 in
 	Printf.printf "[G-POR] A set of symbolic traces to be explored has been computed in %fs.\n%!" (Sys.time() -. t);
-	(* if !print_debug_por_gen then begin Printf.printf "[G-POR] Set of reduced traces: \n"; Por.displaySetTraces trs; end; *)
+	if !print_debug_por_gen_showExplo then begin Printf.printf "[G-POR] Set of reduced traces: \n"; Por.displaySetTraces trs; end;
 	trs
       end
     else Por.emptySetTraces in
