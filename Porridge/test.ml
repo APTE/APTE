@@ -85,28 +85,28 @@ let make_state p =
     ~right:Sem_utils.Configs.empty
     ~constraints:Sem_utils.Constraints.empty
 
-let io c p = Process.input c (Term.var "x") (Process.output c (Term.var "x") p)
-let p = io Channel.c Process.zero
-let q = io Channel.d Process.zero
-let r = io Channel.e Process.zero
-let ok = Term.ok ()
+let io c p = Process_.input c (Term_.var "x") (Process_.output c (Term_.var "x") p)
+let p = io Channel.c Process_.zero
+let q = io Channel.d Process_.zero
+let r = io Channel.e Process_.zero
+let ok = Term_.ok ()
 
 let () =
 
   register "det" "Action-deterministic"
     test
-    (make_state (Process.par [p;q;r])) ;
+    (make_state (Process_.par [p;q;r])) ;
 
-  (* [p;p;q;q;Process.output Channel.d ok q] *)
+  (* [p;p;q;q;Process_.output Channel.d ok q] *)
   register "ndet" "NOT action-deterministic"
     test
-    (make_state (Process.par [p;p;q;q;q]))
+    (make_state (Process_.par [p;p;q;q;q]))
 
 let () =
-  let open Process in
-  let p c = input c (Term.var "y") (input c (Term.var "z")
-             (output c (Term.ok ()) (output c (Term.ok ()) zero))) in
-  let s = Process.par [p (Channel.of_int 0); p (Channel.of_int 1)] in
+  let open Process_ in
+  let p c = input c (Term_.var "y") (input c (Term_.var "z")
+             (output c (Term_.ok ()) (output c (Term_.ok ()) zero))) in
+  let s = Process_.par [p (Channel.of_int 0); p (Channel.of_int 1)] in
   let s = make_state s in
     register "sleep" "Sleep details" (test ~show_sleep:true) s
 

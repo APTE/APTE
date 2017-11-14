@@ -1,10 +1,11 @@
-(** Term representation, hash-consed. *)
+(** Term_ representation, hash-consed. *)
 
 type 'a _term
 type term = private { id : int ; contents : term _term }
 type t = term
 val equal : term -> term -> bool
 val compare : term -> term -> int
+val hash : term -> int
 
 val pp : Format.formatter -> term -> unit
 val to_string : term -> string

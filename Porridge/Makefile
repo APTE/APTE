@@ -1,7 +1,7 @@
-LIB = check.ml debug.ml memo.ml \
-	  LTS.ml POR.ml \
-	  channel.ml term.ml process.ml \
-	  sem_utils.ml trace_equiv.ml
+LIB = check.ml debug_.ml memo.ml \
+	  LTS.ml  \
+	  channel.ml term_.ml process_.ml \
+	  sem_utils.ml trace_equiv.ml POR.ml
 CHECK = $(LIB) check_main.ml
 
 ML=$(wildcard *ml)
@@ -47,9 +47,9 @@ test: porridge.cmxa test.cmx
 
 # stats: $(CMO)
 # 	$(OCAMLC) \
-# 	  debug.cmo memo.cmo \
+# 	  debug_.cmo memo.cmo \
 # 	  LTS.cmo POR.cmo \
-# 	  term.cmo process.cmo trace_equiv.cmo \
+# 	  term_.cmo process_.cmo trace_equiv.cmo \
 # 	  stats.cmo -o stats
 
 -include .depend
@@ -60,7 +60,7 @@ clean:
 	rm -f *.cmi *.cmo *.cma *.cmx *.cmxa check test
 
 cleanPorridge:
-	rm -f check.cmi  check_main.cmi  LTS.cmi  memo.cmi  sem_utils.cmi  test.cmi  trace_equiv.cmi term.cmi process.cmi  debug.cmi check test *.cmt *.cmo
+	rm -f  *.cmt *.cmo test check
 
 plot.txt: stats
 	./stats > $@

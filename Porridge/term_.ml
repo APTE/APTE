@@ -13,7 +13,7 @@ let hash x = x.id
 
 (** HashedType instance for term representations whose subterms are
   * already hash-consed. *)
-module PTerm : Hashtbl.HashedType with type t = term _term = struct
+module PTerm_ : Hashtbl.HashedType with type t = term _term = struct
 
   type t = term _term
 
@@ -35,20 +35,20 @@ module PTerm : Hashtbl.HashedType with type t = term _term = struct
 
 end
 
-module HTerm = Hashtbl.Make(PTerm)
+module HTerm_ = Hashtbl.Make(PTerm_)
 
-let h = HTerm.create 257
+let h = HTerm_.create 257
 
 let reset,new_id =
   let c = ref 0 in
-    (fun () -> c := 0 ; HTerm.reset h),
+    (fun () -> c := 0 ; HTerm_.reset h),
     (fun () -> incr c ; !c)
 
 let hashcons c =
-  try HTerm.find h c with
+  try HTerm_.find h c with
     | Not_found ->
         let t = { id = new_id () ; contents = c } in
-          HTerm.add h c t ;
+          HTerm_.add h c t ;
           t
 
 (** Physically unique string representations of function symbols *)
@@ -129,23 +129,23 @@ let () =
     let equal = equal
   end : Alcotest.TESTABLE with type t = term) in
   Check.add_suite
-    ("Term",
+    ("Term_",
      [ "Initial size", `Quick,
        (fun () ->
           reset () ;
-          Alcotest.(check int) "hashtbl length" 0 (HTerm.length h)) ;
+          Alcotest.(check int) "hashtbl length" 0 (HTerm_.length h)) ;
        "Simple size", `Quick,
        (fun () ->
           reset () ;
           let ok = ok () in
           ignore (senc (tuple [hash ok; hash (hash ok)]) ok) ;
-          Alcotest.(check int) "hashtbl length" 5 (HTerm.length h)) ;
+          Alcotest.(check int) "hashtbl length" 5 (HTerm_.length h)) ;
        "Simple size", `Quick,
        (fun () ->
           reset () ;
           let ok = ok () in
           ignore (senc (tuple [hash ok; hash ok]) ok) ;
-          Alcotest.(check int) "hashtbl length" 4 (HTerm.length h)) ;
+          Alcotest.(check int) "hashtbl length" 4 (HTerm_.length h)) ;
        "Structural inequality senc/aenc", `Quick,
        (fun () ->
           reset () ;
@@ -189,7 +189,7 @@ let () =
 
 let () =
   Check.add_suite
-    ("PTerm",
+    ("PTerm_",
      [ "Basic equalities test", `Quick,
        (fun () ->
           reset () ;
@@ -199,7 +199,7 @@ let () =
           let b = Fun (Syms.aenc,[t1;t2]) in
             Alcotest.(check bool) "physically different" (a != b) true ;
             Alcotest.(check bool) "structurally equal" (a = b) true ;
-            Alcotest.(check bool) "PTerm.equal" (PTerm.equal a b) true) ])
+            Alcotest.(check bool) "PTerm_.equal" (PTerm_.equal a b) true) ])
 
 (* TODO random testing e.g.
  * for all [x : term _term], [x = (hashcons x).contents]. *)

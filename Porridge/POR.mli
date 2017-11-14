@@ -12,11 +12,3 @@ module Make (S:LTS.S) : sig
   end
 
 end
-
-(** Traces of symbolic actions *)
-type action = In of int | Out of int
-type tr = Traces of (action * tr) list
-
-(** Traces of symbolic actions *)
-val tracesPersistentSleepEquiv : Process.t -> Process.t -> tr
-			  

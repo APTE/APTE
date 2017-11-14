@@ -1,4 +1,5 @@
-open Porridge.Process			(* Generic POR engine *)
+open Porridge
+open Process_			(* Generic POR engine *)
 open Standard_library
 
 let tblChannel = Hashtbl.create 5
@@ -15,34 +16,34 @@ let importChannel = function
 					 incr(intChannel);
 					 !intChannel - 1;
 				   end in
-     Porridge.Channel.of_int intCh
+     Channel.of_int intCh
   | _ -> err "In generalized POR mode, channels must be constants."
 	     
-let importVar x = Porridge.Term.var (Term.display_variable x)
+let importVar x = Term_.var (Term.display_variable x)
 
-let importName n = Porridge.Term.var (Term.display_name n)
+let importName n = Term_.var (Term.display_name n)
     
 let rec importPat = function
   | Process.Var x -> importVar x
-  | Process.Tuple (s, tl) when Term.is_tuple s -> Porridge.Term.tuple (List.map importPat tl)
+  | Process.Tuple (s, tl) when Term.is_tuple s -> Term_.tuple (List.map importPat tl)
   | _ -> err "In generalized POR mode, in let p = t in ..., p must be made of tuples and variables only."
 
 let importSymb s t1 = 		(* ugly workaround fo get a more compact function *)
-  if Term.is_equal_symbol Term.senc s then 2, Porridge.Term.senc t1
-  else if Term.is_equal_symbol Term.sdec s then 2, Porridge.Term.sdec t1
-  else if Term.is_equal_symbol Term.aenc s then 2, Porridge.Term.aenc t1
-  else if Term.is_equal_symbol Term.adec s then 2, Porridge.Term.adec t1
-  else if Term.is_equal_symbol Term.hash s then 1, Porridge.Term.hash
-  else if Term.is_equal_symbol Term.pk s then 1, Porridge.Term.pk
-  else if Term.is_equal_symbol Term.vk s then 1,Porridge.Term.vk
-  else if Term.is_equal_symbol Term.sign s then 2,Porridge.Term.sign t1
-  else if Term.is_equal_symbol Term.checksign s then 2,Porridge.Term.checksign t1
+  if Term.is_equal_symbol Term.senc s then 2, Term_.senc t1
+  else if Term.is_equal_symbol Term.sdec s then 2, Term_.sdec t1
+  else if Term.is_equal_symbol Term.aenc s then 2, Term_.aenc t1
+  else if Term.is_equal_symbol Term.adec s then 2, Term_.adec t1
+  else if Term.is_equal_symbol Term.hash s then 1, Term_.hash
+  else if Term.is_equal_symbol Term.pk s then 1, Term_.pk
+  else if Term.is_equal_symbol Term.vk s then 1,Term_.vk
+  else if Term.is_equal_symbol Term.sign s then 2,Term_.sign t1
+  else if Term.is_equal_symbol Term.checksign s then 2,Term_.checksign t1
   else raise Not_found
 	     
 let rec importTerm = function
   | Term.Func (symb, tl) when Term.is_tuple symb ->
-     Porridge.Term.tuple (List.map importTerm tl)
-  | Term.Func (symb, []) -> Porridge.Term.var (Term.display_symbol_without_arity symb) (* constants are abstacted away by variables *)
+     Term_.tuple (List.map importTerm tl)
+  | Term.Func (symb, []) -> Term_.var (Term.display_symbol_without_arity symb) (* constants are abstacted away by variables *)
   | Term.Func (symb, tl) ->
      let t1 = List.hd tl in
      let pt1 = importTerm t1 in
@@ -58,7 +59,7 @@ let rec importTerm = function
   | Term.Name n -> importName n
 
 let importFormula = function
-  | _ -> (Porridge.Term.ok (), Porridge.Term.ok ()) (* TODO *)
+  | _ -> (Term_.ok (), Term_.ok ()) (* TODO *)
     
 let importProcess proc =
   let rec flatten_choice = function
@@ -84,6 +85,38 @@ let importProcess proc =
        | _ -> err "In generalized POR mode, tests in conditionals must be equality or disequality (no OR or AND)."
   in
   build proc
+
+
+type action = Int of string | Out of string
+
+type setSymbTraces = Traces of (action*setSymbTraces) list
+
+module POR = Make(Trace_equiv)
+module Persistent = POR.Persistent
+module RedLTS = LTS.Make(Persistent)
+			
+(** Traces of symbolic actions *)
+type action = In of int | Out of int
+type tr = Traces of (action * tr) list
+				  
+let make_state p1 p2 =
+  Trace_equiv.State.make
+    ~left:(Sem_utils.Configs.of_process p1)
+    ~right:(Sem_utils.Configs.of_process p2)
+    ~constraints:Sem_utils.Constraints.empty
+    
+let simplAction = function
+  | Trace_equiv.Action.Out (ch,_) -> Out (Channel.to_int ch)
+  | Trace_equiv.Action.In (ch,_) -> In (Channel.to_int ch)
+				       
+let rec simpleTraces  = function
+  | RedLTS.Traces tl ->
+     Traces (List.map (fun (act, trs) -> (simplAction act, simpleTraces trs)) tl)
+	    
+let tracesPersistentSleepEquiv p1 p2 =
+  let sinit = make_state p1 p2 in
+  let trLTS = RedLTS.traces sinit in
+  simpleTraces trLTS
 
 
 (* Cannot pen trace_equiv because then it exposes the interface term.mli -> clash with standard library*)

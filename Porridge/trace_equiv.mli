@@ -11,7 +11,7 @@ end
 module Action : sig
   type t =
     | Out of Channel.t * int
-    | In of Channel.t * Term.invar list
+    | In of Channel.t * Term_.invar list
   val compare : t -> t -> int
   val equal : t -> t -> bool
   val hash : t -> int

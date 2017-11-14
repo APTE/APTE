@@ -20,7 +20,7 @@ module Make (T:S) = struct
         (fun b s' res ->
            if indep_ee s a b then
              let fc' = fc a s' in
-               if Debug.first then
+               if Debug_.first then
                Format.printf "fc(%a,%a)=%a\n"
                  State.pp s'
                  Action.pp a
@@ -37,7 +37,7 @@ module Make (T:S) = struct
         (fun b s' res ->
            if indep_de s a b then
              let fe' = fe a s' in
-               if Debug.first then
+               if Debug_.first then
                Format.printf "fe(%a,%a)=%a\n"
                  State.pp s'
                  Action.pp a
@@ -68,7 +68,7 @@ module Make (T:S) = struct
                 let frontier =
                   if may_be_enabled s a then
                     let fc = first_conflicts a s in
-                      if Debug.first then
+                      if Debug_.first then
                         Format.printf
                           "fc(%a,%a) = %a\n"
                           State.pp s
@@ -81,7 +81,7 @@ module Make (T:S) = struct
                 let frontier =
                   if may_be_disabled s a then
                     let fe = first_enabling a s in
-                      if Debug.first then
+                      if Debug_.first then
                         Format.printf
                           "fe(%a,%a) = %a\n"
                           State.pp s
@@ -105,7 +105,7 @@ module Make (T:S) = struct
       (fun a res ->
          let ssa = stubborn s a in
          let res' = ActionSet.inter enabled ssa in
-           if Debug.stubborn then
+           if Debug_.stubborn then
            Format.printf
              "S(%a,%a)=%a\n =E(%a)\n"
              State.pp s
@@ -223,32 +223,3 @@ module Make (T:S) = struct
   end
 
 end
-
-(* New functions for easing interfaces with Apte *)
-module POR = Make(Trace_equiv)
-module Persistent = POR.Persistent
-module RedLTS = LTS.Make(Persistent)
-
-(** Traces of symbolic actions *)
-type action = In of int | Out of int
-type tr = Traces of (action * tr) list
-
-let make_state p1 p2 =
-  Trace_equiv.State.make
-    ~left:(Sem_utils.Configs.of_process p1)
-    ~right:(Sem_utils.Configs.of_process p2)
-    ~constraints:Sem_utils.Constraints.empty
-    
-let simplAction = function
-  | Trace_equiv.Action.Out (ch,_) -> Out (Channel.to_int ch)
-  | Trace_equiv.Action.In (ch,_) -> In (Channel.to_int ch)
-				      
-let rec simpleTraces  = function
-  | RedLTS.Traces tl ->
-     Traces (List.map (fun (act, trs) -> (simplAction act, simpleTraces trs)) tl)
-	      
-let tracesPersistentSleepEquiv p1 p2 =
-  let sinit = make_state p1 p2 in
-  let trLTS = RedLTS.traces sinit in
-  simpleTraces trLTS
-	      

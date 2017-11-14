@@ -1,6 +1,6 @@
 (** Representation of processes, hash-consed. *)
 
-type term = Term.term
+type term = Term_.term
 
 type ('a,'t) _proc =
     Zero
