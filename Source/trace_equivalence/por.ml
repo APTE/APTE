@@ -11,8 +11,8 @@ let pp s = Printf.printf s
 let importChannel = function
   | Term.Name n ->
      let strCh = Term.display_name n in
-     let intCh = try Hashtbl.find tblChannel n
-		 with Not_found -> begin Hashtbl.add tblChannel n !intChannel;
+     let intCh = try Hashtbl.find tblChannel strCh
+		 with Not_found -> begin Hashtbl.add tblChannel strCh !intChannel;
 					 incr(intChannel);
 					 !intChannel - 1;
 				   end in
@@ -51,7 +51,8 @@ let rec importTerm = function
 	   | 1,f -> f pt1
 	   | 2,f ->  let t2 = List.hd (List.tl tl) in
 		     let pt2 = importTerm t2 in
-		     f pt2)
+		     f pt2
+	   | _ -> err "[Internal error] Should never happen.")
       with
       | Not_found -> err "In generalized POR mode, allows constructors are senc, sdec, aenc, adec, hash, pk and tuples."
       | _ -> err "[Internal error] Arity does not match.")
@@ -109,7 +110,7 @@ let tracesPersistentSleepEquiv p1 p2 =
 let isSameChannel chPOR = function
   | Term.Name n ->
      let strCh = Term.display_name n in
-     let intCh = try Hashtbl.find tblChannel n
+     let intCh = try Hashtbl.find tblChannel strCh
 		 with Not_found -> err "[Internal error] Channel is not present in HashTbl." in
      chPOR == Channel.of_int intCh (* == since channel are private int, OK? *)
   | _ -> err "In generalized POR mode, channels must be constants."
@@ -138,7 +139,7 @@ let displayActPor act =
   let aux = function
     | Term.Name n ->
        let strCh = Term.display_name n in
-       let intCh = try Hashtbl.find tblChannel n
+       let intCh = try Hashtbl.find tblChannel strCh
 		   with Not_found -> err "[Internal error] Channel is not present in HashTbl." in
        Channel.to_char (Channel.of_int intCh)
     | _ -> err "[Internal error] Call displayActPor only on channels names." in
