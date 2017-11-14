@@ -17,8 +17,8 @@ import argparse
 import dateutil.parser
 from texttable import *
 
-import data
-from utils import *
+import data_gen
+from utils_gen import *
 
 parser = argparse.ArgumentParser(description='Extract results of benchmarks from log files.')
 parser.add_argument('--latex',

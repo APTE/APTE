@@ -18,7 +18,7 @@ import dateutil.parser
 from texttable import *
 from tabulate import tabulate
 
-import data
+import data_gen
 
 # SETTINGS FOR PRETTY PRINTINGS
 # First Column' width

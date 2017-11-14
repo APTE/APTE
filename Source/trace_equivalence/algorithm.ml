@@ -242,7 +242,7 @@ let apply_strategy_one_transition ?(trs=Por.emptySetTraces) pub_channels next_fu
 			true, Por.forwardTraces act trs
 		      else begin
 			  if !print_debug_por_gen then
-			    Printf.printf "[POR] ---- Last visible action %s is not enabled in symbolic POR so this exploration is stopped.\n" (Process.displayVisAction act);
+			    Printf.printf "[POR] ---- Last visible action %s is not enabled in symbolic POR so this exploration is stopped.\n%!" (Process.displayVisAction act);
 			  false, trs;
 			end
 	| None -> true, trs
@@ -913,13 +913,13 @@ let decide_trace_equivalence process1 process2 =
   let trs =
     if !option_por_gen
     then begin
-	Printf.printf "[POR] Applying generalized POR engine amd computing set of reduced, symbolic traces to be explored...\n";
+	Printf.printf "[POR] Applying generalized POR engine amd computing set of reduced, symbolic traces to be explored...\n%!";
 	let t = Sys.time() in
 	let p1 = Por.importProcess process1
 	and p2 = Por.importProcess process2 in
-	Printf.printf "[POR] Symbolic processes living in the symbolic LTS have been computed in %fs.\n" (Sys.time() -. t);
+	Printf.printf "[POR] Symbolic processes living in the symbolic LTS have been computed in %fs.\n%!" (Sys.time() -. t);
 	let trs = Por.computeTraces p1 p2 in
-	Printf.printf "[POR] A set of symbolic traces to be explored has been computed in %fs.\n" (Sys.time() -. t);
+	Printf.printf "[POR] A set of symbolic traces to be explored has been computed in %fs.\n%!" (Sys.time() -. t);
 	(* if !print_debug_por_gen then begin Printf.printf "[POR] Set of reduced traces: \n"; Por.displaySetTraces trs; end; *)
 	trs
       end
