@@ -5,7 +5,8 @@ module Make (S:LTS.S) : sig
   val stubborn : S.State.t -> S.ActionSet.elt -> S.ActionSet.t
   val persistent : S.State.t -> S.ActionSet.t
 
-  module Persistent : LTS.Simple with type State.t = S.State.t
+  module Persistent : LTS.Simple with type State.t = S.State.t and type Action.t = S.Action.t
+
   module Sleep : sig
     include LTS.Simple
     val from_state : S.State.t -> State.t

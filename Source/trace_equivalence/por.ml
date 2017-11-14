@@ -87,17 +87,13 @@ let importProcess proc =
   build proc
 
 
-type action = Int of string | Out of string
-
-type setSymbTraces = Traces of (action*setSymbTraces) list
-
-module POR = Make(Trace_equiv)
+module POR = POR.Make(Trace_equiv)
 module Persistent = POR.Persistent
 module RedLTS = LTS.Make(Persistent)
 			
 (** Traces of symbolic actions *)
 type action = In of int | Out of int
-type tr = Traces of (action * tr) list
+type trs = Traces of (action * trs) list
 				  
 let make_state p1 p2 =
   Trace_equiv.State.make
@@ -120,4 +116,4 @@ let tracesPersistentSleepEquiv p1 p2 =
 
 
 (* Cannot pen trace_equiv because then it exposes the interface term.mli -> clash with standard library*)
-let computeTraces p1 p2 = POR.tracesPersistentSleepEquiv p1 p2
+let computeTraces p1 p2 = tracesPersistentSleepEquiv p1 p2

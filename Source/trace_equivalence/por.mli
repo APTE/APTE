@@ -6,11 +6,11 @@ val importTerm : Standard_library.Term.term -> Porridge.Term_.t
 (** [importProcess p] gives the LTS representation of a process [p]*)
 val importProcess : Standard_library.Process.process -> Porridge.Process_.t
 
-type action = Int of string | Out of string
+type action = In of int | Out of int
 
-type setSymbTraces = Traces of (action*setSymbTraces) list
+type trs = Traces of (action * trs) list
 
 (** [importProcess lp1 lp2] compute the reduced set of traces to be explored associated to [[p1;0 || p2;0]]. *)
-val computeTraces : Porridge.Process_.t -> Porridge.Process_.t -> Porridge.POR.tr
+val computeTraces : Porridge.Process_.t -> Porridge.Process_.t -> trs
 
 								  

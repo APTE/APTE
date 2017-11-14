@@ -120,7 +120,7 @@ module Make (T:S) = struct
 
   (** Persistent restriction of the semantics [S]. *)
   module Persistent :
-         LTS.Simple with type State.t = State.t and type Action.t = Action.t
+         LTS.Simple with type State.t = State.t and type Action.t = T.Action.t
   = struct
 
     module State = State
