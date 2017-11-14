@@ -99,6 +99,12 @@ module Action = struct
              ~pp_sep:(fun ch () -> Format.pp_print_char ch ',')
              Term_.pp)
           (List.map (fun (x,y,z) -> Term_.invar x y z) l)
+
+  let pp_simpl ch = function
+    | Out (c,_) -> Format.fprintf ch "out(%c)" (Channel.to_char c)
+    | In (c,_) ->
+       Format.fprintf ch "in(%c)" (Channel.to_char c)
+		      
   let same_skel a b = match a,b with
     | Out (c,_), Out (d,_)
     | In (c,_), In (d,_) when c = d -> true

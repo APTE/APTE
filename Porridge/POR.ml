@@ -191,6 +191,8 @@ module Make (T:S) = struct
         Format.fprintf ch "%a\\%a"
           Action.pp a
           pp_z z
+      let pp_simpl ch (a,z) =
+        Format.fprintf ch "%a" Action.pp a
     end
 
     let fold_successors ((s,z):State.t) x f =

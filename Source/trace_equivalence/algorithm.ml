@@ -232,7 +232,7 @@ let apply_strategy_one_transition ?(trs=Por.emptySetTraces) pub_channels next_fu
   let continue, trs = 
     if !option_por_gen
     then begin
-	(* Por.displaySetTraces trs; *)
+	Printf.printf "\n\nNEW TRES:\n"; Por.displaySetTraces trs;
 	(* ** [Generalized POR] stop exploration if trace explores so far is not in the reduced set of traces computed by Porridge *)
 	let proc = if left_symb_proc_list = []
 		   then List.hd right_symb_proc_list
@@ -918,9 +918,10 @@ let decide_trace_equivalence process1 process2 =
 	let p1 = Por.importProcess process1
 	and p2 = Por.importProcess process2 in
 	Printf.printf "[POR] Symbolic processes living in the symbolic LTS have been computed in %fs.\n%!" (Sys.time() -. t);
+	Porridge.Process_.pp Format.std_formatter p1;
 	let trs = Por.computeTraces p1 p2 in
 	Printf.printf "[POR] A set of symbolic traces to be explored has been computed in %fs.\n%!" (Sys.time() -. t);
-	(* if !print_debug_por_gen then begin Printf.printf "[POR] Set of reduced traces: \n"; Por.displaySetTraces trs; end; *)
+	if !print_debug_por_gen then begin Printf.printf "[POR] Set of reduced traces: \n"; Por.displaySetTraces trs; end;
 	trs
       end
     else Por.emptySetTraces in

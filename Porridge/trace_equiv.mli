@@ -16,6 +16,7 @@ module Action : sig
   val equal : t -> t -> bool
   val hash : t -> int
   val pp : Format.formatter -> t -> unit
+  val pp_simpl : Format.formatter -> t -> unit (* compact pretty printing *)
 end
 
 module ActionSet : sig

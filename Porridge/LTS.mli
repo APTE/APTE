@@ -1,6 +1,7 @@
 module type Printable = sig
   type t
   val pp : Format.formatter -> t -> unit
+  val pp_simpl : Format.formatter -> t -> unit
 end
 
 module type HType = sig
@@ -11,11 +12,16 @@ module type HType = sig
   val pp : Format.formatter -> t -> unit
 end
 
+module type HType_act = sig
+    include HType
+    val pp_simpl : Format.formatter -> t -> unit
+  end
+
 module type S = sig
 
   module State : HType
-  module Action : HType
-
+  module Action : HType_act
+		    
   module ActionSet : sig
     include Set.S with type elt = Action.t
     val pp : Format.formatter -> t -> unit

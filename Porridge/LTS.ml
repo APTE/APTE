@@ -6,10 +6,15 @@ module type HType = sig
   val pp : Format.formatter -> t -> unit
 end
 
+module type HType_act = sig
+    include HType
+    val pp_simpl : Format.formatter -> t -> unit
+  end
+
 module type S = sig
 
   module State : HType
-  module Action : HType
+  module Action : HType_act
 
   module ActionSet : sig
     include Set.S with type elt = Action.t
@@ -58,6 +63,7 @@ end
 module type Printable = sig
   type t
   val pp : Format.formatter -> t -> unit
+  val pp_simpl : Format.formatter -> t -> unit
 end
 
 (** Simpler notion of LTS that is not suitable for POR.
@@ -138,18 +144,18 @@ module Make (T:Simple) = struct
   let rec show_traces s =
     iter_traces
       (fun t ->
-         Format.printf " * " ; show_trace t ; Format.printf "\n")
+       Format.printf " * " ; show_trace t ; Format.printf "\n")
       s
 
   (* TODO: use format to create increasing indentation *)
   let rec display_setTraces = function
     | Traces tl ->
-       Format.printf "[[ ";       
        List.iter
 	 (fun (act,trs) -> begin
-	      Format.printf "%a, " Action.pp act;
-	      display_setTraces trs
+	      Format.printf "%a@," Action.pp_simpl act;
+	      Format.printf "->[@[<hov 1>";       
+	      display_setTraces trs;
+	      Format.printf "] @]@,";
 	    end) tl;
-       Format.printf " ]]\n"
-	    
+       
 end
