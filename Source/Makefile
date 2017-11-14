@@ -61,7 +61,7 @@ OBJ = $(ML:.ml=.$(CMO))
 
 ### Targets
 
-../apte: .depend .display $(OBJ)
+../apte: .depend .display $(OBJ) porridge.cmxa
 	@echo
 	@echo The executable :
 	@echo
@@ -87,6 +87,7 @@ clean:
 	@echo          Compilation of $(NAME_PROGRAMME) $(VERSION)
 	@echo ----------------------------------------------
 	@touch .display
+
 
 
 ### Common rules
