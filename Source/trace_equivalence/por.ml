@@ -9,7 +9,7 @@ let err s = Debug.internal_error s
 let pp s = Printf.printf s
 	   
 let importChannel = function
-  | Term.Name n -> (* Term.Func (s,[]) ->  *)
+  | Term.Name n ->
      let strCh = Term.display_name n in
      let intCh = try Hashtbl.find tblChannel n
 		 with Not_found -> begin Hashtbl.add tblChannel n !intChannel;
@@ -18,7 +18,7 @@ let importChannel = function
 				   end in
      Channel.of_int intCh
   | _ -> err "In generalized POR mode, channels must be constants."
-	     
+	     	     
 let importVar x = Term_.var (Term.display_variable x)
 
 let importName n = Term_.var (Term.display_name n)
@@ -90,30 +90,34 @@ let importProcess proc =
 module POR = POR.Make(Trace_equiv)
 module Persistent = POR.Persistent
 module RedLTS = LTS.Make(Persistent)
-			
-(** Traces of symbolic actions *)
-type action = In of int | Out of int
-type trs = Traces of (action * trs) list
-				  
+
+type trs = RedLTS.traces
+type actionA = In of Term.term | Out of Term.term
+
 let make_state p1 p2 =
   Trace_equiv.State.make
     ~left:(Sem_utils.Configs.of_process p1)
     ~right:(Sem_utils.Configs.of_process p2)
     ~constraints:Sem_utils.Constraints.empty
     
-let simplAction = function
-  | Trace_equiv.Action.Out (ch,_) -> Out (Channel.to_int ch)
-  | Trace_equiv.Action.In (ch,_) -> In (Channel.to_int ch)
-				       
-let rec simpleTraces  = function
-  | RedLTS.Traces tl ->
-     Traces (List.map (fun (act, trs) -> (simplAction act, simpleTraces trs)) tl)
-	    
 let tracesPersistentSleepEquiv p1 p2 =
   let sinit = make_state p1 p2 in
-  let trLTS = RedLTS.traces sinit in
-  simpleTraces trLTS
-
-
-(* Cannot pen trace_equiv because then it exposes the interface term.mli -> clash with standard library*)
+  RedLTS.traces sinit
+	       
+let isSameChannel chPOR = function
+  | Term.Name n ->
+     let strCh = Term.display_name n in
+     let intCh = try Hashtbl.find tblChannel n
+		 with Not_found -> err "[Internal error] Channel is not present in HashTbl." in
+     chPOR == Channel.of_int intCh (* == since channel are private int, OK? *)
+  | _ -> err "In generalized POR mode, channels must be constants."
+	     
+let isSameAction = function
+  | (In chApte, Trace_equiv.Action.In (chPOR,_)) -> isSameChannel chPOR chApte
+  | (Out chApte, Trace_equiv.Action.Out (chPOR,_)) -> isSameChannel chPOR chApte
+  | _ -> false
+	   
+let isEnable actApte = function
+  | RedLTS.Traces tl -> List.exists (fun (actPOR, _) -> isSameAction (actApte, actPOR)) tl
+				    
 let computeTraces p1 p2 = tracesPersistentSleepEquiv p1 p2
