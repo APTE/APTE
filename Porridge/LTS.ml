@@ -149,7 +149,7 @@ module Make (T:Simple) = struct
 	 (fun (act,trs) -> begin
 	      Format.printf "%a, " Action.pp act;
 	      display_setTraces trs
-	    end);
+	    end) tl;
        Format.printf " ]]\n"
 	    
 end
