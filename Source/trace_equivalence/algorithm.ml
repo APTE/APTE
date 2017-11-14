@@ -232,17 +232,19 @@ let apply_strategy_one_transition ?(trs=Por.emptySetTraces) pub_channels next_fu
   let continue, trs = 
     if !option_por_gen
     then begin
-	Por.displaySetTraces trs;
+	(* Por.displaySetTraces trs; *)
 	(* ** [Generalized POR] stop exploration if trace explores so far is not in the reduced set of traces computed by Porridge *)
 	let proc = if left_symb_proc_list = []
 		   then List.hd right_symb_proc_list
 		   else List.hd right_symb_proc_list in
 	match Process.lastVisAction proc with
-	| Some act -> if ! print_debug_por_gen then
-			Printf.printf "Last visible action: %s.\n" (Process.displayVisAction act);
-		      if Por.isEnable act trs then
+	| Some act -> if Por.isEnable act trs then
 			true, Por.forwardTraces act trs
-		      else false, trs
+		      else begin
+			  if !print_debug_por_gen then
+			    Printf.printf "[POR] ---- Last visible action %s is not enabled in symbolic POR so this exploration is stopped.\n" (Process.displayVisAction act);
+			  false, trs;
+			end
 	| None -> true, trs
       end
     else true, trs in
@@ -918,7 +920,7 @@ let decide_trace_equivalence process1 process2 =
 	Printf.printf "[POR] Symbolic processes living in the symbolic LTS have been computed in %fs.\n" (Sys.time() -. t);
 	let trs = Por.computeTraces p1 p2 in
 	Printf.printf "[POR] A set of symbolic traces to be explored has been computed in %fs.\n" (Sys.time() -. t);
-	if !print_debug_por_gen then begin Printf.printf "[POR] Set of reduced traces: \n"; Por.displaySetTraces trs; end;
+	(* if !print_debug_por_gen then begin Printf.printf "[POR] Set of reduced traces: \n"; Por.displaySetTraces trs; end; *)
 	trs
       end
     else Por.emptySetTraces in
