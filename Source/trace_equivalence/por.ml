@@ -91,9 +91,11 @@ module POR = POR.Make(Trace_equiv)
 module Persistent = POR.Persistent
 module RedLTS = LTS.Make(Persistent)
 
+type actionA = Process.visAct
 type trs = RedLTS.traces
-type actionA = In of Term.term | Out of Term.term
 
+let emptySetTraces = RedLTS.Traces []
+				  
 let make_state p1 p2 =
   Trace_equiv.State.make
     ~left:(Sem_utils.Configs.of_process p1)
@@ -113,11 +115,21 @@ let isSameChannel chPOR = function
   | _ -> err "In generalized POR mode, channels must be constants."
 	     
 let isSameAction = function
-  | (In chApte, Trace_equiv.Action.In (chPOR,_)) -> isSameChannel chPOR chApte
-  | (Out chApte, Trace_equiv.Action.Out (chPOR,_)) -> isSameChannel chPOR chApte
+  | (Process.InS chApte, Trace_equiv.Action.In (chPOR,_)) -> isSameChannel chPOR chApte
+  | (Process.OutS chApte, Trace_equiv.Action.Out (chPOR,_)) -> isSameChannel chPOR chApte
   | _ -> false
 	   
 let isEnable actApte = function
   | RedLTS.Traces tl -> List.exists (fun (actPOR, _) -> isSameAction (actApte, actPOR)) tl
 				    
+let forwardTraces actApte trs =
+  let rec extractFromList = function
+    | [] -> raise Not_found
+    | (actPOR, trsNext) :: tl when isSameAction (actApte, actPOR) -> trsNext
+    | (actPOR, trsNext) :: tl -> extractFromList tl in
+  match trs with
+  | RedLTS.Traces tl -> extractFromList tl
+					
 let computeTraces p1 p2 = tracesPersistentSleepEquiv p1 p2
+
+let displaySetTraces trs = RedLTS.display_setTraces trs

@@ -37,6 +37,8 @@ let option_alternating_strategy = ref true
 
 let print_debug_por = ref false
 
+let print_debug_por_gen = ref true
+
 let display_traces = ref false
 
 (** Statistics info *)
@@ -217,7 +219,7 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
 
 (** Strategy for the complete unfolding without POR *)
 
-let apply_strategy_one_transition pub_channels next_function_output next_function_input next_function_eavesdrop left_symb_proc_list right_symb_proc_list =
+let apply_strategy_one_transition ?(trs=Por.emptySetTraces) pub_channels next_function_output next_function_input next_function_eavesdrop left_symb_proc_list right_symb_proc_list =
   (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
   incr(final_test_count);
 
@@ -227,170 +229,188 @@ let apply_strategy_one_transition pub_channels next_function_output next_functio
 		       else List.hd right_symb_proc_list in
 	Printf.printf "%s\n" (Process.display_trace_simple one_proc));
 
-  (* ** Generalized POR: stop exploration if trace explores so far is not in the reduced set of traces computed by Porridge *)
-  (* TODO-POR *)
+  let continue, trs = 
+    if !option_por_gen
+    then begin
+	Por.displaySetTraces trs;
+	(* ** [Generalized POR] stop exploration if trace explores so far is not in the reduced set of traces computed by Porridge *)
+	let proc = if left_symb_proc_list = []
+		   then List.hd right_symb_proc_list
+		   else List.hd right_symb_proc_list in
+	match Process.lastVisAction proc with
+	| Some act -> if ! print_debug_por_gen then
+			Printf.printf "Last visible action: %s.\n" (Process.displayVisAction act);
+		      if Por.isEnable act trs then
+			true, Por.forwardTraces act trs
+		      else false, trs
+	| None -> true, trs
+      end
+    else true, trs in
+  
+  if not(continue) then ()	(* [POR_GEN] Stop exploration *)
+  else
+    
+    (* ** Option Erase Double *)
+    let left_erase_set =
+      if !option_erase_double
+      then erase_double (List.map Process.instanciate_trace left_symb_proc_list)
+      else left_symb_proc_list
+    and right_erase_set =
+      if !option_erase_double
+      then erase_double (List.map Process.instanciate_trace right_symb_proc_list)
+      else right_symb_proc_list
+    in
 
-  (* ** Option Erase Double *)
-  let left_erase_set =
-    if !option_erase_double
-    then erase_double (List.map Process.instanciate_trace left_symb_proc_list)
-    else left_symb_proc_list
-  and right_erase_set =
-    if !option_erase_double
-    then erase_double (List.map Process.instanciate_trace right_symb_proc_list)
-    else right_symb_proc_list
-  in
 
+    (* ** First step : apply the internal transitions (including conditionals) *)
 
-  (* ** First step : apply the internal transitions (including conditionals) *)
+    let left_internal = ref []
+    and right_internal = ref [] in
 
-  let left_internal = ref []
-  and right_internal = ref [] in
-
-  (* Scan all symbolic processes, flatten all parallels/choices and perform all available
+    (* Scan all symbolic processes, flatten all parallels/choices and perform all available
    conditionals and branch for then/else and for the different ways (disjunction)
    to satisfy the conditional's test. Thanks to our "function_next", we then put
    all those alternatives together in left/right_internal lists. *)
-  List.iter (fun symb_proc_1 ->
-    Process.apply_internal_transition
-      !option_semantics
-      pub_channels
-      ~with_por:false
-      ~with_improper:false
-      (fun symb_proc_2 -> left_internal := symb_proc_2::!left_internal)
-      symb_proc_1
-  ) left_erase_set;
+    List.iter (fun symb_proc_1 ->
+	       Process.apply_internal_transition
+		 !option_semantics
+		 pub_channels
+		 ~with_por:false
+		 ~with_improper:false
+		 (fun symb_proc_2 -> left_internal := symb_proc_2::!left_internal)
+		 symb_proc_1
+	      ) left_erase_set;
 
-  List.iter (fun symb_proc_1 ->
-    Process.apply_internal_transition
-      !option_semantics
-      pub_channels
-      ~with_por:false
-      ~with_improper:false
-      (fun symb_proc_2 -> right_internal := symb_proc_2::!right_internal)
-      symb_proc_1
-  ) right_erase_set;
+    List.iter (fun symb_proc_1 ->
+	       Process.apply_internal_transition
+		 !option_semantics
+		 pub_channels
+		 ~with_por:false
+		 ~with_improper:false
+		 (fun symb_proc_2 -> right_internal := symb_proc_2::!right_internal)
+		 symb_proc_1
+	      ) right_erase_set;
 
 
-  (* ** Second step : apply the output transitions *)
-  let support =
-    if !left_internal = []
-    then Constraint_system.get_maximal_support (Process.get_constraint_system (List.hd !right_internal))
-    else Constraint_system.get_maximal_support (Process.get_constraint_system (List.hd !left_internal))
-  in
+    (* ** Second step : apply the output transitions *)
+    let support =
+      if !left_internal = []
+      then Constraint_system.get_maximal_support (Process.get_constraint_system (List.hd !right_internal))
+      else Constraint_system.get_maximal_support (Process.get_constraint_system (List.hd !left_internal))
+    in
 
-  let left_output_set = ref []
-  and right_output_set = ref [] in
+    let left_output_set = ref []
+    and right_output_set = ref [] in
 
-  let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
+    let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
 
-  (* Scan all symbolic processes and look for one starting with an output and
+    (* Scan all symbolic processes and look for one starting with an output and
    apply function_next to the resulting symbolic process. We thus store in
    left/right_output_set all the alternatives of performing an output. *)
-  List.iter (fun symb_proc_1 ->
-	     Process.apply_output
-	       false (fun (symb_proc_2,_) ->
-			    let simplified_symb_proc = Process.simplify symb_proc_2 in
-			    if not (Process.is_bottom simplified_symb_proc)
-			    then left_output_set := simplified_symb_proc::!left_output_set
-			   ) var_r_ch symb_proc_1
-	    ) !left_internal;
+    List.iter (fun symb_proc_1 ->
+	       Process.apply_output
+		 false (fun (symb_proc_2,_) ->
+			let simplified_symb_proc = Process.simplify symb_proc_2 in
+			if not (Process.is_bottom simplified_symb_proc)
+			then left_output_set := simplified_symb_proc::!left_output_set
+		       ) var_r_ch symb_proc_1
+	      ) !left_internal;
 
-  List.iter (fun symb_proc_1 ->
-	     Process.apply_output
-	       false (fun (symb_proc_2,_) ->
-			    let simplified_symb_proc = Process.simplify symb_proc_2 in
-			    if not (Process.is_bottom simplified_symb_proc)
-			    then right_output_set := simplified_symb_proc::!right_output_set
-			   ) var_r_ch symb_proc_1
-	    ) !right_internal;
+    List.iter (fun symb_proc_1 ->
+	       Process.apply_output
+		 false (fun (symb_proc_2,_) ->
+			let simplified_symb_proc = Process.simplify symb_proc_2 in
+			if not (Process.is_bottom simplified_symb_proc)
+			then right_output_set := simplified_symb_proc::!right_output_set
+		       ) var_r_ch symb_proc_1
+	      ) !right_internal;
 
-  (* We pass those alternatives to the next step which consists in:
+    (* We pass those alternatives to the next step which consists in:
      1. put all csys in a row matrix
      2. apply Strategy.apply_strategy_input/output resulting in a branching
         process ending with many matrices (for leaves: in solved form)
      3. apply final_test_on_matrix on all those leaves, if OK:
      4. apply partitionate_matrix giving many pairs of symbolic processes
      5. recursive calls on each of them to keep exploring actions
-   *)
-  if !left_output_set <> [] || !right_output_set <> []
-  then next_function_output !left_output_set !right_output_set;
+     *)
+    if !left_output_set <> [] || !right_output_set <> []
+    then next_function_output !left_output_set !right_output_set;
 
 
-  (* ** Third step : apply the input transitions *)
+    (* ** Third step : apply the input transitions *)
 
-  let left_input_set = ref []
-  and right_input_set = ref [] in
+    let left_input_set = ref []
+    and right_input_set = ref [] in
 
-  let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
-  and var_r_t = Recipe.fresh_free_variable_from_id "Y" support in
+    let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support
+    and var_r_t = Recipe.fresh_free_variable_from_id "Y" support in
 
-  (* Scan all symbolic processes and look for one starting with an input and
+    (* Scan all symbolic processes and look for one starting with an input and
    apply function_next to the resulting symbolic process. We thus store in
    left/right_input_set all the alternatives of performing an input. *)
-  List.iter (fun symb_proc_1 ->
-	     Process.apply_input
-	       false (fun (symb_proc_2,_) ->
-			    let simplified_symb_proc = Process.simplify symb_proc_2 in
-			    if not (Process.is_bottom simplified_symb_proc)
-			    then left_input_set := simplified_symb_proc::!left_input_set
-			   ) var_r_ch var_r_t symb_proc_1
-	    ) !left_internal;
+    List.iter (fun symb_proc_1 ->
+	       Process.apply_input
+		 false (fun (symb_proc_2,_) ->
+			let simplified_symb_proc = Process.simplify symb_proc_2 in
+			if not (Process.is_bottom simplified_symb_proc)
+			then left_input_set := simplified_symb_proc::!left_input_set
+		       ) var_r_ch var_r_t symb_proc_1
+	      ) !left_internal;
 
-  List.iter (fun symb_proc_1 ->
-	     Process.apply_input
-	       false (fun (symb_proc_2,_) ->
-			      let simplified_symb_proc = Process.simplify symb_proc_2 in
-			      if not (Process.is_bottom simplified_symb_proc)
-			      then right_input_set := simplified_symb_proc::!right_input_set
-			     ) var_r_ch var_r_t symb_proc_1
-	    ) !right_internal;
+    List.iter (fun symb_proc_1 ->
+	       Process.apply_input
+		 false (fun (symb_proc_2,_) ->
+			let simplified_symb_proc = Process.simplify symb_proc_2 in
+			if not (Process.is_bottom simplified_symb_proc)
+			then right_input_set := simplified_symb_proc::!right_input_set
+		       ) var_r_ch var_r_t symb_proc_1
+	      ) !right_internal;
 
-  (* We pass those alternatives to the next step (same desc. as for out.) *)
-  if !left_input_set <> [] || !right_input_set <> []
-  then next_function_input !left_input_set !right_input_set;
+    (* We pass those alternatives to the next step (same desc. as for out.) *)
+    if !left_input_set <> [] || !right_input_set <> []
+    then next_function_input !left_input_set !right_input_set;
 
-  (* ** Fourth step : apply the eaves transitions *)
+    (* ** Fourth step : apply the eaves transitions *)
 
-  if !option_semantics = Process.Eavesdrop
-  then begin
-    let left_eavesdrop_set = ref []
-    and right_eavesdrop_set = ref [] in
+    if !option_semantics = Process.Eavesdrop
+    then begin
+	let left_eavesdrop_set = ref []
+	and right_eavesdrop_set = ref [] in
 
-    let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
+	let var_r_ch = Recipe.fresh_free_variable_from_id "Z" support in
 
-    (* Scan all symbolic processes and look for one starting with an output and
+	(* Scan all symbolic processes and look for one starting with an output and
      apply function_next to the resulting symbolic process. We thus store in
      left/right_output_set all the alternatives of performing an output. *)
-    List.iter (fun symb_proc_1 ->
-  	     Process.apply_eavesdrop
-  	       (fun (symb_proc_2,_) ->
-  			     let simplified_symb_proc = Process.simplify symb_proc_2 in
-  			     if not (Process.is_bottom simplified_symb_proc)
-  			     then left_eavesdrop_set := simplified_symb_proc::!left_eavesdrop_set
-  			   ) var_r_ch symb_proc_1
-  	    ) !left_internal;
+	List.iter (fun symb_proc_1 ->
+  		   Process.apply_eavesdrop
+  		     (fun (symb_proc_2,_) ->
+  		      let simplified_symb_proc = Process.simplify symb_proc_2 in
+  		      if not (Process.is_bottom simplified_symb_proc)
+  		      then left_eavesdrop_set := simplified_symb_proc::!left_eavesdrop_set
+  		     ) var_r_ch symb_proc_1
+  		  ) !left_internal;
 
-    List.iter (fun symb_proc_1 ->
-  	     Process.apply_eavesdrop
-  	       (fun (symb_proc_2,_) ->
-  			    let simplified_symb_proc = Process.simplify symb_proc_2 in
-  			    if not (Process.is_bottom simplified_symb_proc)
-  			    then right_eavesdrop_set := simplified_symb_proc::!right_eavesdrop_set
-  			   ) var_r_ch symb_proc_1
-  	    ) !right_internal;
+	List.iter (fun symb_proc_1 ->
+  		   Process.apply_eavesdrop
+  		     (fun (symb_proc_2,_) ->
+  		      let simplified_symb_proc = Process.simplify symb_proc_2 in
+  		      if not (Process.is_bottom simplified_symb_proc)
+  		      then right_eavesdrop_set := simplified_symb_proc::!right_eavesdrop_set
+  		     ) var_r_ch symb_proc_1
+  		  ) !right_internal;
 
-    (* We pass those alternatives to the next step which consists in:
+	(* We pass those alternatives to the next step which consists in:
        1. put all csys in a row matrix
        2. apply Strategy.apply_strategy_input/output resulting in a branching
           process ending with many matrices (for leaves: in solved form)
        3. apply final_test_on_matrix on all those leaves, if OK:
        4. apply partitionate_matrix giving many pairs of symbolic processes
        5. recursive calls on each of them to keep exploring actions
-     *)
-    if !left_eavesdrop_set <> [] || !right_eavesdrop_set <> []
-    then next_function_eavesdrop !left_eavesdrop_set !right_eavesdrop_set;
-  end
+	 *)
+	if !left_eavesdrop_set <> [] || !right_eavesdrop_set <> []
+	then next_function_eavesdrop !left_eavesdrop_set !right_eavesdrop_set;
+      end
 
 (** Handles exceptions that Process.process.ml may raise and raises the corresponding algorithm.ml exception *)
 let try_P symproc_left symproc_right expr =
@@ -840,7 +860,7 @@ let rec apply_complete_unfolding pub_channels left_symb_proc_list right_symb_pro
 
 (* The alternating strategy *)
 
-let rec apply_alternating pub_channels left_symb_proc_list right_symb_proc_list =
+let rec apply_alternating ?(trs=Por.emptySetTraces) pub_channels left_symb_proc_list right_symb_proc_list =
   (* 'next_function [some Strategy]' will be applied on every pairs resulting from
    the execution of one symbolic action *)
   let next_function f_strat_m left_list right_list =
@@ -848,7 +868,7 @@ let rec apply_alternating pub_channels left_symb_proc_list right_symb_proc_list 
     Statistic.start_transition left_list right_list;
 
     apply_strategy_for_matrices (fun index_right_process matrix ->
-				 partionate_matrix (apply_alternating pub_channels) left_list right_list index_right_process matrix
+				 partionate_matrix (apply_alternating ~trs:trs pub_channels) left_list right_list index_right_process matrix
 				) f_strat_m left_list right_list;
 
     (***[Statistic]***)
@@ -877,7 +897,7 @@ let rec apply_alternating pub_channels left_symb_proc_list right_symb_proc_list 
   if !option_compr (* if we use at least the weakest POR technique, we need
                                                           to use a dedicated actions-exploring function *)
   then apply_strategy_one_transition_por next_out next_in left_symb_proc_list right_symb_proc_list
-  else apply_strategy_one_transition pub_channels next_out next_in next_eavesdrop left_symb_proc_list right_symb_proc_list
+  else apply_strategy_one_transition ~trs:trs pub_channels next_out next_in next_eavesdrop left_symb_proc_list right_symb_proc_list
 
 
 (*****************************************
@@ -887,19 +907,22 @@ let rec apply_alternating pub_channels left_symb_proc_list right_symb_proc_list 
 let decide_trace_equivalence process1 process2 =
   (* We assume at this point that all name in the process are distinct *)
 
-  (* If generalized POR is enable, compute symbolic traces to be explred *)
-  if !option_por_gen
-  then begin
-      Printf.printf "[POR] Applying generalized POR engine amd computing set of reduced, symbolic traces to be explored...\n";
-      let t = Sys.time() in
-      let p1 = Por.importProcess process1
-      and p2 = Por.importProcess process2 in
-      Printf.printf "[POR] Symbolic processes living in the synbolic LTS have been computed in %fs.\n" (Sys.time() -. t);
-      Por.computeTraces p1 p2;
-      (* Todo: compute set of synbolic traces *)
-      Printf.printf "[POR] A set of symbolic traces to be explored has been computed in %fs.\n" (Sys.time() -. t);
-    end;
-
+  (* If generalized POR is enable, compute symbolic traces to be explored *)
+  let trs =
+    if !option_por_gen
+    then begin
+	Printf.printf "[POR] Applying generalized POR engine amd computing set of reduced, symbolic traces to be explored...\n";
+	let t = Sys.time() in
+	let p1 = Por.importProcess process1
+	and p2 = Por.importProcess process2 in
+	Printf.printf "[POR] Symbolic processes living in the symbolic LTS have been computed in %fs.\n" (Sys.time() -. t);
+	let trs = Por.computeTraces p1 p2 in
+	Printf.printf "[POR] A set of symbolic traces to be explored has been computed in %fs.\n" (Sys.time() -. t);
+	if !print_debug_por_gen then begin Printf.printf "[POR] Set of reduced traces: \n"; Por.displaySetTraces trs; end;
+	trs
+      end
+    else Por.emptySetTraces in
+  
   (* Get the free names *)
   let free_names_1 = Process.get_free_names process1 in
   let free_names_2 = Process.get_free_names process2 in
@@ -947,7 +970,7 @@ let decide_trace_equivalence process1 process2 =
   (* Application of the strategy *)
   try
     if !option_alternating_strategy
-    then apply_alternating pub_channels [symb_proc1] [symb_proc2]
+    then apply_alternating pub_channels [symb_proc1] [symb_proc2] ~trs:trs
     else apply_complete_unfolding pub_channels [symb_proc1] [symb_proc2];
     true
   with

@@ -347,6 +347,10 @@ let init_proc_label =(init_par_label, OkLabel)
 let set_to_be_labelled = function
   | (parLab,_) -> (parLab, ToLabel)
 
+type visAct =
+  | InS of Term.term
+  | OutS of Term.term
+
 type trace_label =
   | Output of label * Recipe.recipe * Term.term * Recipe.axiom * Term.term * par_label
   | Input of label * Recipe.recipe * Term.term * Recipe.recipe * Term.term * par_label
@@ -372,11 +376,17 @@ type symbolic_process =
     forbidden_comm : internal_communication list;
     trace : trace_label list;
     trace_blocks : block list;
-    marked : bool
+    marked : bool;
+    lastVisAction : visAct option;    
   }
 
 let pp s = Printf.printf "%s%!" s
 
+let lastVisAction proc = proc.lastVisAction
+let displayVisAction = function
+  | InS t -> Printf.sprintf "In(%s)" (Term.display_term t)
+  | OutS t -> Printf.sprintf "Out(%s)" (Term.display_term t)
+			    
 let block_set_complete_inp symP =
   let trace_blocks = symP.trace_blocks in
   if not(trace_blocks = [])
@@ -407,7 +417,8 @@ let create_symbolic axiom_name_assoc proc csys =
     forbidden_comm = [];
     trace = [];
     trace_blocks = [];
-    marked = false
+    marked = false;
+    lastVisAction = None;
   }
 
 (******* Display *******)
@@ -633,7 +644,9 @@ let apply_internal_transition_without_comm with_por with_improper function_next 
     | [] -> function_next { symb_proc with process = prev_proc;
 					   constraint_system = csys;
 					   is_improper = check_is_improper flags;
-					   has_focus = check_has_focus flags }
+					   has_focus = check_has_focus flags;
+					   lastVisAction = None;
+			  }
     | (Nil,_)::q -> if with_por && check_has_focus_null flags
 		    (* CASE I : this null proc was the last one of the Par and this Par had only one Input
                                  -> stop and keep focus *)
@@ -715,6 +728,7 @@ let apply_internal_transition_without_comm with_por with_improper function_next 
        then function_next { symb_proc with process = proc :: q; (* in that case, we know that prev = [] *)
 					   constraint_system = csys;
 					   has_focus = true;
+					   lastVisAction = None;					   
 			  }
        (* Other cases: we recurs. apply go_through after updating flags if necessary *)
        else let newFlags = if with_por && not(flags.nb_sub_proc_to_process = 0)
@@ -736,7 +750,7 @@ let apply_internal_transition_without_comm with_por with_improper function_next 
 let rec apply_one_internal_transition_with_comm function_next symb_proc =
 
   let rec go_through prev_proc_1 forbid_comm_1 = function
-    | [] -> function_next { symb_proc with forbidden_comm = forbid_comm_1 }
+    | [] -> function_next { symb_proc with forbidden_comm = forbid_comm_1; lastVisAction = None; }
     | ((In(ch_in,v,sub_proc_in,label_in),_) as proc_in)::q_1 ->
        let rec search_for_a_out prev_proc_2 forbid_comm_2 = function
          | [] -> go_through (proc_in::prev_proc_1) forbid_comm_2 q_1
@@ -758,6 +772,7 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                       constraint_system = new_csys_comm_2;
                       forbidden_comm = new_forbid_comm_2;
                       trace = (Comm { in_label = label_in; out_label = label_out })::symb_proc.trace;
+		      lastVisAction = None;
                     }
                   in
 
@@ -794,7 +809,8 @@ let rec apply_one_internal_transition_with_comm function_next symb_proc =
                       process = prev_proc_1@((sub_proc_in,dummy_l)::(sub_proc_out,dummy_l)::prev_proc_2)@q_2;
                       constraint_system = new_csys_comm_2;
                       forbidden_comm = new_forbid_comm_2;
-                      trace = (Comm { in_label = label_in; out_label = label_out })::symb_proc.trace
+                      trace = (Comm { in_label = label_in; out_label = label_out })::symb_proc.trace;
+		      lastVisAction = None;
                     }
                   in
 
@@ -840,6 +856,7 @@ let rec apply_one_internal_comm_on_priv_channel function_next pub_channels symb_
                       constraint_system = new_csys_comm_2;
                       forbidden_comm = new_forbid_comm_2;
                       trace = (Comm { in_label = label_in; out_label = label_out })::symb_proc.trace;
+		      lastVisAction = None;		      
                     }
                   in
 
@@ -875,7 +892,8 @@ let rec apply_one_internal_comm_on_priv_channel function_next pub_channels symb_
                       process = prev_proc_1@((sub_proc_in,dummy_l)::(sub_proc_out,dummy_l)::prev_proc_2)@q_2;
                       constraint_system = new_csys_comm_2;
                       forbidden_comm = new_forbid_comm_2;
-                      trace = (Comm { in_label = label_in; out_label = label_out })::symb_proc.trace
+                      trace = (Comm { in_label = label_in; out_label = label_out })::symb_proc.trace;
+		      lastVisAction = None;
                     }
                   in
 
@@ -971,6 +989,7 @@ let apply_input with_por function_next ch_var_r t_var_r symb_proc =
            forbidden_comm = remove_in_label label symb_proc.forbidden_comm;
            trace = (Input (label,ch_r,Term.term_of_variable y,t_r,Term.term_of_variable v, fst l))::symb_proc.trace;
 	   trace_blocks = new_trace_blocks;
+	   lastVisAction = Some (InS ch);
          }
        in
 
@@ -1031,8 +1050,9 @@ let apply_output with_por function_next ch_var_r symb_proc =
 			        axiom,
 			        Term.term_of_variable x, fst l))::symb_proc.trace;
 	          trace_blocks = new_trace_blocks;
-	  }
-	in
+		  lastVisAction = Some (OutS ch);
+		}
+	      in
 
         function_next (symb_proc',ch);
         if not(with_por)
@@ -1140,7 +1160,8 @@ let apply_eavesdrop function_next ch_var_r symb_proc =
                   process = ((sub_proc_in,dummy_l)::(sub_proc_out,dummy_l)::q_out)@prev_proc_out;
                   constraint_system = new_csys_6;
                   forbidden_comm = forbid_comm_2;
-                  trace = (Eaves (label_comm,ch_r,t_y,axiom,t_x_out))::symb_proc.trace
+                  trace = (Eaves (label_comm,ch_r,t_y,axiom,t_x_out))::symb_proc.trace;
+		  lastVisAction = None;
                 }
               in
 

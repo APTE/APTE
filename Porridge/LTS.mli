@@ -65,4 +65,5 @@ module Make : functor (T:Simple) -> sig
   val show_traces : T.State.t -> unit
   type traces = Traces of (T.Action.t*traces) list
   val traces : T.State.t -> traces
+  val display_setTraces : traces -> unit
 end

@@ -105,8 +105,8 @@ module Make (T:Simple) = struct
   let rec traces s =
     Traces
       (fold_successors s []
-         (fun a s' l -> (a, traces s')::l))
-
+         (fun a s' l -> (a, traces s')::l))      
+	    
   (** Type of traces, represented in reverse order. *)
   type trace = {
     dest : State.t ;
@@ -141,4 +141,15 @@ module Make (T:Simple) = struct
          Format.printf " * " ; show_trace t ; Format.printf "\n")
       s
 
+  (* TODO: use format to create increasing indentation *)
+  let rec display_setTraces = function
+    | Traces tl ->
+       Format.printf "[[ ";       
+       List.iter
+	 (fun (act,trs) -> begin
+	      Format.printf "%a, " Action.pp act;
+	      display_setTraces trs
+	    end);
+       Format.printf " ]]\n"
+	    
 end

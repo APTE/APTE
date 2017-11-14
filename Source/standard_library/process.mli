@@ -198,3 +198,15 @@ val is_subtrace : int list -> int -> symbolic_process -> bool
 val display_symb_process : symbolic_process -> unit
 
 val display_dep_csts : symbolic_process -> string
+
+(** {4 Generalized POR} *)
+
+(** Simplified symbolic representation of actions (term denotes channel). Used by generalized POR. *)
+type visAct =
+  | InS of Term.term
+  | OutS of Term.term
+	      
+val displayVisAction : visAct -> string
+				   
+(** Returns the last action if it was visible. Returns None otherwise. *)
+val lastVisAction : symbolic_process -> visAct option
