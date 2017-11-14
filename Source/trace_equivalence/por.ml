@@ -32,12 +32,13 @@ let importSymb s t1 = 		(* ugly workaround fo get a more compact function *)
   else if Term.is_equal_symbol Term.sdec s then 2, Porridge.Term.sdec t1
   else if Term.is_equal_symbol Term.aenc s then 2, Porridge.Term.aenc t1
   else if Term.is_equal_symbol Term.adec s then 2, Porridge.Term.adec t1
-  else if Term.display_symbol_without_arity s = "mac" then 2, Porridge.Term.mac t1
   else if Term.is_equal_symbol Term.hash s then 1, Porridge.Term.hash
   else if Term.is_equal_symbol Term.pk s then 1, Porridge.Term.pk
   else if Term.is_equal_symbol Term.vk s then 1, Porridge.Term.vk
   else if Term.is_equal_symbol Term.sign s then 2, Porridge.Term.sign t1
   else if Term.is_equal_symbol Term.checksign s then 2, Porridge.Term.checksign t1
+  else if Term.display_symbol_without_arity s = "mac" then 2, Porridge.Term.mac t1
+  else if Term.display_symbol_without_arity s = "h" then 1, Porridge.Term.hash
   else raise Not_found
 	     
 let rec importTerm = function
