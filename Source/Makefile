@@ -66,7 +66,7 @@ OBJ = $(ML:.ml=.$(CMO))
 	@echo The executable :
 	@echo
 	$(NV)echo $(OCAMLC_UC) -o $(EXECUTABLE)
-	$(V)$(OCAMLC) -o $(EXECUTABLE) $(OCAMLFLAGS)  -linkpkg ../Porridge/porridge.cmxa  $(OBJ)
+	$(V)$(OCAMLC) -o $(EXECUTABLE) $(OCAMLFLAGS)  -linkpkg porridge.cmxa  $(OBJ)
 	@echo
 	@echo ----- Some Statistics -----
 	@echo
@@ -76,7 +76,8 @@ OBJ = $(ML:.ml=.$(CMO))
 clean:
 	@echo ----- Clean $(NAME_PROGRAMME) -----
 	rm -f $(EXECUTABLE) $(EXECUTABLE)_debug
-	rm -f *~ *.cm[ioxt] *.o
+	find . -type f -name '*.cm[ioxt]' -not -name 'porridge*' -print0 | xargs -0 rm 
+	rm -f *~  *.o
 	rm -f */*~ */*.cm[ioxt] */*.o
 	rm -f $(GENERATED_SOURCES)
 	rm -f .depend
