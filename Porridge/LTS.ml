@@ -155,7 +155,7 @@ module Make (T:Simple) = struct
 	      Format.printf "%a@," Action.pp_simpl act;
 	      Format.printf "->[@[<hov 1>";       
 	      display_setTraces trs;
-	      Format.printf "] @]@,";
+	      Format.printf "@]]@,";
 	    end) tl;
        
-end
+  end

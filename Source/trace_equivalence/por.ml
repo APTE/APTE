@@ -124,12 +124,24 @@ let isEnable actApte = function
 				    
 let forwardTraces actApte trs =
   let rec extractFromList = function
-    | [] -> raise Not_found
+    | [] -> err "[Internal error] isEnable has not been called before forwardTraces."
     | (actPOR, trsNext) :: tl when isSameAction (actApte, actPOR) -> trsNext
     | (actPOR, trsNext) :: tl -> extractFromList tl in
   match trs with
-  | RedLTS.Traces tl -> extractFromList tl
+  | RedLTS.Traces list -> extractFromList list
 					
 let computeTraces p1 p2 = tracesPersistentSleepEquiv p1 p2
 
 let displaySetTraces trs = RedLTS.display_setTraces trs
+
+let displayActPor act =
+  let aux = function
+    | Term.Name n ->
+       let strCh = Term.display_name n in
+       let intCh = try Hashtbl.find tblChannel n
+		   with Not_found -> err "[Internal error] Channel is not present in HashTbl." in
+       Channel.to_char (Channel.of_int intCh)
+    | _ -> err "[Internal error] Call displayActPor only on channels names." in
+  match act with
+  | Process.InS chApte -> Printf.sprintf "In(%c)" (aux chApte)
+  | Process.OutS chApte -> Printf.sprintf "Out(%c)" (aux chApte)

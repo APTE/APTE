@@ -54,9 +54,9 @@ val apply_strategy_for_matrices :
 val apply_strategy_one_transition :
   ?trs:Por.trs -> 
   Term.name list ->
-  (Process.symbolic_process list -> Process.symbolic_process list -> unit) ->
-  (Process.symbolic_process list -> Process.symbolic_process list -> unit) ->
-  (Process.symbolic_process list -> Process.symbolic_process list -> unit) ->
+  (?trs:Por.trs -> Process.symbolic_process list -> Process.symbolic_process list -> unit) ->
+  (?trs:Por.trs -> Process.symbolic_process list -> Process.symbolic_process list -> unit) ->
+  (?trs:Por.trs -> Process.symbolic_process list -> Process.symbolic_process list -> unit) ->
   Process.symbolic_process list ->
   Process.symbolic_process list ->
   unit

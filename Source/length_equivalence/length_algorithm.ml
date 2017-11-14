@@ -34,8 +34,8 @@ let test_for_length_on_leaves left_set right_set =
 
 (** The complete unfolding strategy *)
 
-let rec apply_complete_unfolding pub_channels left_symb_proc_list right_symb_proc_list =
-  let next_function left_list right_list =
+let rec apply_complete_unfolding ?(trs=Por.emptySetTraces) pub_channels left_symb_proc_list right_symb_proc_list =
+  let next_function ?(trs=Por.emptySetTraces) left_list right_list =
     (***[Statistic]***)
     Trace_equivalence.Statistic.start_transition left_list right_list;
 
@@ -53,8 +53,8 @@ let rec apply_complete_unfolding pub_channels left_symb_proc_list right_symb_pro
 
 (** The alternating strategy *)
 
-let rec apply_alternating pub_channels left_symb_proc_list right_symb_proc_list =
-  let next_function f_strat_m left_list right_list =
+let rec apply_alternating ?(trs=Por.emptySetTraces) pub_channels left_symb_proc_list right_symb_proc_list =
+  let next_function f_strat_m ?(trs=Por.emptySetTraces) left_list right_list =
     (***[Statistic]***)
     Trace_equivalence.Statistic.start_transition left_list right_list;
 

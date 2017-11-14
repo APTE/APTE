@@ -39,6 +39,8 @@ let print_debug_por = ref false
 
 let print_debug_por_gen = ref true
 
+let print_debug_por_gen_showExplo = ref true
+
 let display_traces = ref false
 
 (** Statistics info *)
@@ -214,12 +216,30 @@ let apply_strategy_for_matrices next_function strategy_for_matrix left_set right
         final_test_on_matrix index_right_process left_set right_set matrix_1;
         next_function index_right_process matrix_1
       end
-  ) matrix
+		      ) matrix
 
 
 (** Strategy for the complete unfolding without POR *)
-
-let apply_strategy_one_transition ?(trs=Por.emptySetTraces) pub_channels next_function_output next_function_input next_function_eavesdrop left_symb_proc_list right_symb_proc_list =
+let apply_strategy_one_transition (* given .... *)
+      (* Some optional reduced set of symbolic traces to explore (generalized POR) *)
+      ?(trs=Por.emptySetTraces)
+      (* Set of public channels *)
+      pub_channels
+      (* what to do on continuations after performing an output *)
+      (next_function_output : (?trs:Por.trs -> Process.symbolic_process list -> Process.symbolic_process list -> unit))
+      (* what to do on continuations after performing an input *)
+      (next_function_input : (?trs:Por.trs -> Process.symbolic_process list -> Process.symbolic_process list -> unit))
+      (* what to do on continuations after performing an eavesdrop action *)
+      (next_function_eavesdrop : (?trs:Por.trs -> Process.symbolic_process list -> Process.symbolic_process list -> unit))
+      (* all alternatives on the left *)
+      (left_symb_proc_list : Process.symbolic_process list)
+      (* all alternatives on the right *)
+      (right_symb_proc_list : Process.symbolic_process list) 
+    (* ... explore all possible symbolic, observable actions in the compressed semantics,
+      perform all available conditionals and parallel compositions and apply
+     next_function... on resulting processes *)
+    : unit =
+  
   (* we count the number of calls of this function (= nb. of final tests = nb. explorations) *)
   incr(final_test_count);
 
@@ -229,27 +249,31 @@ let apply_strategy_one_transition ?(trs=Por.emptySetTraces) pub_channels next_fu
 		       else List.hd right_symb_proc_list in
 	Printf.printf "%s\n" (Process.display_trace_simple one_proc));
 
-  let continue, trs = 
+  let continue, trs_new = 
     if !option_por_gen
     then begin
-	Printf.printf "\n\nNEW TRES:\n"; Por.displaySetTraces trs;
 	(* ** [Generalized POR] stop exploration if trace explores so far is not in the reduced set of traces computed by Porridge *)
+	if !print_debug_por_gen_showExplo then
+	  Printf.printf "Current set of symbolic traces to explore: \n"; Por.displaySetTraces trs; Printf.printf "\n%!";
 	let proc = if left_symb_proc_list = []
 		   then List.hd right_symb_proc_list
 		   else List.hd right_symb_proc_list in
 	match Process.lastVisAction proc with
-	| Some act -> if Por.isEnable act trs then
-			true, Por.forwardTraces act trs
-		      else begin
-			  if !print_debug_por_gen then
-			    Printf.printf "[POR] ---- Last visible action %s is not enabled in symbolic POR so this exploration is stopped.\n%!" (Process.displayVisAction act);
+	| Some act -> if Por.isEnable act trs
+		      then begin
+			  if !print_debug_por_gen_showExplo then
+			    Printf.printf "[G-POR] ---- Last visible action %s -> %s is enabled in symbolic POR so this exploration continues.\n%!" (Process.displayVisAction act) (Por.displayActPor act);
+			  true, Por.forwardTraces act trs
+			end else begin
+			  if !print_debug_por_gen_showExplo then
+			    Printf.printf "[GPOR] ---- Last visible action %s -> %s is not enabled in symbolic POR so this exploration is stopped.\n%!" (Process.displayVisAction act) (Por.displayActPor act);
 			  false, trs;
 			end
 	| None -> true, trs
       end
     else true, trs in
   
-  if not(continue) then ()	(* [POR_GEN] Stop exploration *)
+  if not(continue) then ()	(* [G-POR] Stop exploration *)
   else
     
     (* ** Option Erase Double *)
@@ -336,7 +360,7 @@ let apply_strategy_one_transition ?(trs=Por.emptySetTraces) pub_channels next_fu
      5. recursive calls on each of them to keep exploring actions
      *)
     if !left_output_set <> [] || !right_output_set <> []
-    then next_function_output !left_output_set !right_output_set;
+    then next_function_output ~trs:trs_new !left_output_set !right_output_set;
 
 
     (* ** Third step : apply the input transitions *)
@@ -370,7 +394,7 @@ let apply_strategy_one_transition ?(trs=Por.emptySetTraces) pub_channels next_fu
 
     (* We pass those alternatives to the next step (same desc. as for out.) *)
     if !left_input_set <> [] || !right_input_set <> []
-    then next_function_input !left_input_set !right_input_set;
+    then next_function_input ~trs:trs_new !left_input_set !right_input_set;
 
     (* ** Fourth step : apply the eaves transitions *)
 
@@ -411,7 +435,7 @@ let apply_strategy_one_transition ?(trs=Por.emptySetTraces) pub_channels next_fu
        5. recursive calls on each of them to keep exploring actions
 	 *)
 	if !left_eavesdrop_set <> [] || !right_eavesdrop_set <> []
-	then next_function_eavesdrop !left_eavesdrop_set !right_eavesdrop_set;
+	then next_function_eavesdrop ~trs:trs_new !left_eavesdrop_set !right_eavesdrop_set;
       end
 
 (** Handles exceptions that Process.process.ml may raise and raises the corresponding algorithm.ml exception *)
@@ -843,9 +867,9 @@ let apply_strategy_one_transition_por (* given .... *)
 
 (* The complete unfolding strategy *)
 
-let rec apply_complete_unfolding pub_channels left_symb_proc_list right_symb_proc_list =
-  let next_function left_list right_list =
-
+let rec apply_complete_unfolding ?(trs=Por.emptySetTraces) pub_channels left_symb_proc_list right_symb_proc_list =
+  let next_function ?(trs=Por.emptySetTraces) left_list right_list =
+    
     (***[Statistic]***)
     Statistic.start_transition left_list right_list;
 
@@ -865,7 +889,7 @@ let rec apply_complete_unfolding pub_channels left_symb_proc_list right_symb_pro
 let rec apply_alternating ?(trs=Por.emptySetTraces) pub_channels left_symb_proc_list right_symb_proc_list =
   (* 'next_function [some Strategy]' will be applied on every pairs resulting from
    the execution of one symbolic action *)
-  let next_function f_strat_m left_list right_list =
+  let next_function  f_strat_m ?(trs=Por.emptySetTraces) left_list right_list =
     (***[Statistic]***)
     Statistic.start_transition left_list right_list;
 
@@ -913,15 +937,15 @@ let decide_trace_equivalence process1 process2 =
   let trs =
     if !option_por_gen
     then begin
-	Printf.printf "[POR] Applying generalized POR engine amd computing set of reduced, symbolic traces to be explored...\n%!";
+	Printf.printf "[G-POR] Applying generalized POR engine amd computing set of reduced, symbolic traces to be explored...\n%!";
 	let t = Sys.time() in
 	let p1 = Por.importProcess process1
 	and p2 = Por.importProcess process2 in
-	Printf.printf "[POR] Symbolic processes living in the symbolic LTS have been computed in %fs.\n%!" (Sys.time() -. t);
-	Porridge.Process_.pp Format.std_formatter p1;
+	Printf.printf "[G-POR] Symbolic processes living in the symbolic LTS have been computed in %fs.\n%!" (Sys.time() -. t);
+	(* Porridge.Process_.pp Format.std_formatter p1; *)
 	let trs = Por.computeTraces p1 p2 in
-	Printf.printf "[POR] A set of symbolic traces to be explored has been computed in %fs.\n%!" (Sys.time() -. t);
-	if !print_debug_por_gen then begin Printf.printf "[POR] Set of reduced traces: \n"; Por.displaySetTraces trs; end;
+	Printf.printf "[G-POR] A set of symbolic traces to be explored has been computed in %fs.\n%!" (Sys.time() -. t);
+	(* if !print_debug_por_gen then begin Printf.printf "[G-POR] Set of reduced traces: \n"; Por.displaySetTraces trs; end; *)
 	trs
       end
     else Por.emptySetTraces in

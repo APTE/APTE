@@ -21,3 +21,6 @@ val computeTraces : Porridge.Process_.t -> Porridge.Process_.t -> trs
 
 (** Display a set of symbolic traces *)								  
 val displaySetTraces : trs -> unit
+
+(** Display the action-LTS representation of an Apte-action. *)								  
+val displayActPor : actionA -> string
