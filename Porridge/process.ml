@@ -1,6 +1,6 @@
 open Channel
 
-type term = Term_.term
+type term = Term.term
 
 type ('a,'t) _proc =
   | Zero
@@ -52,9 +52,9 @@ module PProc : Hashtbl.HashedType with type t = (proc,term) _proc = struct
          | Zero -> Zero
          | Par l -> Par (List.map (fun x -> x.id) l)
          | Plus l -> Plus (List.map (fun x -> x.id) l)
-         | If (a,b,t,e) -> If (a.Term_.id,b.Term_.id,t.id,e.id)
-         | Input (c,t,p) -> Input (c,t.Term_.id,p.id)
-         | Output (c,t,p) -> Output (c,t.Term_.id,p.id)
+         | If (a,b,t,e) -> If (a.Term.id,b.Term.id,t.id,e.id)
+         | Input (c,t,p) -> Input (c,t.Term.id,p.id)
+         | Output (c,t,p) -> Output (c,t.Term.id,p.id)
          | Bottom i -> Bottom i)
 
 end
@@ -103,19 +103,19 @@ let if_neq a b t e = hashcons (If (a,b,e,t))
 let rec subst p x y = match p.contents with
   | Zero -> p
   | Input (c,z,q) ->
-      if Term_.equal x z then p else
+      if Term.equal x z then p else
         (* The distinction between var and invar
          * prevents variable capture here ---
          * we always use subst for an invar. *)
         input c z (subst q x y)
   | Output (c,t,q) ->
-      output c (Term_.subst t x y) (subst q x y)
+      output c (Term.subst t x y) (subst q x y)
   | Par l ->
       par (List.map (fun q -> subst q x y) l)
   | Plus l ->
       plus (List.map (fun q -> subst q x y) l)
   | If (a,b,t,e) ->
-      if_eq (Term_.subst a x y) (Term_.subst b x y)
+      if_eq (Term.subst a x y) (Term.subst b x y)
         (subst t x y)
         (subst e x y)
   | Bottom _ -> assert false
@@ -126,7 +126,7 @@ type ('a,'b) trans_table =
 
 (** Pre-transitions for process free of conditionals and bottoms at toplevel *)
 let transitions proc =
-  let output : (Term_.term*t) list array = Array.make Channel.nb_chan [] in
+  let output : (Term.term*t) list array = Array.make Channel.nb_chan [] in
   let input = Array.make Channel.nb_chan [] in
   let add_input c f = input.(Channel.to_int c) <- f::input.(Channel.to_int c) in
   let add_output c t p = output.(Channel.to_int c) <- (t,p)::output.(Channel.to_int c) in
@@ -160,21 +160,21 @@ let rec pp ch = function
       if equal q zero then
         Format.fprintf ch "in(%c,%a)"
           (Channel.to_char c)
-          Term_.pp x
+          Term.pp x
       else
         Format.fprintf ch "in(%c,%a).%a"
           (Channel.to_char c)
-          Term_.pp x
+          Term.pp x
           pp q
   | { contents = Output (c,t,q) } ->
       if equal q zero then
         Format.fprintf ch "out(%c,%a)"
           (Channel.to_char c)
-          Term_.pp t
+          Term.pp t
       else
         Format.fprintf ch "out(%c,%a).%a"
           (Channel.to_char c)
-          Term_.pp t
+          Term.pp t
           pp q
   | { contents = Par l } ->
       Format.fprintf ch "(" ;
@@ -193,15 +193,15 @@ let rec pp ch = function
   | { contents = If (a,b,t,e) } ->
       if equal e zero then
         Format.fprintf ch "[%a=%a].%a"
-          Term_.pp a Term_.pp b
+          Term.pp a Term.pp b
           pp t
       else if equal t zero then
         Format.fprintf ch "[%a≠%a].%a"
-          Term_.pp a Term_.pp b
+          Term.pp a Term.pp b
           pp e
       else
         Format.fprintf ch "if %a=%a then %a else %a"
-          Term_.pp a Term_.pp b
+          Term.pp a Term.pp b
           pp t pp e
   | { contents = Zero } -> Format.fprintf ch "0"
   | { contents = Bottom i } -> Format.fprintf ch "⊥%d" i
@@ -213,33 +213,33 @@ let () =
     ("PProc",
      [ "Basic equalities test", `Quick,
        (fun () ->
-          let p = output (Channel.of_int 0) (Term_.ok ()) zero in
+          let p = output (Channel.of_int 0) (Term.ok ()) zero in
           let p1 = Plus [p;p] in
           let p2 = Plus [p;p] in
             Alcotest.(check bool) "physically different" (p1 != p2) true ;
             Alcotest.(check bool) "structurally equal" (p1 = p2) true ;
-            Alcotest.(check bool) "PTerm_.equal" (PProc.equal p1 p2) true) ])
+            Alcotest.(check bool) "PTerm.equal" (PProc.equal p1 p2) true) ])
 
 let () =
   Check.add_suite
-    ("Process_",
+    ("Process",
      [ "Singleton sum", `Quick,
        (fun () ->
-          let p = output (Channel.of_int 0) (Term_.ok ()) zero in
+          let p = output (Channel.of_int 0) (Term.ok ()) zero in
           let q = plus [p] in
             Alcotest.(check bool) "equal" true (equal q p)) ;
        "Ordered idempotent sums", `Quick,
        (fun () ->
-          let p = output (Channel.of_int 0) (Term_.ok ()) zero in
-          let q = output (Channel.of_int 1) (Term_.ok ()) zero in
+          let p = output (Channel.of_int 0) (Term.ok ()) zero in
+          let q = output (Channel.of_int 1) (Term.ok ()) zero in
           let p1 = plus [p;q] in
           let p2 = plus [q;p;q] in
             Alcotest.(check bool) "equal" true (equal p1 p2)) ;
        "Transitions", `Quick,
        (fun () ->
           let c = Channel.of_int 0 in
-          let o = output c (Term_.ok ()) zero in
-          let io = input c (Term_.var "x") o in
+          let o = output c (Term.ok ()) zero in
+          let io = input c (Term.var "x") o in
           let tbl = transitions io in
           Format.printf "io = %a\n" pp io ;
           Alcotest.(check int)
@@ -256,7 +256,7 @@ let () =
             0
             (List.length tbl.output.(0)) ;
           let p = List.hd tbl.input.(0) in
-          let p = p (Term_.invar (Channel.of_int 0) 0 0) in
+          let p = p (Term.invar (Channel.of_int 0) 0 0) in
           Format.printf "p = %a\n" pp p ;
           let tbl' = transitions p in
           Alcotest.(check int)
@@ -282,9 +282,9 @@ let () =
             "correct result for subst"
             true
             (equal
-               (output Channel.c (Term_.invar Channel.c 1 2) zero)
+               (output Channel.c (Term.invar Channel.c 1 2) zero)
                (subst
-                  (output Channel.c (Term_.var "x") zero)
-                  (Term_.var "x")
-                  (Term_.invar Channel.c 1 2)))) ;
+                  (output Channel.c (Term.var "x") zero)
+                  (Term.var "x")
+                  (Term.invar Channel.c 1 2)))) ;
      ])

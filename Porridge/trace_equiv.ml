@@ -49,8 +49,8 @@ module State = struct
       List.map snd
         (List.filter
            (fun (p,phi) ->
-              match p.Process_.contents with
-                | Process_.Bottom _ -> false
+              match p.Process.contents with
+                | Process.Bottom _ -> false
                 | _ -> true)
            (config_list s))
   in
@@ -60,8 +60,8 @@ module State = struct
     let dead =
       List.filter
         (fun (p,phi) ->
-           match p.Process_.contents with
-             | Process_.Bottom _ -> true
+           match p.Process.contents with
+             | Process.Bottom _ -> true
              | _ -> false)
         (config_list s)
     in
@@ -86,7 +86,7 @@ module Action = struct
     * refers to. *)
   type t =
     | Out of Channel.t * int
-    | In of Channel.t * Term_.invar list
+    | In of Channel.t * Term.invar list
   let equal = (=)
   let compare = Pervasives.compare
   let hash = Hashtbl.hash
@@ -97,8 +97,8 @@ module Action = struct
           (Channel.to_char c)
           (Format.pp_print_list
              ~pp_sep:(fun ch () -> Format.pp_print_char ch ',')
-             Term_.pp)
-          (List.map (fun (x,y,z) -> Term_.invar x y z) l)
+             Term.pp)
+          (List.map (fun (x,y,z) -> Term.invar x y z) l)
 
   let pp_simpl ch = function
     | Out (c,_) -> Format.fprintf ch "out(%c)" (Channel.to_char c)
@@ -166,13 +166,13 @@ let rec split_list split c l sk fk = match l with
   * together with enriched constraints.
   * This amounts to pull the conditionals at toplevel, by permuting
   * them with plus and par operations. *)
-let rec split_process c p sk fk = match p.Process_.contents with
-  | Process_.Zero | Process_.Input _ | Process_.Output _ | Process_.Bottom _ -> sk (p,c) fk
-  | Process_.Par l ->
-      split_list split_process c l (fun (l,c) k -> sk (Process_.par l, c) k) fk
-  | Process_.Plus l ->
-      split_list split_process c l (fun (l,c) k -> sk (Process_.plus l, c) k) fk
-  | Process_.If (a,b,t,e) ->
+let rec split_process c p sk fk = match p.Process.contents with
+  | Process.Zero | Process.Input _ | Process.Output _ | Process.Bottom _ -> sk (p,c) fk
+  | Process.Par l ->
+      split_list split_process c l (fun (l,c) k -> sk (Process.par l, c) k) fk
+  | Process.Plus l ->
+      split_list split_process c l (fun (l,c) k -> sk (Process.plus l, c) k) fk
+  | Process.If (a,b,t,e) ->
       let fk_else () =
         match Constraints.add_neq c a b with
           | Some c -> split_process c e sk fk
@@ -209,8 +209,8 @@ let fresh =
       c.(i) <- 1+c.(i) ;
       c.(i)
 
-let is_ghost p = match p.Process_.contents with
-  | Process_.Bottom _ -> true
+let is_ghost p = match p.Process.contents with
+  | Process.Bottom _ -> true
   | _ -> false
 
 type 'a trans_table = {
@@ -225,7 +225,7 @@ let config_tables = SMemo.make (fun s ->
         if is_ghost p then
           `Ghost (p,phi)
         else
-          `Table (Process_.transitions p, phi))
+          `Table (Process.transitions p, phi))
       s.State.left.Configs.contents
   in
   let right_tables =
@@ -234,14 +234,14 @@ let config_tables = SMemo.make (fun s ->
          if is_ghost p then
            `Ghost (p,phi)
          else
-           `Table (Process_.transitions p, phi))
+           `Table (Process.transitions p, phi))
       s.State.right.Configs.contents
   in
     left_tables, right_tables)
 
 let pre_steps ~get_action_entries ~config_of_entry s =
   let age = State.age s in
-  let ghost phi = (Process_.bottom age, phi) in
+  let ghost phi = (Process.bottom age, phi) in
   let left_tables, right_tables = config_tables s in
   let configs tables =
     List.fold_left
@@ -278,7 +278,7 @@ let steps s a =
     | Action.Out (c,n) ->
         if n <> State.frame_size ~channel:c s then StateSet.empty else
         let get_action_entries table =
-          table.Process_.output.(Channel.to_int c)
+          table.Process.output.(Channel.to_int c)
         in
         let config_of_entry (t,p) phi =
           p, Frame.append phi c t
@@ -288,7 +288,7 @@ let steps s a =
     | Action.In (c,vars) ->
         try
         let get_action_entries table =
-          table.Process_.input.(Channel.to_int c)
+          table.Process.input.(Channel.to_int c)
         in
         let config_of_entry k phi =
           let d,id,n =
@@ -299,7 +299,7 @@ let steps s a =
               vars
           in
             assert (d = c) ;
-            k (Term_.invar c id n), phi
+            k (Term.invar c id n), phi
         in
           SuccFail.stateset_of
             (pre_steps ~get_action_entries ~config_of_entry s)
@@ -326,13 +326,13 @@ let transitions = SMemo.make (fun s ->
          let c = Channel.of_int c in
            Action.Out (c, State.frame_size ~channel:c s))
       (fun c (t,p) phi -> p, Frame.append phi (Channel.of_int c) t)
-      (fun c table -> table.Process_.output.(c))
+      (fun c table -> table.Process.output.(c))
   in
   let input_uid : int array = Array.init Channel.nb_chan fresh in
   let h = Hashtbl.create 17 in
   let create_var c phi =
     let iv = (Channel.of_int c, phi.Frame.id, input_uid.(c)) in
-    let v = Term_.invar (Channel.of_int c) phi.Frame.id input_uid.(c) in
+    let v = Term.invar (Channel.of_int c) phi.Frame.id input_uid.(c) in
       Hashtbl.replace h (c,phi.Frame.id) iv ;
       v
   in
@@ -347,7 +347,7 @@ let transitions = SMemo.make (fun s ->
       (fun c k phi ->
          let v = create_var c phi in
            k v, phi)
-      (fun c table -> table.Process_.input.(c))
+      (fun c table -> table.Process.input.(c))
   in
     { output = outputs ; input = inputs })
 
@@ -446,65 +446,65 @@ let () =
     ("Semantics",
      [ "Size of split_process", `Quick,
        (fun () ->
-          let u = Term_.var "u" in
-          let v = Term_.var "v" in
-          let w = Term_.var "w" in
+          let u = Term.var "u" in
+          let v = Term.var "v" in
+          let w = Term.var "w" in
           let c = Channel.of_int 0 in
           let d = Channel.of_int 1 in
-          let p = Process_.input c (Term_.var "x") Process_.zero in
-          let q = Process_.input d (Term_.var "x") Process_.zero in
-          let r = Process_.output c u Process_.zero in
-          let s = Process_.output c v Process_.zero in
+          let p = Process.input c (Term.var "x") Process.zero in
+          let q = Process.input d (Term.var "x") Process.zero in
+          let r = Process.output c u Process.zero in
+          let s = Process.output c v Process.zero in
           let cstr = Constraints.empty in
           let count p = List.length (SuccFail.list_of (split_process cstr p)) in
             Alcotest.(check int) "nb of splits for (if u=u then P else Q)"
               1
-              (count (Process_.if_eq u u p q)) ;
+              (count (Process.if_eq u u p q)) ;
             Alcotest.(check int) "nb of splits for (if u=v then P else Q)"
               2
-              (count (Process_.if_eq u v p q)) ;
+              (count (Process.if_eq u v p q)) ;
             Alcotest.(check int) "nb of splits for (if v=u then P else Q)"
               2
-              (count (Process_.if_eq v u p q)) ;
+              (count (Process.if_eq v u p q)) ;
             Alcotest.(check int)
               "nb of splits for (if v=u then P else Q | if u=v then R else S)"
               2
-              (count (Process_.par [Process_.if_eq v u p q;
-                                   Process_.if_eq u v r s])) ;
+              (count (Process.par [Process.if_eq v u p q;
+                                   Process.if_eq u v r s])) ;
             Alcotest.(check int)
               "nb of splits for (if u=v then (if v=w then P else R) else Q)"
               3
-              (count (Process_.if_eq u v (Process_.if_eq v w p r) q)) ;
+              (count (Process.if_eq u v (Process.if_eq v w p r) q)) ;
             Alcotest.(check int)
               "nb of splits for (if v=u then P else Q | if u=w then R else S)"
               4
-              (count (Process_.par [Process_.if_eq v u p q;
-                                   Process_.if_eq u w r s])) ;
+              (count (Process.par [Process.if_eq v u p q;
+                                   Process.if_eq u w r s])) ;
             Alcotest.(check int)
               "nb of splits for (if v=u then P else 0 | if u=w then R else S)"
               4
-              (count (Process_.par [Process_.if_eq v u p Process_.zero;
-                                   Process_.if_eq u w r s])) ;
+              (count (Process.par [Process.if_eq v u p Process.zero;
+                                   Process.if_eq u w r s])) ;
             Alcotest.(check int)
               "nb of splits for (if v=u then P else Q + if u=w then R else S)"
               4
-              (count (Process_.plus [Process_.if_eq v u p q;
-                                    Process_.if_eq u w r s])) ;
+              (count (Process.plus [Process.if_eq v u p q;
+                                    Process.if_eq u w r s])) ;
             Alcotest.(check int)
               "nb of splits for \
                (if v=u then .. | if u=w then .. | if v=w then ..)"
               (* We do not perform congruence closure and miss than v=w
                * is a consequence of u=v and u=w. *)
               8
-              (count (Process_.par [Process_.if_eq v u p q;
-                                   Process_.if_eq u w r s;
-                                   Process_.if_eq v w p p])) ;
+              (count (Process.par [Process.if_eq v u p q;
+                                   Process.if_eq u w r s;
+                                   Process.if_eq v w p p])) ;
        ) ;
        "Transitions", `Quick,
        (fun () ->
           let c = Channel.of_int 0 in
-          let o = Process_.output c (Term_.ok ()) Process_.zero in
-          let io = Process_.input c (Term_.var "x") o in
+          let o = Process.output c (Term.ok ()) Process.zero in
+          let io = Process.input c (Term.var "x") o in
           let s =
             State.make
               ~left:(Configs.of_process io)
@@ -535,8 +535,8 @@ let () =
             "correct value for s.in.out"
             s'
             (State.make
-               ~left:(Configs.of_process (Process_.output c (Term_.ok ()) Process_.zero))
-               ~right:(Configs.of_process (Process_.bottom 0))
+               ~left:(Configs.of_process (Process.output c (Term.ok ()) Process.zero))
+               ~right:(Configs.of_process (Process.bottom 0))
                ~constraints:(Constraints.empty)) ;
           let tbl' = transitions s' in
           Alcotest.(check int)
@@ -550,8 +550,8 @@ let () =
             true
             (State.equal s''
                (State.make
-                 ~left:(Configs.add (Process_.zero, Frame.append Frame.empty c (Term_.ok ())) Configs.empty)
-                 ~right:(Configs.of_process (Process_.bottom 0))
+                 ~left:(Configs.add (Process.zero, Frame.append Frame.empty c (Term.ok ())) Configs.empty)
+                 ~right:(Configs.of_process (Process.bottom 0))
                  ~constraints:Constraints.empty)) ;
           let tbl'' = transitions s'' in
           Alcotest.(check int)
@@ -563,13 +563,13 @@ let () =
        "Trans. with non-det + cond (1)", `Quick,
        (fun () ->
           let c = Channel.of_int 0 in
-          let o = Process_.output c (Term_.ok ()) Process_.zero in
-          let p = Process_.if_eq (Term_.var "x") (Term_.ok ()) o Process_.zero in
-          let q = Process_.input c (Term_.var "x") p in
-          let r = Process_.input c (Term_.var "x") Process_.zero in
+          let o = Process.output c (Term.ok ()) Process.zero in
+          let p = Process.if_eq (Term.var "x") (Term.ok ()) o Process.zero in
+          let q = Process.input c (Term.var "x") p in
+          let r = Process.input c (Term.var "x") Process.zero in
           let s =
             State.make
-              ~left:(Configs.of_process (Process_.par [q;r]))
+              ~left:(Configs.of_process (Process.par [q;r]))
               ~right:(Configs.empty)
               ~constraints:Constraints.empty
           in
@@ -584,14 +584,14 @@ let () =
        "Trans. with non-det + cond (2)", `Quick,
        (fun () ->
           let c = Channel.of_int 0 in
-          let o = Process_.output c (Term_.ok ()) Process_.zero in
-          let p = Process_.if_eq (Term_.var "x") (Term_.ok ()) o Process_.zero in
-          let q = Process_.input c (Term_.var "x") p in
-          let r = Process_.input c (Term_.var "x") Process_.zero in
+          let o = Process.output c (Term.ok ()) Process.zero in
+          let p = Process.if_eq (Term.var "x") (Term.ok ()) o Process.zero in
+          let q = Process.input c (Term.var "x") p in
+          let r = Process.input c (Term.var "x") Process.zero in
           let s =
            State.make
-             ~left:(Configs.of_process (Process_.par [q;r]))
-             ~right:(Configs.of_process (Process_.par [q;r]))
+             ~left:(Configs.of_process (Process.par [q;r]))
+             ~right:(Configs.of_process (Process.par [q;r]))
              ~constraints:Constraints.empty
           in
           let l = snd (transitions s).input.(0) in
@@ -605,8 +605,8 @@ let () =
        "Cardinal of enabled and fold_successors", `Quick,
        (fun () ->
           let c = Channel.of_int 0 in
-          let o = Process_.output c (Term_.ok ()) Process_.zero in
-          let io = Process_.input c (Term_.var "x") o in
+          let o = Process.output c (Term.ok ()) Process.zero in
+          let io = Process.input c (Term.var "x") o in
           let s =
            State.make
              ~left:(Configs.of_process o)
@@ -624,11 +624,11 @@ let () =
        "Independence", `Quick,
        (fun () ->
           let c = Channel.of_int 0 in
-          let o = Process_.output c (Term_.ok ()) Process_.zero in
-          let io = Process_.input c (Term_.var "x") o in
+          let o = Process.output c (Term.ok ()) Process.zero in
+          let io = Process.input c (Term.var "x") o in
           let s =
            State.make
-             ~left:(Configs.of_process (Process_.par [io;o]))
+             ~left:(Configs.of_process (Process.par [io;o]))
              ~right:Configs.empty
              ~constraints:Constraints.empty
           in
@@ -656,7 +656,7 @@ let () =
                   (StateSet.cardinal set) ;
                 StateSet.choose set
             in
-            let phi = Frame.append Frame.empty c (Term_.ok ()) in
+            let phi = Frame.append Frame.empty c (Term.ok ()) in
             let a_in' = Action.In (c,[c,phi.Frame.id,0]) in
             Alcotest.(check bool)
               "input' enabled in s'"

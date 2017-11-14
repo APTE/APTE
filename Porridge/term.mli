@@ -1,4 +1,4 @@
-(** Term_ representation, hash-consed. *)
+(** Term representation, hash-consed. *)
 
 type 'a _term
 type term = private { id : int ; contents : term _term }

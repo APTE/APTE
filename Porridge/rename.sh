@@ -11,8 +11,8 @@ do
     for j in $i.ml; do
 	BASE=${j%.ml}
 	echo "Renaming $BASE.ml":
-	mv $BASE.ml $BASE$S.ml
-	mv $BASE.mli $BASE$S.mli
+	mv $BASE$S.ml $BASE.ml
+	mv $BASE$S.mli $BASE.mli
     done
 done
 
@@ -24,10 +24,10 @@ do
     before="$(tr '[:lower:]' '[:upper:]' <<< ${i:0:1})${i:1}"
     after=$before$S
     echo "Sed: $before -> $after"
-    echo "sed -i 's/$i/$i$S/g' Makefile"
-    sed -i "s/${i}/${i}${S}/g" Makefile
+    echo "sed -i 's/$i$S/$i/g' Makefile"
+    sed -i "s/${i}${S/${i}}/g" Makefile
     for file in *.ml*; do
-	echo "sed -i 's/${before}/${after}/g' ${file}"
-	sed -i "s/${before}/${after}/g" "${file}"   
+	echo "sed -i 's/${after}/${before}/g' ${file}"
+	sed -i "s/${after}/${before}/g" "${file}"   
     done
 done

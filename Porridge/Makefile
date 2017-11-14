@@ -1,6 +1,6 @@
-LIB = check.ml debug_.ml memo.ml \
+LIB = check.ml debug.ml memo.ml \
 	  LTS.ml  \
-	  channel.ml term_.ml process_.ml \
+	  channel.ml term.ml process.ml \
 	  sem_utils.ml trace_equiv.ml POR.ml
 CHECK = $(LIB) check_main.ml
 
@@ -35,9 +35,9 @@ porridge.cma: porridge.cmo
 	$(OCAMLC) $+ -a -o $@
 
 porridge.cmx: $(LIB:.ml=.cmx)
-	$(OCAMLOPT) $+ -pack -o $@
+	$(OCAMLOPT) $+ -opaque -pack -o $@
 porridge.cmxa: porridge.cmx
-	$(OCAMLOPT) $+ -a -o $@
+	$(OCAMLOPT) $+ -opaque -a -o $@
 
 test.byte: porridge.cma test.cmo
 	$(OCAMLC) -linkpkg $+ -o $@

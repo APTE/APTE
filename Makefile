@@ -1,6 +1,6 @@
 default:
 	$(MAKE) -C Porridge
-	$(MAKE) -C Porridge cleanPorridge
+	cp Porridge/porridge.cmi Porridge/porridge.cmxa Source/
 	$(MAKE) -C Source
 
 clean:
