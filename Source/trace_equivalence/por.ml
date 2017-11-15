@@ -60,6 +60,7 @@ let rec importTerm = function
   | Term.Var x ->  importVar x
   | Term.Name n -> importName n
 
+(* Deprecated *)
 let rec importFormula = function
   | Process.Eq (t1,t2) -> Porridge.Formula.form_eq (importTerm t1) (importTerm t2)
   | Process.Neq (t1,t2) -> Porridge.Formula.form_neq (importTerm t1) (importTerm t2)
@@ -75,6 +76,13 @@ let importProcess proc =
     | Process.Par(p1,p2) -> (flatten_par p1) @ (flatten_par p2)
     | Process.New(n,p,label) -> flatten_par p
     | p -> [build p]
+  and flattenFormula t e = function
+    | Process.Eq (t1,t2) -> if_eq (importTerm t1) (importTerm t2) t e
+    | Process.Neq (t1,t2) -> if_neq (importTerm t1) (importTerm t2) t e
+    | Process.And (f1,f2) -> let pt2 = flattenFormula t e f2 in
+			     flattenFormula pt2 e f2
+    | Process.Or (f1,f2) -> let pt2 = flattenFormula t e f2 in
+			    flattenFormula t pt2 f2
   and build = function
     | Process.Nil -> zero
     | Process.Choice(p1,p2) -> plus ((flatten_choice p1) @ (flatten_choice p2))
@@ -84,9 +92,25 @@ let importProcess proc =
     | Process.Out(t1,t2,proc,label) -> output (importChannel t1) (importTerm t2) (build proc)
     | Process.Let(pat,t,proc,label) -> if_eq (importPat pat) (importTerm t) (build proc) zero
     | Process.IfThenElse(f,proc_then,proc_else,label) ->
-       if_form (importFormula f) (build proc_then) (build proc_else)
+       flattenFormula (build proc_then) (build proc_else) f
   in
   build proc
+
+(* let simplCondProcess p = *)
+(*   let rec aux = function *)
+(*     | If (f,t,e) -> *)
+(*        (match f.contents with *)
+(* 	| Porridge.Formula.And (f1,f2) -> aux (if_form f1 (if_form f2 t e) e) *)
+(* 	| Porridge.Formula.Or (f1,f2) -> aux (if_form f1 t (if_form f2 t e)) *)
+(* 	| Porridge.Formula.Eq (t1,t2) -> if_eq t1 t2 (aux t) (aux e) *)
+(* 	| Porridge.Formula.Neq (t1,t2) -> if_neq t1 t2 (aux t) (aux e)) *)
+(*     | Zero -> Zero *)
+(*     | Plus tl -> plus List.map aux tl *)
+(*     | Par tl -> par List.map aux tl *)
+(*     | Input (c,t,e) -> input c (aux t) (aux e) *)
+(*     | Output (c,t,e) -> output c (aux t) (aux e) *)
+(*     | Bottom _ as b -> b in *)
+(*   aux p.contents *)
 
 module POR = Porridge.POR.Make(Porridge.Trace_equiv)
 module Persistent = POR.Persistent
