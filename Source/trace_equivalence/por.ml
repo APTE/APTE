@@ -60,9 +60,12 @@ let rec importTerm = function
   | Term.Var x ->  importVar x
   | Term.Name n -> importName n
 
-let importFormula = function
-  | _ -> (Porridge.Term.ok (), Porridge.Term.ok ()) (* TODO *)
-    
+let rec importFormula = function
+  | Process.Eq (t1,t2) -> Porridge.Formula.form_eq (importTerm t1) (importTerm t2)
+  | Process.Neq (t1,t2) -> Porridge.Formula.form_neq (importTerm t1) (importTerm t2)
+  | Process.And (f1,f2) -> Porridge.Formula.form_and (importFormula f1) (importFormula f2)
+  | Process.Or (f1,f2) -> Porridge.Formula.form_or (importFormula f1) (importFormula f2)
+						   
 let importProcess proc =
   let rec flatten_choice = function
     | Process.Choice(p1,p2) -> (flatten_choice p1) @ (flatten_choice p2)
@@ -80,11 +83,8 @@ let importProcess proc =
     | Process.In(t,pat,proc,label) -> input (importChannel t) (importVar pat) (build proc)
     | Process.Out(t1,t2,proc,label) -> output (importChannel t1) (importTerm t2) (build proc)
     | Process.Let(pat,t,proc,label) -> if_eq (importPat pat) (importTerm t) (build proc) zero
-    | Process.IfThenElse(formula,proc_then,proc_else,label) ->
-       match formula with
-       | Process.Eq (t1,t2) -> if_eq (importTerm t1) (importTerm t2) (build proc_then) (build proc_else)
-       | Process.Neq (t1,t2) -> if_neq (importTerm t1) (importTerm t2) (build proc_then) (build proc_else)
-       | _ -> err "In generalized POR mode, tests in conditionals must be equality or disequality (no OR or AND)."
+    | Process.IfThenElse(f,proc_then,proc_else,label) ->
+       if_form (importFormula f) (build proc_then) (build proc_else)
   in
   build proc
 
