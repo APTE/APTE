@@ -83,6 +83,11 @@ let importProcess proc =
 			     flattenFormula pt2 e f2
     | Process.Or (f1,f2) -> let pt2 = flattenFormula t e f2 in
 			    flattenFormula t pt2 f2
+  (* Substitutions won't be capture-avoiding for variables introduced by let.
+     We assume processes have been alpha-renamed before. *)
+  (* and flattenPattern t e = function *)
+  (*   | Var t -> let tx = importVar in if_eq tx t e zero *)
+  (*   | Tuple (s,pl) -> *)
   and build = function
     | Process.Nil -> zero
     | Process.Choice(p1,p2) -> plus ((flatten_choice p1) @ (flatten_choice p2))
