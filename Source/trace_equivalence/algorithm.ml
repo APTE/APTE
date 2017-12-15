@@ -39,7 +39,7 @@ let print_debug_por = ref false
 
 let print_debug_por_gen = ref true
 
-let print_debug_por_gen_showExplo = ref false
+let print_debug_por_gen_showExplo = ref true
 
 let display_traces = ref false
 

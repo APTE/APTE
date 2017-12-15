@@ -18,33 +18,34 @@ let importChannel = function
      Porridge.Channel.of_int intCh
   | _ -> err "In generalized POR mode, channels must be constants."
 	     	     
-let importVar x = Porridge.Term.var (Term.display_variable x)
+let importVar x = Porridge.Frame.Term.var (Term.display_variable x)
 
-let importName n = Porridge.Term.var (Term.display_name n)
+let importName n = Porridge.Frame.Term.var (Term.display_name n)
     
 let rec importPat = function
   | Process.Var x -> importVar x
-  | Process.Tuple (s, tl) when Term.is_tuple s -> Porridge.Term.tuple (List.map importPat tl)
+  (* TODO: let variables should bound the next ones and not be captured by previous ones *)
+  | Process.Tuple (s, tl) when Term.is_tuple s -> Porridge.Frame.Term.tuple (List.map importPat tl)
   | _ -> err "In generalized POR mode, in let p = t in ..., p must be made of tuples and variables only."
 
-let importSymb s t1 = 		(* ugly workaround fo get a more compact function *)
-  if Term.is_equal_symbol Term.senc s then 2, Porridge.Term.senc t1
-  else if Term.is_equal_symbol Term.sdec s then 2, Porridge.Term.sdec t1
-  else if Term.is_equal_symbol Term.aenc s then 2, Porridge.Term.aenc t1
-  else if Term.is_equal_symbol Term.adec s then 2, Porridge.Term.adec t1
-  else if Term.is_equal_symbol Term.hash s then 1, Porridge.Term.hash
-  else if Term.is_equal_symbol Term.pk s then 1, Porridge.Term.pk
-  else if Term.is_equal_symbol Term.vk s then 1, Porridge.Term.vk
-  else if Term.is_equal_symbol Term.sign s then 2, Porridge.Term.sign t1
-  else if Term.is_equal_symbol Term.checksign s then 2, Porridge.Term.checksign t1
-  else if Term.display_symbol_without_arity s = "mac" then 2, Porridge.Term.mac t1
-  else if Term.display_symbol_without_arity s = "h" then 1, Porridge.Term.hash
+let importSymb s t1 = 		(*  workaround to get a more compact function *)
+  if Term.is_equal_symbol Term.senc s then 2, Porridge.Frame.Term.senc t1
+  else if Term.is_equal_symbol Term.sdec s then 2, Porridge.Frame.Term.sdec t1
+  else if Term.is_equal_symbol Term.aenc s then 2, Porridge.Frame.Term.aenc t1
+  else if Term.is_equal_symbol Term.adec s then 2, Porridge.Frame.Term.adec t1
+  else if Term.is_equal_symbol Term.hash s then 1, Porridge.Frame.Term.hash
+  else if Term.is_equal_symbol Term.pk s then 1, Porridge.Frame.Term.pk
+  else if Term.is_equal_symbol Term.vk s then 1, Porridge.Frame.Term.vk
+  else if Term.is_equal_symbol Term.sign s then 2, Porridge.Frame.Term.sign t1
+  else if Term.is_equal_symbol Term.checksign s then 2, Porridge.Frame.Term.checksign t1
+  else if Term.display_symbol_without_arity s = "mac" then 2, Porridge.Frame.Term.mac t1
+  else if Term.display_symbol_without_arity s = "h" then 1, Porridge.Frame.Term.hash
   else raise Not_found
 	     
 let rec importTerm = function
   | Term.Func (symb, tl) when Term.is_tuple symb ->
-     Porridge.Term.tuple (List.map importTerm tl)
-  | Term.Func (symb, []) -> Porridge.Term.var (Term.display_symbol_without_arity symb) (* constants are abstacted away by variables *)
+     Porridge.Frame.Term.tuple (List.map importTerm tl)
+  | Term.Func (symb, []) -> Porridge.Frame.Term.var (Term.display_symbol_without_arity symb) (* constants are abstacted away by variables *)
   | Term.Func (symb, tl) ->
      let t1 = List.hd tl in
      let pt1 = importTerm t1 in
@@ -77,14 +78,14 @@ let importProcess proc =
     | Process.New(n,p,label) -> flatten_par p
     | p -> [build p]
   and flattenFormula t e = function
-    | Process.Eq (t1,t2) -> if_eq (importTerm t1) (importTerm t2) t e
-    | Process.Neq (t1,t2) -> if_neq (importTerm t1) (importTerm t2) t e
+    | Process.Eq (t1,t2) -> Porridge.Process.if_eq (importTerm t1) (importTerm t2) t e
+    | Process.Neq (t1,t2) -> Porridge.Process.if_neq (importTerm t1) (importTerm t2) t e
     | Process.And (f1,f2) -> let pt2 = flattenFormula t e f2 in
 			     flattenFormula pt2 e f2
     | Process.Or (f1,f2) -> let pt2 = flattenFormula t e f2 in
 			    flattenFormula t pt2 f2
   (* Substitutions won't be capture-avoiding for variables introduced by let.
-     We assume processes have been alpha-renamed before. *)
+     We assume processes have been alpha-renamed before: TODO *)
   (* and flattenPattern t e = function *)
   (*   | Var t -> let tx = importVar in if_eq tx t e zero *)
   (*   | Tuple (s,pl) -> *)
@@ -117,9 +118,10 @@ let importProcess proc =
 (*     | Bottom _ as b -> b in *)
 (*   aux p.contents *)
 
+(********* POR COMPUTATIONS *************)	
 module POR = Porridge.POR.Make(Porridge.Trace_equiv)
-module Persistent = POR.Persistent
-module RedLTS = Porridge.LTS.Make(Persistent)
+module Sleep = POR.Sleep
+module RedLTS = Porridge.LTS.Make(Sleep)
 
 type actionA = Process.visAct
 type trs = RedLTS.traces
@@ -127,10 +129,15 @@ type trs = RedLTS.traces
 let emptySetTraces = RedLTS.Traces []
 				  
 let make_state p1 p2 =
-  Porridge.Trace_equiv.State.make
+  ( (* S.State.t *)
+    Porridge.Trace_equiv.State.make
     ~left:(Porridge.Sem_utils.Configs.of_process p1)
     ~right:(Porridge.Sem_utils.Configs.of_process p2)
     ~constraints:Porridge.Sem_utils.Constraints.empty
+    ~inputs:Porridge.Frame.Domain.empty, (* TODO: check that *)
+  (* S.Z.t *)
+    Porridge.Trace_equiv.Z.empty (* TODO: check that *)
+  )
     
 let tracesPersistentSleepEquiv p1 p2 =
   let sinit = make_state p1 p2 in
@@ -145,17 +152,22 @@ let isSameChannel chPOR = function
   | _ -> err "In generalized POR mode, channels must be constants."
 	     
 let isSameAction = function
-  | (Process.InS chApte, Porridge.Trace_equiv.Action.In (chPOR,_)) -> isSameChannel chPOR chApte
+  | (Process.InS chApte, Porridge.Trace_equiv.Action.In (chPOR,_,_)) -> isSameChannel chPOR chApte
   | (Process.OutS chApte, Porridge.Trace_equiv.Action.Out (chPOR,_)) -> isSameChannel chPOR chApte
+  | _ -> false
+
+let isSameZAction = function
+  | (Process.InS chApte, Porridge.Trace_equiv.ZAction.Input (chPOR,_,_)) -> isSameChannel chPOR chApte
+  | (Process.OutS chApte, Porridge.Trace_equiv.ZAction.Output (chPOR)) -> isSameChannel chPOR chApte
   | _ -> false
 	   
 let isEnable actApte = function
-  | RedLTS.Traces tl -> List.exists (fun (actPOR, _) -> isSameAction (actApte, actPOR)) tl
+  | RedLTS.Traces tl -> List.exists (fun (actPOR,_) -> isSameZAction (actApte, actPOR)) tl
 				    
 let forwardTraces actApte trs =
   let rec extractFromList = function
     | [] -> err "[Internal error] isEnable has not been called before forwardTraces."
-    | (actPOR, trsNext) :: tl when isSameAction (actApte, actPOR) -> trsNext
+    | (actPOR, trsNext) :: tl when isSameZAction (actApte, actPOR) -> trsNext
     | (actPOR, trsNext) :: tl -> extractFromList tl in
   match trs with
   | RedLTS.Traces list -> extractFromList list

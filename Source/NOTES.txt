@@ -1,0 +1,13 @@
+1. TODO: fix translation of "let in" into Porridge: I should use bound variables in order to avoid capture-avoiding and let Porridge understand that when evaluating "let x=", "x" should be susbstituted
+
+2. TODO:Check initialization of states (see below)
+let make_state p1 p2 =   (* both processes have type Porridge.Process.t *)
+  ( (* S.State.t *)
+    Porridge.Trace_equiv.State.make
+    ~left:(Porridge.Sem_utils.Configs.of_process p1)
+    ~right:(Porridge.Sem_utils.Configs.of_process p2)
+    ~constraints:Porridge.Sem_utils.Constraints.empty
+    ~inputs:Porridge.Frame.Domain.empty, (* TODO: check that *)
+  (* S.Z.t *)
+    Porridge.Trace_equiv.Z.empty (* TODO: check that *)
+  )
