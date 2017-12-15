@@ -1,6 +1,6 @@
 
 module Make (M:Hashtbl.HashedType) : sig
-  
+
   val make : (M.t -> 'a) -> M.t -> 'a
   val make_rec : ((M.t -> 'a) -> M.t -> 'a) -> M.t -> 'a
 
@@ -26,5 +26,20 @@ end = struct
               Hashtbl.add h x y ;
             y
     in ff
+
+end
+
+module Fake (M:Hashtbl.HashedType) : sig
+
+  val make : (M.t -> 'a) -> M.t -> 'a
+  val make_rec : ((M.t -> 'a) -> M.t -> 'a) -> M.t -> 'a
+
+end = struct
+
+  module Hashtbl = Hashtbl.Make(M)
+
+  let make f = f
+
+  let rec make_rec f x = f (fun x -> make_rec f x) x
 
 end

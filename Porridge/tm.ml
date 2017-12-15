@@ -1,10 +1,58 @@
+module type HashedType = sig
+  type t
+  val hash : t -> int
+  val equal : t -> t -> bool
+  val pp : Format.formatter -> t -> unit
+end
+
+module type S = sig
+
+(** Term representation, hash-consed. *)
+
+type term
+type t = term
+val equal : term -> term -> bool
+val compare : term -> term -> int
+val hash : term -> int
+
+val pp : Format.formatter -> term -> unit
+val to_string : term -> string
+
+val ok : unit -> term
+val senc : term -> term -> term
+val sdec : term -> term -> term
+val aenc : term -> term -> term
+val adec : term -> term -> term
+val pk : term -> term
+val mac : term -> term -> term
+val hash_tm : term -> term
+val sign : term -> term -> term
+val checksign : term -> term -> term
+val vk : term -> term
+val hash : term -> term
+val tuple : term list -> term
+
+(** Variables for representing symbolic inputs. *)
+type invar
+val invar : invar -> term
+
+(** Variables for representing bindings and bound variables
+  * in processes. *)
+val var : string -> term
+
+val subst : term -> term -> term -> term
+
+end
+
+module Make (V:HashedType) : S with type invar = V.t = struct
+
+type invar = V.t
+
 type 'a _term =
   | Fun of string * 'a list
-  | Var of Channel.t * int * int (* channel, frame, freshness *)
+  | Var of V.t
 
 type term = { id : int ; contents : term _term }
-
-type invar = Channel.t * int * int
 
 type t = term
 let equal x y = x == y
@@ -25,13 +73,12 @@ module PTerm : Hashtbl.HashedType with type t = term _term = struct
         with
           | Not_found | Invalid_argument _ -> false
         end
-    | Var (c1,i1,n1), Var (c2,i2,n2) ->
-        c1 = c2 && i1 = i2 && n1 = n2
+    | Var v1, Var v2 -> V.equal v1 v2
     | _ -> false
 
   let hash t = match t with
     | Fun (s,l) -> Hashtbl.hash (s, List.map (fun x -> x.id) l)
-    | Var (c,i,n) -> Hashtbl.hash ("", [Channel.to_int c;i;n])
+    | Var v -> Hashtbl.hash v
 
 end
 
@@ -68,7 +115,7 @@ module Syms = struct
   let variables = Hashtbl.create 17
 end
 
-let invar c phi n = hashcons (Var (c,phi,n))
+let invar v = hashcons (Var v)
 let ok () = hashcons (Fun (Syms.ok,[]))
 let senc x y = hashcons (Fun (Syms.senc,[x;y]))
 let sdec x y = hashcons (Fun (Syms.sdec,[x;y]))
@@ -110,8 +157,8 @@ and pp ch t =
           Format.fprintf ch "%s" sym
         else
           Format.fprintf ch "%s(%a)" sym pp_list l
-    | Var (c,phi,i) ->
-        Format.fprintf ch "X%c:%x:%x" (Channel.to_char c) phi i
+    | Var v ->
+        V.pp ch v
 
 let to_string t = Format.asprintf "%a" pp t
 
@@ -119,10 +166,13 @@ let rec subst t x y = match t.contents with
   | Fun (f,l) ->
      if t.id = x.id then y else
        hashcons (Fun (f, List.map (fun t -> subst t x y) l))
-  | Var (c,phi,i) ->
-      assert (t.id <> x.id) ; (* we only substitute invars for vars *)
+  | Var _ ->
+      assert (not (equal t x)) ; (* we only substitute invars for vars *)
       t
 
+end
+
+(*
 (** Basic tests on the unicity of term representations *)
 let () =
   let tmtest : term Alcotest.testable = (module struct
@@ -203,6 +253,6 @@ let () =
             Alcotest.(check bool) "physically different" (a != b) true ;
             Alcotest.(check bool) "structurally equal" (a = b) true ;
             Alcotest.(check bool) "PTerm.equal" (PTerm.equal a b) true) ])
-
+  *)
 (* TODO random testing e.g.
  * for all [x : term _term], [x = (hashcons x).contents]. *)

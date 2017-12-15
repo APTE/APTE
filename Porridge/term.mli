@@ -16,6 +16,7 @@ val sdec : term -> term -> term
 val aenc : term -> term -> term
 val adec : term -> term -> term
 val pk : term -> term
+val mac : term -> term -> term
 val hash_tm : term -> term
 val sign : term -> term -> term
 val checksign : term -> term -> term
@@ -25,7 +26,7 @@ val tuple : term list -> term
 
 (** Variables for representing symbolic inputs. *)
 type invar = Channel.t*int*int
-val invar : Channel.channel -> int -> int -> term
+val invar : Channel.channel -> n:int -> phi:int -> term
 
 (** Variables for representing bindings and bound variables
   * in processes. *)

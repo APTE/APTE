@@ -1,28 +1,30 @@
 open Channel
+open Frame
 
 type term = Term.term
+type formula = Formula.formula
 
-type ('a,'t) _proc =
+type ('a,'t,'f) _proc =
   | Zero
   | Par of 'a list
   | Plus of 'a list
-  | If of 't * 't * 'a * 'a
+  | If of 'f * 'a * 'a
   | Input of channel * 't * 'a
   | Output of channel * 't * 'a
   | Bottom of int
 
-type proc = { id : int ; contents : (proc,term) _proc }
-
+type proc = { id : int; contents : (proc,term,formula) _proc; }
 type t = proc
+	   
 let equal x y = x == y
 let compare x y = compare x.id y.id
 let hash x = x.id
-
+	       
 (** HashedType instance for processes whose subprocesses are hash-consed. *)
-module PProc : Hashtbl.HashedType with type t = (proc,term) _proc = struct
+module PProc : Hashtbl.HashedType with type t = (proc,term,formula) _proc = struct
 
-  type t = (proc,term) _proc
-
+  type t = (proc,term,formula) _proc
+									     
   let equal x y = match x,y with
     | Zero, Zero -> true
     | Par l, Par l' ->
@@ -37,34 +39,34 @@ module PProc : Hashtbl.HashedType with type t = (proc,term) _proc = struct
         with
           | Not_found | Invalid_argument _ -> false
         end
-    | If (a,b,t,e), If (a',b',t',e') ->
-        a == a' && b == b' && t == t' && e == e'
+    | If (f,t,e), If (f',t',e') ->
+        f=f' && t == t' && e == e'
     | Input (c,x,p), Input (c',x',p') ->
         c = c' && x = x' && p == p'
     | Output (c,t,p), Output (c',t',p') ->
         c = c' && t = t' && p == p'
     | Bottom i, Bottom j -> i = j
     | _ -> false
-
+	     
   let hash x =
     Hashtbl.hash
       (match x with
-         | Zero -> Zero
-         | Par l -> Par (List.map (fun x -> x.id) l)
-         | Plus l -> Plus (List.map (fun x -> x.id) l)
-         | If (a,b,t,e) -> If (a.Term.id,b.Term.id,t.id,e.id)
-         | Input (c,t,p) -> Input (c,t.Term.id,p.id)
-         | Output (c,t,p) -> Output (c,t.Term.id,p.id)
-         | Bottom i -> Bottom i)
-
-end
+       | Zero -> Zero
+       | Par l -> Par (List.map (fun x -> x.id) l)
+       | Plus l -> Plus (List.map (fun x -> x.id) l)
+       | If (f,t,e) -> If (f.Formula.id,t.id,e.id)
+       | Input (c,t,p) -> Input (c,Term.hash t,p.id)
+       | Output (c,t,p) -> Output (c,Term.hash t,p.id)
+       | Bottom i -> Bottom i)
+      
+ end
 
 module HProc = Hashtbl.Make(PProc)
 
 let new_id =
   let c = ref 0 in
-    fun () -> incr c ; !c
-
+  fun () -> incr c ; !c
+			
 let h = HProc.create 257
 
 let hashcons c =
@@ -73,9 +75,8 @@ let hashcons c =
         let p = { id = new_id () ; contents = c } in
           HProc.add h c p ;
           p
-
+	    
 (** Smart constructors *)
-
 let zero = hashcons Zero
 let bottom i = hashcons (Bottom i)
 let input c v p = hashcons (Input (c,v,p))
@@ -95,11 +96,12 @@ let plus l =
       | l ->
           let l = List.sort_uniq compare l in
             hashcons (Plus l)
-let if_eq a b t e = hashcons (If (a,b,t,e))
-let if_neq a b t e = hashcons (If (a,b,e,t))
+let if_form f t e = hashcons (If (f,t,e))
+
+let if_eq t1 t2 t e = hashcons (If (Formula.form_eq t1 t2,t,e))
+let if_neq t1 t2 t e = hashcons (If (Formula.form_neq t1 t2,t,e))
 
 (** Substitution *)
-
 let rec subst p x y = match p.contents with
   | Zero -> p
   | Input (c,z,q) ->
@@ -114,22 +116,32 @@ let rec subst p x y = match p.contents with
       par (List.map (fun q -> subst q x y) l)
   | Plus l ->
       plus (List.map (fun q -> subst q x y) l)
-  | If (a,b,t,e) ->
-      if_eq (Term.subst a x y) (Term.subst b x y)
-        (subst t x y)
-        (subst e x y)
+  | If (f,t,e) ->
+     if_form (Formula.subst f x y)
+             (subst t x y)
+             (subst e x y)
   | Bottom _ -> assert false
 
 type ('a,'b) trans_table =
-    { output : 'a list array ;
-      input : 'b list array }
+    { output : 'a list Channel.Map.t ;
+      input : 'b list Channel.Map.t }
+
+(** Tests over subprocesses *)
+
+let rec for_all_plus pred = function
+  | { contents = Plus l } -> List.for_all (fun p -> for_all_plus pred p) l
+  | p -> pred p
+
+let rec exists_par pred = function
+  | { contents = Par l } -> List.exists (fun p -> exists_par pred p) l
+  | p -> pred p
 
 (** Pre-transitions for process free of conditionals and bottoms at toplevel *)
 let transitions proc =
-  let output : (Term.term*t) list array = Array.make Channel.nb_chan [] in
-  let input = Array.make Channel.nb_chan [] in
-  let add_input c f = input.(Channel.to_int c) <- f::input.(Channel.to_int c) in
-  let add_output c t p = output.(Channel.to_int c) <- (t,p)::output.(Channel.to_int c) in
+  let outputs = ref [] in
+  let inputs = ref [] in
+  let add_input c f = inputs := (c,f) :: !inputs in
+  let add_output c t p = outputs := (c,(t,p)) :: !outputs in
   let rec aux context proc = match proc.contents with
     | Zero -> ()
     | Input (c,x,p) ->
@@ -147,14 +159,15 @@ let transitions proc =
               aux (List.rev_append l context) p ;
               try_all (p::context) l
         in try_all context l
-    | If (a,b,t,e) -> assert false
+    | If (f,t,e) -> assert false
     | Bottom i -> assert false
   in
-    aux [] proc ;
-    { output ; input }
+  let () = aux [] proc in
+    { Channel.
+      outputs = Channel.Map.of_elem_list !outputs ;
+      inputs = Channel.Map.of_elem_list !inputs }
 
-(** Printing *)
-
+(** Printing *)		     
 let rec pp ch = function
   | { contents = Input (c,x,q) } ->
       if equal q zero then
@@ -177,32 +190,32 @@ let rec pp ch = function
           Term.pp t
           pp q
   | { contents = Par l } ->
-      Format.fprintf ch "(" ;
+      Format.fprintf ch "@[<1>(" ;
       let rec aux ch = function
-        | [] -> Format.fprintf ch ")"
-        | [p] -> Format.fprintf ch "%a)" pp p
-        | p::tl -> Format.fprintf ch "%a|%a" pp p aux tl
+        | [] -> Format.fprintf ch ")@]"
+        | [p] -> Format.fprintf ch "%a)@]" pp p
+        | p::tl -> Format.fprintf ch "%a|@,%a" pp p aux tl
       in aux ch l
   | { contents = Plus l } ->
-      Format.fprintf ch "(" ;
+      Format.fprintf ch "@[<1>(" ;
       let rec aux ch = function
-        | [] -> Format.fprintf ch ")"
-        | [p] -> Format.fprintf ch "%a)" pp p
-        | p::tl -> Format.fprintf ch "%a+%a" pp p aux tl
+        | [] -> Format.fprintf ch ")@]"
+        | [p] -> Format.fprintf ch "%a)@]" pp p
+        | p::tl -> Format.fprintf ch "%a+@,%a" pp p aux tl
       in aux ch l
-  | { contents = If (a,b,t,e) } ->
+  | { contents = If (f,t,e) } ->
       if equal e zero then
-        Format.fprintf ch "[%a=%a].%a"
-          Term.pp a Term.pp b
-          pp t
+        Format.fprintf ch "[%a].%a"
+		       Formula.pp f
+		       pp t
       else if equal t zero then
-        Format.fprintf ch "[%a≠%a].%a"
-          Term.pp a Term.pp b
-          pp e
+        Format.fprintf ch "¬[%a].%a"
+		       Formula.pp f
+		       pp e
       else
-        Format.fprintf ch "if %a=%a then %a else %a"
-          Term.pp a Term.pp b
-          pp t pp e
+        Format.fprintf ch "if [%a] then %a else %a"
+		       Formula.pp f
+		       pp t pp e
   | { contents = Zero } -> Format.fprintf ch "0"
   | { contents = Bottom i } -> Format.fprintf ch "⊥%d" i
 
@@ -219,6 +232,16 @@ let () =
             Alcotest.(check bool) "physically different" (p1 != p2) true ;
             Alcotest.(check bool) "structurally equal" (p1 = p2) true ;
             Alcotest.(check bool) "PTerm.equal" (PProc.equal p1 p2) true) ])
+
+let nb_inputs tbl c =
+  try List.length (Channel.Map.get tbl.Channel.inputs c) with
+    | Not_found -> 0
+
+let nb_outputs tbl c =
+  try List.length (Channel.Map.get tbl.Channel.outputs c) with
+    | Not_found -> 0
+
+let nb_actions tbl c = nb_inputs tbl c + nb_outputs tbl c
 
 let () =
   Check.add_suite
@@ -237,40 +260,38 @@ let () =
             Alcotest.(check bool) "equal" true (equal p1 p2)) ;
        "Transitions", `Quick,
        (fun () ->
-          let c = Channel.of_int 0 in
+          let c = Channel.c in
           let o = output c (Term.ok ()) zero in
           let io = input c (Term.var "x") o in
           let tbl = transitions io in
           Format.printf "io = %a\n" pp io ;
           Alcotest.(check int)
-            "no transition for channel 1"
+            "no transition for channel d"
             0
-            (List.length tbl.output.(1) +
-             List.length tbl.input.(1)) ;
+            (nb_actions tbl d) ;
           Alcotest.(check int)
-            "one input for channel 0"
+            "one input for channel c"
             1
-            (List.length tbl.input.(0)) ;
+            (nb_inputs tbl c) ;
           Alcotest.(check int)
-            "no output for channel 0"
+            "no output for channel c"
             0
-            (List.length tbl.output.(0)) ;
-          let p = List.hd tbl.input.(0) in
-          let p = p (Term.invar (Channel.of_int 0) 0 0) in
+            (nb_outputs tbl c) ;
+          let p = List.hd (Channel.Map.get tbl.inputs c) in
+          let p = p (Term.invar (Channel.of_int 0,0,Frame.empty)) in
           Format.printf "p = %a\n" pp p ;
           let tbl' = transitions p in
           Alcotest.(check int)
             "one in(0).out(0) trace"
             1
-            (List.length tbl'.output.(0)) ;
-          let _,q = List.hd tbl'.output.(0) in
+            (nb_outputs tbl' c) ;
+          let _,q = List.hd (Channel.Map.get tbl'.outputs c) in
           Format.printf "q = %a\n" pp q ;
           let tbl'' = transitions q in
           Alcotest.(check int)
             "nothing on 0 after in(0).out(0)"
             0
-            (List.length tbl''.input.(0) +
-             List.length tbl''.output.(0)) ;
+            (nb_actions tbl'' c) ;
           Alcotest.(check bool)
             "process equals 0 after in(0).out(0)"
             true
@@ -278,13 +299,14 @@ let () =
        ) ;
        "Substitution", `Quick,
        (fun () ->
+          let phi = Frame.append Frame.empty c (Term.ok()) in
           Alcotest.(check bool)
             "correct result for subst"
             true
             (equal
-               (output Channel.c (Term.invar Channel.c 1 2) zero)
+               (output Channel.c (Term.invar (Channel.c,1,phi)) zero)
                (subst
                   (output Channel.c (Term.var "x") zero)
                   (Term.var "x")
-                  (Term.invar Channel.c 1 2)))) ;
+                  (Term.invar (Channel.c,1,phi))))) ;
      ])

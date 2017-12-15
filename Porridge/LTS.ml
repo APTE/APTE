@@ -1,23 +1,50 @@
-module type HType = sig
+module type Printable = sig
   type t
-  val compare : t -> t -> int
-  val equal : t -> t -> bool
-  val hash : t -> int
   val pp : Format.formatter -> t -> unit
 end
 
-module type HType_act = sig
-    include HType
-    val pp_simpl : Format.formatter -> t -> unit
-  end
+module type HType = sig
+  include Printable
+  val compare : t -> t -> int
+  val equal : t -> t -> bool
+  val hash : t -> int
+end
+
+module type Printable_simpl = sig
+  include Printable
+  val pp_simpl : Format.formatter -> t -> unit
+end
+
+module type HType_simpl = sig
+  include HType
+  val pp_simpl : Format.formatter -> t -> unit
+end
 
 module type S = sig
 
   module State : HType
-  module Action : HType_act
+  module Action : HType_simpl
+  module SemanticAction : HType_simpl with type t = Action.t
 
   module ActionSet : sig
     include Set.S with type elt = Action.t
+    val pp : Format.formatter -> t -> unit
+  end
+
+  module SemanticActionSet : sig
+    type t
+    type elt = Action.t
+    val empty : t
+    val add : elt -> t -> t
+    val singleton : elt -> t
+    val union : t -> t -> t
+    val choose : t -> elt*t
+    val is_empty : t -> bool
+    val mem : elt -> t -> bool
+    val cardinal : t -> int
+    val fold : (elt -> 'a -> 'a) -> t -> 'a -> 'a
+    val for_all : (elt -> bool) -> t -> bool
+    val exists : (elt -> bool) -> t -> bool
     val pp : Format.formatter -> t -> unit
   end
 
@@ -30,6 +57,7 @@ module type S = sig
     * there is "don't know" non-determinism here due to the symbolic
     * abstraction. *)
   val steps : State.t -> Action.t -> StateSet.t
+  val steps_list : State.t -> Action.t -> State.t list
 
   (** Fold over all possible successors by enabled actions.
     * [successors s] is the union of all [steps s b] for [b] in
@@ -37,10 +65,14 @@ module type S = sig
   val fold_successors :
     State.t -> 'a -> (Action.t -> State.t -> 'a -> 'a) -> 'a
 
+  val max_repr : State.t -> Action.t -> Action.t
+
   (** Set of symbolic actions that represent all enabled concrete actions of
     * all possible concrete instances of the given symbolic state.
     * This is not necessarily the set of all executable symbolic actions. *)
   val enabled_cover : State.t -> ActionSet.t
+
+  val enabled_cover_list : State.t -> Action.t list
 
   (** [may_be_enabled s a] must return true whenever there
     * exists theta such that [a\theta] is enabled in [s\theta]. *)
@@ -56,14 +88,34 @@ module type S = sig
 
   (** [indep_de s a b] guarantees that all enabled instances of [a] and [b]
     * in [s] are independent. *)
-  val indep_de : State.t -> Action.t -> Action.t -> bool
+  val indep_de :
+    State.t -> Action.t -> Action.t -> [ `Forever_true | `For_now of bool ]
+  (** TODO *)
+  val first_enabling : Action.t -> State.t -> SemanticActionSet.t option
 
-end
+  (** Representation of sleep sets, which are collections of actions.
+    * In the theory, actions are coupled with states, but we ignore states
+    * in the implementation since we have no use for them in our
+    * instantiation of the functor. *)
+  module Z : sig
+    include HType
+    val empty : t
+    val add : Action.t -> t -> t
+    val filter_indep : State.t -> Action.t -> t -> t
+  end
 
-module type Printable = sig
-  type t
-  val pp : Format.formatter -> t -> unit
-  val pp_simpl : Format.formatter -> t -> unit
+  (** Type of symbolic actions constrained by sleep sets.
+    * This corresponds to A\Z objects in the theory, but they might be
+    * represented in a more concise way relying on specificities of
+    * the LTS. *)
+  module ZAction : sig
+    include Printable_simpl
+    (** Build an action constrained by a sleep set,
+      * return None if the action admits no concretization that
+      * is not already in the sleep set. *)
+    val make : Action.t -> Z.t -> t option
+  end
+
 end
 
 (** Simpler notion of LTS that is not suitable for POR.
@@ -72,7 +124,7 @@ end
 module type Simple = sig
 
   module State : HType
-  module Action : Printable
+  module Action : Printable_simpl
 
   (** Fold over all possible successors by enabled actions.
     * [successors s] is the union of all [steps s b] for [b] in
@@ -106,29 +158,44 @@ module Make (T:Simple) = struct
       | None -> 1
       | Some n -> n)
 
+  (** Representation of a set of traces as a tree of actions. *)
   type traces = Traces of (Action.t*traces) list
 
   let rec traces s =
     Traces
       (fold_successors s []
-         (fun a s' l -> (a, traces s')::l))      
-	    
-  (** Type of traces, represented in reverse order. *)
+         (fun a s' l -> (a, traces s')::l))
+
+  let rec display_setTraces = function
+    | Traces tl ->
+       List.iter
+         (fun (act,trs) -> begin
+            Format.printf "%a@," Action.pp_simpl act;
+            Format.printf "->[@[<hov 1>";
+            display_setTraces trs;
+            Format.printf "@]]@,";
+          end) tl;
+
+  (** Representation of traces including both states and actions,
+    * represented in reverse order. *)
   type trace = {
-    dest : State.t ;
-    prev : (Action.t*trace) option
+    dest : State.t ;                 (** target state *)
+    prev : (Action.t*trace) option   (** last action and preceding trace, if any *)
   }
 
   let (@) t (a,s) = { dest = s ; prev = Some (a,t) }
 
-  let rec iter_traces f s =
-    let rec aux prefix =
+  let iter_traces ?bound f s =
+    let rec aux n prefix =
+      if n=0 then f prefix else
       let no_succ =
         fold_successors prefix.dest true
-          (fun a s' _ -> aux (prefix @ (a,s')) ; false)
+          (fun a s' _ -> aux (n-1) (prefix @ (a,s')) ; false)
       in
         if no_succ then f prefix
-    in aux { dest = s ; prev = None }
+    in
+    let bound = match bound with None -> max_int | Some n -> n in
+      aux bound { dest = s ; prev = None }
 
   let rec show_trace t =
     match t.prev with
@@ -137,24 +204,19 @@ module Make (T:Simple) = struct
       | Some (a,t') ->
           show_trace t' ;
           Format.printf
-            " -[%a]-> %a"
+            "@ -%a->@ %a"
             Action.pp a
             State.pp t.dest
 
-  let rec show_traces s =
-    iter_traces
+  let show_trace t =
+    Format.printf "@[<v>" ;
+    show_trace t ;
+    Format.printf "@]"
+
+  let show_traces ?bound s =
+    iter_traces ?bound
       (fun t ->
-       Format.printf " * " ; show_trace t ; Format.printf "\n")
+         Format.printf " * " ; show_trace t ; Format.printf "@.")
       s
 
-  let rec display_setTraces = function
-    | Traces tl ->
-       List.iter
-	 (fun (act,trs) -> begin
-	      Format.printf "%a@," Action.pp_simpl act;
-	      Format.printf "->[@[<hov 1>";       
-	      display_setTraces trs;
-	      Format.printf "@]]@,";
-	    end) tl;
-       
-  end
+end
