@@ -23,6 +23,7 @@ val checksign : term -> term -> term
 val vk : term -> term
 val hash : term -> term
 val tuple : term list -> term
+val proj : term -> int -> term
 
 (** Variables for representing symbolic inputs. *)
 type invar = Channel.t*int*int

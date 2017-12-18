@@ -31,6 +31,7 @@ val checksign : term -> term -> term
 val vk : term -> term
 val hash : term -> term
 val tuple : term list -> term
+val proj : term -> int -> term
 
 (** Variables for representing symbolic inputs. *)
 type invar
@@ -51,6 +52,7 @@ type invar = V.t
 type 'a _term =
   | Fun of string * 'a list
   | Var of V.t
+  | Proj of 'a * int
 
 type term = { id : int ; contents : term _term }
 
@@ -74,11 +76,13 @@ module PTerm : Hashtbl.HashedType with type t = term _term = struct
           | Not_found | Invalid_argument _ -> false
         end
     | Var v1, Var v2 -> V.equal v1 v2
+    | Proj (t1, n1), Proj (t2, n2) -> not(t1 != t2) && n1 == n2
     | _ -> false
 
   let hash t = match t with
     | Fun (s,l) -> Hashtbl.hash (s, List.map (fun x -> x.id) l)
     | Var v -> Hashtbl.hash v
+    | Proj (t,n) -> Hashtbl.hash (t.id, n)
 
 end
 
@@ -112,6 +116,7 @@ module Syms = struct
   let checksign = "checksign"
   let hash = "hash"
   let tuple = "tuple"
+  let proj = "proj"
   let variables = Hashtbl.create 17
 end
 
@@ -129,6 +134,7 @@ let checksign x y = hashcons (Fun (Syms.checksign,[x;y]))
 let vk x = hashcons (Fun (Syms.vk,[x]))
 let hash x = hashcons (Fun (Syms.hash,[x]))
 let tuple l = hashcons (Fun (Syms.tuple,l))
+let proj t n = hashcons (Proj (t,n))
 let var x =
   let x =
     try
@@ -159,6 +165,8 @@ and pp ch t =
           Format.fprintf ch "%s(%a)" sym pp_list l
     | Var v ->
         V.pp ch v
+    | Proj (t,n) -> Format.fprintf ch "proj%i(%a)" n pp t
+
 
 let to_string t = Format.asprintf "%a" pp t
 
@@ -169,6 +177,10 @@ let rec subst t x y = match t.contents with
   | Var _ ->
       assert (not (equal t x)) ; (* we only substitute invars for vars *)
       t
+  | Proj (tt,n) ->
+     if t.id = x.id then y else
+       hashcons (Proj (subst tt x y, n))
+
 
 end
 
