@@ -602,11 +602,15 @@ let steps_list s a =
   match a with
     | Action.Out (c,n) ->
         if n <> State.frame_size ~channel:c s then [] else
-          snd (Channel.Map.get (transitions s).Channel.outputs c)
+          begin try
+            snd (Channel.Map.get (transitions s).Channel.outputs c)
+          with Not_found -> [] end
     | Action.In (c,n,dom) ->
         if n <> State.get_input_nb s c then [] else
           if Domain.included (State.domain s) dom then
-            snd (Channel.Map.get (transitions s).Channel.inputs c)
+            begin try
+              snd (Channel.Map.get (transitions s).Channel.inputs c)
+            with Not_found -> [] end
           else
             let s =
               State.update
@@ -1345,6 +1349,23 @@ let () =
                    ~left:(Configs.singleton (p,Frame.append Frame.empty Channel.d (Term.ok ()))))
                 (Action.In (Channel.c,0,Domain.add Domain.empty Channel.d))
                 (Action.Out (Channel.d,1)))
+       end ;
+
+       "Dependence", `Quick,
+       begin fun () ->
+         let c = Channel.c in
+         let p =
+           Process.(
+             plus [ input c (Term.var "x") zero ;
+                    output c (Term.ok ()) zero ]
+           )
+         in
+           Alcotest.(check bool)
+             "independence"
+             false
+             (indep_ee (State.of_process p)
+                (Action.In (c,0,Domain.empty))
+                (Action.Out (c,0)))
        end ;
 
        "indep_ee from det3 example (simplified)", `Quick,

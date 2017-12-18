@@ -1,5 +1,5 @@
 default:
-	$(MAKE) -C Porridge
+	$(MAKE) -C Porridge lib
 	cp Porridge/porridge.cmi Porridge/porridge.cmxa Porridge/porridge.a Source/
 	$(MAKE) -C Source
 

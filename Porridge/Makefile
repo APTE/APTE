@@ -1,6 +1,6 @@
-LIB = check.ml debug.ml memo.ml \
+LIB = check.ml memo.ml priority.ml \
 	  LTS.ml POR.ml \
-	  channel.ml term.ml process.ml \
+	  SAList.ml channel.ml tm.ml frame.ml formula.ml process.ml \
 	  sem_utils.ml trace_equiv.ml
 CHECK = $(LIB) check_main.ml
 
@@ -8,12 +8,24 @@ ML=$(wildcard *ml)
 MLI=$(wildcard *mli)
 CMO=$(ML:.ml=.cmo)
 
-OCAMLC=ocamlfind ocamlc -g -package alcotest
-OCAMLOPT=ocamlfind ocamlopt -package alcotest
+OCAMLCFLAGS=-g
+OCAMLOPTFLAGS=-g
 
-all: run_tests \
-  porridge.cma porridge.cmxa \
-  test.byte test
+# The P flag is meant to be either empty or just "p"
+# to switch from ocamlc/ocamlopt to ocamlcp/ocamloptp.
+# Note that "make lib" won't work with these profiling
+# compilers.
+P=
+
+OCAMLC=ocamlfind ocamlc$(P) $(OCAMLCFLAGS) -package alcotest
+OCAMLOPT=ocamlfind ocamlopt$(P) $(OCAMLOPTFLAGS) -package alcotest
+
+all: run_tests test.byte test
+
+lib: porridge.cma porridge.cmxa
+
+clean:
+	rm -f *.o *.a *.cmi *.cmo *.cma *.cmx *.cmxa check test
 
 %.cmo: %.ml
 	$(OCAMLC) -c $<
@@ -39,27 +51,21 @@ porridge.cmx: $(LIB:.ml=.cmx)
 porridge.cmxa: porridge.cmx
 	$(OCAMLOPT) $+ -opaque -a -o $@
 
-test.byte: porridge.cma test.cmo
+test.byte: $(LIB:.ml=.cmo) test.cmo
 	$(OCAMLC) -linkpkg $+ -o $@
 
-test: porridge.cmxa test.cmx
+test: $(LIB:.ml=.cmx) test.cmx
 	$(OCAMLOPT) -linkpkg $+ -o $@
 
-# stats: $(CMO)
-# 	$(OCAMLC) \
-# 	  debug.cmo memo.cmo \
-# 	  LTS.cmo POR.cmo \
-# 	  term.cmo process.cmo trace_equiv.cmo \
-# 	  stats.cmo -o stats
+# Profiling information
+
+OCAMLPROF_FILES=$(LIB) test.ml
+profiles:
+	mkdir -p prof
+	for i in $(OCAMLPROF_FILES) ; do OCAMLPROF_DUMP=/dev/null ocamlprof $$i > prof/$$i ; done
+
+# Dependencies
 
 -include .depend
 .depend: $(ML) $(MLI)
 	ocamldep *ml *mli > .depend
-
-clean:
-	rm -f *.cmi *.cmo *.cma *.cmx *.cmxa check test
-
-plot.txt: stats
-	./stats > $@
-plot.pdf: plot.plot plot.txt
-	gnuplot plot.plot
