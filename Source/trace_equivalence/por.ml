@@ -3,10 +3,25 @@ open Standard_library
 
 let tblChannel = Hashtbl.create 5
 let intChannel = ref 0
-		     
+let importVars = ref []
+let freshVars = ref 0
+		   
 let err s = Debug.internal_error s
 let pp s = Printf.printf s
 	   
+let addVar str = if not(List.mem str !importVars) then importVars := str :: !importVars
+
+let freshVar () =
+  let rec search n =
+    let name = "fresh_"^(string_of_int n) in
+    if not(List.mem name !importVars)
+    then begin incr(freshVars);
+	       addVar name;
+	       Porridge.Frame.Term.var name;
+	 end
+    else search (n+1) in
+  search !freshVars
+		
 let importChannel = function
   | Term.Name n ->
      let strCh = Term.display_name n in
@@ -18,16 +33,13 @@ let importChannel = function
      Porridge.Channel.of_int intCh
   | _ -> err "In generalized POR mode, channels must be constants."
 	     	     
-let importVar x = Porridge.Frame.Term.var (Term.display_variable x)
-
+let importVar x =
+  let str = Term.display_variable x in
+  addVar str;
+  Porridge.Frame.Term.var str
+			  
 let importName n = Porridge.Frame.Term.var (Term.display_name n)
     
-let rec importPat = function
-  | Process.Var x -> importVar x
-  (* TODO: let variables should bound the next ones and not be captured by previous ones *)
-  | Process.Tuple (s, tl) when Term.is_tuple s -> Porridge.Frame.Term.tuple (List.map importPat tl)
-  | _ -> err "In generalized POR mode, in let p = t in ..., p must be made of tuples and variables only."
-
 let importSymb s t1 = 		(*  workaround to get a more compact function *)
   if Term.is_equal_symbol Term.senc s then 2, Porridge.Frame.Term.senc t1
   else if Term.is_equal_symbol Term.sdec s then 2, Porridge.Frame.Term.sdec t1
@@ -61,6 +73,20 @@ let rec importTerm = function
   | Term.Var x ->  importVar x
   | Term.Name n -> importName n
 
+(* For a pattern "Tuple [x_i] = term", computes a list of (x_i,u_i) such that u_i is the
+   compiled i-th projection of "term". *)
+let rec importPat term = function
+  | Process.Var v -> [(importVar v, term)]
+  | Process.Tuple (s, tl) when Term.is_tuple s ->
+     snd(List.fold_left
+	   (fun (n,tl) -> (fun tp ->
+			   match tp with
+			   | Process.Var x -> (n+1, (importVar x, Porridge.Frame.Term.proj term n) :: tl)
+			   | _ -> err "In generalized POR mode, in let p = t in ..., p must be made of (non-tested) tuples and variables only."
+			  )
+	   ) (1,[]) tl)
+  | _ -> err "In generalized POR mode, in let p = t in ..., p must be made of tuples and variables only."
+	     
 (* Deprecated *)
 let rec importFormula = function
   | Process.Eq (t1,t2) -> Porridge.Formula.form_eq (importTerm t1) (importTerm t2)
@@ -84,11 +110,6 @@ let importProcess proc =
 			     flattenFormula pt2 e f2
     | Process.Or (f1,f2) -> let pt2 = flattenFormula t e f2 in
 			    flattenFormula t pt2 f2
-  (* Substitutions won't be capture-avoiding for variables introduced by let.
-     We assume processes have been alpha-renamed before: TODO *)
-  (* and flattenPattern t e = function *)
-  (*   | Var t -> let tx = importVar in if_eq tx t e zero *)
-  (*   | Tuple (s,pl) -> *)
   and build = function
     | Process.Nil -> zero
     | Process.Choice(p1,p2) -> plus ((flatten_choice p1) @ (flatten_choice p2))
@@ -96,7 +117,16 @@ let importProcess proc =
     | Process.New(n,p,label) -> build p (* names will be abstracted away by variables *)
     | Process.In(t,pat,proc,label) -> input (importChannel t) (importVar pat) (build proc)
     | Process.Out(t1,t2,proc,label) -> output (importChannel t1) (importTerm t2) (build proc)
-    | Process.Let(pat,t,proc,label) -> if_eq (importPat pat) (importTerm t) (build proc) zero
+    | Process.Let(pat,t,proc,label) ->
+       (* "let (x1,..,xn)=t in P" are compiled into "if freshVar = t then P{pi_i(t)/x_i}" 
+          The test should always be considered as true or false because Porridge has no
+          information on t and its potential failure. Hence our use of freshVar. *)
+       let freshV = freshVar () in
+       let importT = importTerm t in
+       let listSubTerms = importPat importT pat in
+       let importProc = build proc in
+       let importProcSubst = List.fold_left (fun p -> (fun (xi,ti) -> Porridge.Process.subst p xi ti )) importProc listSubTerms in
+       if_eq freshV importT importProcSubst zero
     | Process.IfThenElse(f,proc_then,proc_else,label) ->
        flattenFormula (build proc_then) (build proc_else) f
   in
