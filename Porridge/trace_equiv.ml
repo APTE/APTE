@@ -109,6 +109,12 @@ module State = struct
       ~right:Configs.empty
       ~constraints ~inputs
 
+  let of_processes ?(constraints=Constraints.empty) ?(inputs=Domain.empty) p q =
+    make
+      ~left:(Configs.of_process p)
+      ~right:(Configs.of_process q)
+      ~constraints ~inputs
+      
   let get_input_nb s c =
     try Channel.Map.get s.inputs c with Not_found -> 0
 

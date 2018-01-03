@@ -15,6 +15,9 @@ val to_char : channel -> char
 val c : channel
 val d : channel
 val e : channel
+val f : channel
+val g : channel
+val h : channel
 
 module Map : sig
   type 'a t

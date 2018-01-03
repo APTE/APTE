@@ -7,9 +7,9 @@ VERSION = 0.4beta
 # For bytecode compilation, unset NATIVECODE below or run:
 #  make NATIVECODE="" <target>
 NATIVECODE=yes
-DEBUG=yes
+DEBUG=no
 
-OCAMLC_=$(if $(NATIVECODE),ocamlopt,ocamlc) -package alcotest porridge.cmxa
+OCAMLC_=$(if $(NATIVECODE),ocamlopt,ocamlc) -package alcotest -package porridge
 OCAMLC=ocamlfind $(OCAMLC_)
 DEBUGOPT=$(if $(DEBUG),-g,)
 OCAMLC_UC=$(shell echo $(OCAMLC) | tr a-z A-Z)
@@ -61,7 +61,7 @@ OBJ = $(ML:.ml=.$(CMO))
 
 ### Targets
 
-../apte: .depend .display $(OBJ) porridge.cmxa
+../apte: .depend .display $(OBJ)
 	@echo
 	@echo The executable :
 	@echo

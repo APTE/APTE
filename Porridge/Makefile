@@ -24,6 +24,12 @@ all: run_tests test.byte test
 
 lib: porridge.cma porridge.cmxa
 
+install: porridge.cma porridge.cmxa
+	ocamlfind install porridge META porridge.*
+
+uninstall:
+	ocamlfind remove porridge
+
 clean:
 	rm -f *.o *.a *.cmi *.cmo *.cma *.cmx *.cmxa check test
 

@@ -7,6 +7,9 @@ let to_char c = Char.chr (Char.code 'c' + c)
 let c = 0
 let d = 1
 let e = 2
+let f = 3
+let g = 4
+let h = 5
 
 module Map = SAList
 

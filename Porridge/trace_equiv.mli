@@ -18,6 +18,12 @@ module State : sig
     ?inputs:(int Channel.Map.t) ->
     Process.t ->
     t
+  val of_processes :
+    ?constraints:Constraints.t ->
+    ?inputs:(int Channel.Map.t) ->
+    Process.t ->
+    Process.t ->
+    t
   val empty : t
   val update :
     ?left:Configs.t ->
