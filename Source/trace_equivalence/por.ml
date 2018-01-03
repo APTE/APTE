@@ -160,13 +160,9 @@ let emptySetTraces = RedLTS.Traces []
 				  
 let make_state p1 p2 =
   ( (* S.State.t *)
-    Porridge.Trace_equiv.State.make
-    ~left:(Porridge.Sem_utils.Configs.of_process p1)
-    ~right:(Porridge.Sem_utils.Configs.of_process p2)
-    ~constraints:Porridge.Sem_utils.Constraints.empty
-    ~inputs:Porridge.Frame.Domain.empty, (* TODO: check that *)
-  (* S.Z.t *)
-    Porridge.Trace_equiv.Z.empty (* TODO: check that *)
+    Porridge.Trace_equiv.State.of_processes p1 p2,
+    (* S.Z.t *)
+    Porridge.Trace_equiv.Z.empty
   )
     
 let tracesPersistentSleepEquiv p1 p2 =
