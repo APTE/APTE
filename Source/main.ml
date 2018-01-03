@@ -32,7 +32,7 @@ let print_help () =
   Printf.printf "          WARNING : This option should only be used for action-determinate processes.\n\n";
   Printf.printf "      -with_por_gen: [!Experimental!] Uses generic Partial Order Reductions techniques to significantly\n";
   Printf.printf "          improve performance. Contrary to '-with_por', those optimizations do not assume anything about\n";
-  Printf.printf "          protocols given as iputs.\n";
+  Printf.printf "          protocols given as inputs.\n";
   Printf.printf "          Note : This option automatically activates the classic semantics.\n\n";
   Printf.printf "      -semantics [classic|private|eavesdrop]: Select the semantics to consider.\n";
   Printf.printf "          WARNING : In the private and eavesdrop semantics, we require well-typed processes.\n\n";

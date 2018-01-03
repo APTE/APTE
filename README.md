@@ -11,12 +11,12 @@ For more information about the original tool, visit the [dedicated website](http
 
 ###1. Installation
 
-To install **APTE**, first reach the extracted directory APTE-v0.4beta, then enter the following commands:
+ **APTE** builds with OCaml 4.04.0. It requires the Alcotest library >=0.8.1 and Porridge library >=0.0.1.
+You may want to install Porridge using opam: `opam pin add porridge ssh://git@git.lsv.fr/baelde/por.git`.
 
-1. cd Source
-2. make
+Then, reach `./Source` and type `make`.
 
-Once the installation is done, an executable 'apte' is created in the directory main directory APTE-v0.4beta
+Once the installation is done, an executable 'apte' is created in the main directory.
 
 ###2. Usage
 
@@ -44,11 +44,16 @@ Once the installation is done, an executable 'apte' is created in the directory 
 -  -with_por [compr|red] [improper] [nouse]: Uses Partial Order Reductions techniques to significantly
           improve performance. It is possible to choose a specific POR technique (compressed
           or reduced semantics), improper and nouse are optional. Without extra argument, -with_por option
-          will enable the best POR tehnique (i.e., reduced semantics with improper and nouse).  
-**Note** : This option automatically activates the option '-no_comm'.  
+          will enable the best POR tehnique (i.e., reduced semantics with improper and nouse).
+**Note** : This option automatically activates the option '-no_comm'.
 **WARNING** : This option should only be used for action-determinate processes.
 
-- -no_comm : Does not consider the internal communication in the trace equivalence.  
+- -with_por_gen: [!Experimental!] Uses generic Partial Order Reductions techniques to significantly
+            improve performance. Contrary to '-with_por', those optimizations do not assume anything about
+            protocols given as inputs.
+**Note** : This option automatically activates the classic semantics.								
+
+- -no_comm : Does not consider the internal communication in the trace equivalence.
 **WARNING** : This option should not be used in presence of private channel.
 
 - -no_erase : Does not consider a slight optimisation that consists of removing symbolic processes with the same process during the execution of the algorithm.  
