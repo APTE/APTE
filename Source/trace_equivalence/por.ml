@@ -2,18 +2,23 @@ open Porridge.Process
 open Standard_library
 
 let tblChannel = Hashtbl.create 5
-let intChannel = ref 0
 let importVars = ref []
-let freshVars = ref 0
-		   
+let importNames = ref []
+let intChannel = ref 0
+let freshVars = ref 0	
+let freshNames = ref 0
+	   
 let err s = Debug.internal_error s
 let pp s = Printf.printf s
 	   
+let initRefs () = begin importVars := []; importNames := []; freshVars := 0; freshNames := 0; end
+		    
 let addVar str = if not(List.mem str !importVars) then importVars := str :: !importVars
-
+let addName str = if not(List.mem str !importNames) then importNames := str :: !importNames
+										
 let freshVar () =
   let rec search n =
-    let name = "fresh_"^(string_of_int n) in
+    let name = "var_"^(string_of_int n) in
     if not(List.mem name !importVars)
     then begin incr(freshVars);
 	       addVar name;
@@ -21,7 +26,18 @@ let freshVar () =
 	 end
     else search (n+1) in
   search !freshVars
-		
+	 
+let freshName () =
+  let rec search n =
+    let name = "name_"^(string_of_int n) in
+    if not(List.mem name !importNames)
+    then begin incr(freshNames);
+	       addName name;
+	       Porridge.Frame.Term.var name;
+	 end
+    else search (n+1) in
+  search !freshNames
+
 let importChannel = function
   | Term.Name n ->
      let strCh = Term.display_name n in
@@ -114,8 +130,15 @@ let importProcess proc =
     | Process.Nil -> zero
     | Process.Choice(p1,p2) -> plus ((flatten_choice p1) @ (flatten_choice p2))
     | Process.Par(p1,p2) -> par ((flatten_par p1) @ (flatten_par p2))
-    | Process.New(n,p,label) -> build p (* names will be abstracted away by variables *)
+    | Process.New(n,p,label) -> (* names will be abstracted away by "fresh" variable freshN *)
+       let freshN = freshName () in
+       let importProc = build p in
+       Porridge.Process.subst importProc (importName n) freshN 
     | Process.In(t,pat,proc,label) -> input (importChannel t) (importVar pat) (build proc)
+    (* let freshV = freshVar () in *)
+       (* let x = importVar pat in  *)
+       (* let importProc = input (importChannel t) x (build proc) in *)
+       (* Porridge.Process.subst importProc (importVar pat) freshV *) 
     | Process.Out(t1,t2,proc,label) -> output (importChannel t1) (importTerm t2) (build proc)
     | Process.Let(pat,t,proc,label) ->
        (* "let (x1,..,xn)=t in P" are compiled into "if freshVar = t then P{pi_i(t)/x_i}" 
@@ -130,7 +153,9 @@ let importProcess proc =
     | Process.IfThenElse(f,proc_then,proc_else,label) ->
        flattenFormula (build proc_then) (build proc_else) f
   in
-  build proc
+  let proc_por = build proc in
+  initRefs ();
+  proc_por
 
 (* let simplCondProcess p = *)
 (*   let rec aux = function *)

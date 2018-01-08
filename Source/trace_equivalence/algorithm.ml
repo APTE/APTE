@@ -266,7 +266,7 @@ let apply_strategy_one_transition (* given .... *)
 			  true, Por.forwardTraces act trs
 			end else begin
 			  if !print_debug_por_gen_showExplo then
-			    Printf.printf "[GPOR] ---- Last visible action %s -> %s is not enabled in symbolic POR so this exploration is stopped.\n%!" (Process.displayVisAction act) (Por.displayActPor act);
+			    Printf.printf "[G-POR] ---- Last visible action %s -> %s is not enabled in symbolic POR so this exploration is stopped.\n%!" (Process.displayVisAction act) (Por.displayActPor act);
 			  false, trs;
 			end
 	| None -> true, trs
