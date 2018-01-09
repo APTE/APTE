@@ -61,13 +61,13 @@ let importSymb s t1 = 		(*  workaround to get a more compact function *)
   else if Term.is_equal_symbol Term.sdec s then 2, Porridge.Frame.Term.sdec t1
   else if Term.is_equal_symbol Term.aenc s then 2, Porridge.Frame.Term.aenc t1
   else if Term.is_equal_symbol Term.adec s then 2, Porridge.Frame.Term.adec t1
-  else if Term.is_equal_symbol Term.hash s then 1, Porridge.Frame.Term.hash
+  else if Term.is_equal_symbol Term.hash s then 1, Porridge.Frame.Term.hash_tm
   else if Term.is_equal_symbol Term.pk s then 1, Porridge.Frame.Term.pk
   else if Term.is_equal_symbol Term.vk s then 1, Porridge.Frame.Term.vk
   else if Term.is_equal_symbol Term.sign s then 2, Porridge.Frame.Term.sign t1
   else if Term.is_equal_symbol Term.checksign s then 2, Porridge.Frame.Term.checksign t1
   else if Term.display_symbol_without_arity s = "mac" then 2, Porridge.Frame.Term.mac t1
-  else if Term.display_symbol_without_arity s = "h" then 1, Porridge.Frame.Term.hash
+  else if Term.display_symbol_without_arity s = "h" then 1, Porridge.Frame.Term.hash_tm
   else raise Not_found
 	     
 let rec importTerm = function
