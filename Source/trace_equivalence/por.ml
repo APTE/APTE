@@ -225,7 +225,7 @@ let forwardTraces actApte trs =
 					
 let computeTraces p1 p2 = tracesPersistentSleepEquiv p1 p2
 
-let displaySetTraces trs = RedLTS.display_setTraces trs
+let displaySetTraces trs = RedLTS.display_traces trs
 
 let displayActPor act =
   let aux = function
