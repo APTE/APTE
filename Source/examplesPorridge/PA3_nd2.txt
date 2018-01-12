@@ -1,0 +1,65 @@
+# Private Authentication Protocol
+#
+# 1. A -> B: {Na, pub(A)}pub(B)
+# 2. B -> A: {Na, Nb,pub(B)}pub(A) if B wants to communicate with A
+#                  {Nb}pub(B) otherwise
+
+free ca1.
+free cb1.
+free ca2.
+free cb2.
+free c.
+
+#    Description of role A played:
+# - on channel ca
+# - by the agent with private key ska
+# - with the agent with public key pkb
+
+let processA ca ska pkb =
+  new na;
+  out(ca,aenc((na,pk(ska)),pkb));
+  in(ca,x).
+
+#    Description of role B played:
+# - on channel cb
+# - by the agent with private key skb
+# - with the agent with public key pka
+
+let processB cb skb pka =
+  in(cb,yb);
+  let (yna,ypka) = adec(yb,skb) in
+  new nb;
+  if ypka = pka
+  then out(cb,aenc((yna,nb,pk(skb)),pka))
+  else out(cb,aenc(nb,pk(skb))).
+
+
+# Main
+
+let ProcessAB =
+  new ska;
+  new skb;
+  new skc;
+  in(c,z);
+  out(c,pk(ska));
+  out(c,pk(skb));
+  out(c,pk(skc));
+  (
+    processA ca1 ska pk(skb) | processB ca1 skb pk(ska) | # B expect to talk to A
+    processA ca1 ska pk(skb)  # B expect to talk to A
+  ).
+
+let ProcessCB =
+  new ska;
+  new skb;
+  new skc;
+  in(c,z);
+  out(c,pk(ska));
+  out(c,pk(skb));
+  out(c,pk(skc));
+  (
+    processA ca1 skc pk(skb) | processB ca1 skb pk(skc) | # B expect to talk to C
+    processA ca1 ska pk(skb)    # B expect to talk to A
+  ).
+
+equivalence ProcessAB and ProcessCB.

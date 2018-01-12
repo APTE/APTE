@@ -942,8 +942,8 @@ let decide_trace_equivalence process1 process2 =
 	let p1 = Por.importProcess process1
 	and p2 = Por.importProcess process2 in
 	Printf.printf "[G-POR] Symbolic processes living in the symbolic LTS have been computed in %fs.\n%!" (Sys.time() -. t);
-	(* Porridge.Process.pp Format.std_formatter p1; Printf.printf "\n\n%!"; *)
-	(* Porridge.Process.pp Format.std_formatter p2; Printf.printf "\n%!"; *)
+	Porridge.Process.pp Format.std_formatter p1; Printf.printf "\n\n%!";
+	Porridge.Process.pp Format.std_formatter p2; Printf.printf "\n%!";
 	let trs = Por.computeTraces p1 p2 in
 	Printf.printf "[G-POR] A set of symbolic traces to be explored has been computed in %fs.\n%!" (Sys.time() -. t);
 	if !print_debug_por_gen_showExplo then begin Printf.printf "[G-POR] Set of reduced traces: \n"; Por.displaySetTraces trs; end;

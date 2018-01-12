@@ -154,7 +154,8 @@ let importProcess proc =
        flattenFormula (build proc_then) (build proc_else) f
   in
   let proc_por = build proc in
-  initRefs ();
+  initRefs () ;
+  Porridge.Memo.display_stats := true ;
   proc_por
 
 (* let simplCondProcess p = *)

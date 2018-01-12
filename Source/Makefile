@@ -7,7 +7,7 @@ VERSION = 0.4beta
 # For bytecode compilation, unset NATIVECODE below or run:
 #  make NATIVECODE="" <target>
 NATIVECODE=yes
-DEBUG=no
+DEBUG=yes
 
 OCAMLC_=$(if $(NATIVECODE),ocamlopt,ocamlc) -package alcotest -package porridge
 OCAMLC=ocamlfind $(OCAMLC_)
