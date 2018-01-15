@@ -58,7 +58,7 @@ let ProcessCB =
   out(c,pk(skb));
   out(c,pk(skc));
   (
-    processA ca1 ska pk(skb) | processB ca1 skb pk(ska) | # B expect to talk to A
+    processA ca1 skc pk(skb) | processB ca1 skb pk(skc) | # B expect to talk to C
     processA ca1 ska pk(skb) | processB ca1 skb pk(ska) | # B expect to talk to A
   ).
 
