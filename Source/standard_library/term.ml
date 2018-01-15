@@ -931,6 +931,10 @@ let display_name n = Printf.sprintf "N%s_%d" n.id_n n.number_n
 
 let display_variable v = Printf.sprintf "V%s_%d" v.id_v v.number_v
 
+let display_name_short n = Printf.sprintf "%s" n.id_n
+
+let display_variable_short v = Printf.sprintf "%s" v.id_v
+
 let rec display_list_term = function
   | [] -> ""
   | [t] -> display_term t

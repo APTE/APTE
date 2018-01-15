@@ -55,7 +55,7 @@ let ProcessCB =
   out(c,pk(skb));
   out(c,pk(skc));
   (
-    processA ca skc pk(skb) | processB cb skb pk(skc)
+    processA ca skc pk(skc) | processB cb skb pk(skc)
   ).
 
 equivalence ProcessAB and ProcessCB.

@@ -27,9 +27,9 @@ let freshVar () =
     else search (n+1) in
   search !freshVars
 	 
-let freshName () =
+let freshName s =
   let rec search n =
-    let name = "name_"^(string_of_int n) in
+    let name = (Term.display_name_short s)^"_"^(string_of_int n) in
     if not(List.mem name !importNames)
     then begin incr(freshNames);
 	       addName name;
@@ -40,7 +40,7 @@ let freshName () =
 
 let importChannel = function
   | Term.Name n ->
-     let strCh = Term.display_name n in
+     let strCh = Term.display_name_short n in
      let intCh = try Hashtbl.find tblChannel strCh
 		 with Not_found -> begin Hashtbl.add tblChannel strCh !intChannel;
 					 incr(intChannel);
@@ -50,11 +50,11 @@ let importChannel = function
   | _ -> err "In generalized POR mode, channels must be constants."
 	     	     
 let importVar x =
-  let str = Term.display_variable x in
+  let str = Term.display_variable_short x in
   addVar str;
   Porridge.Frame.Term.var str
 			  
-let importName n = Porridge.Frame.Term.var (Term.display_name n)
+let importName n = Porridge.Frame.Term.var (Term.display_name_short n)
     
 let importSymb s t1 = 		(*  workaround to get a more compact function *)
   if Term.is_equal_symbol Term.senc s then 2, Porridge.Frame.Term.senc t1
@@ -117,7 +117,7 @@ let importProcess proc =
     | p -> [build p]
   and flatten_par = function
     | Process.Par(p1,p2) -> (flatten_par p1) @ (flatten_par p2)
-    | Process.New(n,p,label) -> flatten_par p
+    | Process.New(n,p,label) -> [build (Process.New(n,p,label))]
     | p -> [build p]
   and flattenFormula t e = function
     | Process.Eq (t1,t2) -> Porridge.Process.if_eq (importTerm t1) (importTerm t2) t e
@@ -131,15 +131,15 @@ let importProcess proc =
     | Process.Choice(p1,p2) -> plus ((flatten_choice p1) @ (flatten_choice p2))
     | Process.Par(p1,p2) -> par ((flatten_par p1) @ (flatten_par p2))
     | Process.New(n,p,label) -> (* names will be abstracted away by "fresh" variable freshN *)
-       let freshN = freshName () in
+       let freshN = freshName n in
        let importProc = build p in
        Porridge.Process.subst importProc (importName n) freshN 
-    | Process.In(t,pat,proc,label) -> input (importChannel t) (importVar pat) (build proc)
+    | Process.In(t,pat,proc,label) -> let c = (importChannel t) in input c (importVar pat) (build proc)
     (* let freshV = freshVar () in *)
        (* let x = importVar pat in  *)
        (* let importProc = input (importChannel t) x (build proc) in *)
        (* Porridge.Process.subst importProc (importVar pat) freshV *) 
-    | Process.Out(t1,t2,proc,label) -> output (importChannel t1) (importTerm t2) (build proc)
+    | Process.Out(t1,t2,proc,label) -> let c = (importChannel t1) in output c (importTerm t2) (build proc)
     | Process.Let(pat,t,proc,label) ->
        (* "let (x1,..,xn)=t in P" are compiled into "if freshVar = t then P{pi_i(t)/x_i}" 
           The test should always be considered as true or false because Porridge has no
@@ -197,7 +197,7 @@ let tracesPersistentSleepEquiv p1 p2 =
 	       
 let isSameChannel chPOR = function
   | Term.Name n ->
-     let strCh = Term.display_name n in
+     let strCh = Term.display_name_short n in
      let intCh = try Hashtbl.find tblChannel strCh
 		 with Not_found -> err "[Internal error] Channel is not present in HashTbl." in
      chPOR == Porridge.Channel.of_int intCh (* == since channel are private int, OK? *)
@@ -231,7 +231,7 @@ let displaySetTraces trs = RedLTS.display_traces trs
 let displayActPor act =
   let aux = function
     | Term.Name n ->
-       let strCh = Term.display_name n in
+       let strCh = Term.display_name_short n in
        let intCh = try Hashtbl.find tblChannel strCh
 		   with Not_found -> err "[Internal error] Channel is not present in HashTbl." in
        Porridge.Channel.to_char (Porridge.Channel.of_int intCh)

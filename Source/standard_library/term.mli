@@ -342,7 +342,11 @@ val display_term : term -> string
 
 val display_name : name -> string
 
+val display_name_short : name -> string
+
 val display_variable : variable -> string
+
+val display_variable_short : variable -> string
 
 (** {2 Mapping table} *)
 
