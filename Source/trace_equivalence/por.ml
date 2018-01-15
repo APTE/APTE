@@ -155,7 +155,7 @@ let importProcess proc =
   in
   let proc_por = build proc in
   initRefs () ;
-  Porridge.Memo.display_stats := true ;
+  Porridge.Memo.display_stats_flag := true ;
   proc_por
 
 (* let simplCondProcess p = *)
