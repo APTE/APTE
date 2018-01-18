@@ -224,7 +224,12 @@ let forwardTraces actApte trs =
   match trs with
   | RedLTS.Traces list -> extractFromList list
 					
-let computeTraces p1 p2 = tracesPersistentSleepEquiv p1 p2
+let computeTraces p1 p2 =
+  let trs = tracesPersistentSleepEquiv p1 p2 in
+  if true
+  then Printf.printf "[G-POR] Number of (maximal) traces in the reduced set of traces to explore (~nb. of states): [%d]\n"
+         (RedLTS.count_traces trs) ;
+  trs
 
 let displaySetTraces trs = RedLTS.display_traces trs
 
