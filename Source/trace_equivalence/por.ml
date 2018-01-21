@@ -141,15 +141,14 @@ let importProcess proc =
        (* Porridge.Process.subst importProc (importVar pat) freshV *) 
     | Process.Out(t1,t2,proc,label) -> let c = (importChannel t1) in output c (importTerm t2) (build proc)
     | Process.Let(pat,t,proc,label) ->
-       (* "let (x1,..,xn)=t in P" are compiled into "if freshVar = t then P{pi_i(t)/x_i}" 
-          The test should always be considered as true or false because Porridge has no
-          information on t and its potential failure. Hence our use of freshVar. *)
-       let freshV = freshVar () in
+       (* "let (x1,..,xn)=t in P" are compiled into "P{pi_i(t)/x_i}".
+          The fact that the let construct may fail or not is not translated into a test in Porridge since
+          Let constructs in APTE should be understood as syntactica sugar. *)
        let importT = importTerm t in
        let listSubTerms = importPat importT pat in
        let importProc = build proc in
        let importProcSubst = List.fold_left (fun p -> (fun (xi,ti) -> Porridge.Process.subst p xi ti )) importProc listSubTerms in
-       if_eq freshV importT importProcSubst zero
+       importProcSubst
     | Process.IfThenElse(f,proc_then,proc_else,label) ->
        flattenFormula (build proc_then) (build proc_else) f
   in
@@ -193,6 +192,8 @@ let make_state p1 p2 =
     
 let tracesPersistentSleepEquiv p1 p2 =
   let sinit = make_state p1 p2 in
+  Printf.printf "[G-POR] Initial state:\n" ;
+  Porridge.Trace_equiv.State.pp Format.std_formatter (fst sinit) ;
   RedLTS.traces sinit
 	       
 let isSameChannel chPOR = function
