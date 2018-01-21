@@ -84,7 +84,7 @@ let rec importTerm = function
 		     f pt2
 	   | _ -> err "[Internal error] Should never happen.")
       with
-      | Not_found -> err "In generalized POR mode, allows constructors are senc, sdec, aenc, adec, hash, pk and tuples."
+      | Not_found -> Porridge.Frame.Term.user_fun (symb.Term.name) (List.map importTerm tl)
       | _ -> err "[Internal error] Arity does not match.")
   | Term.Var x ->  importVar x
   | Term.Name n -> importName n
