@@ -91,17 +91,16 @@ let rec importTerm = function
 
 (* For a pattern "Tuple [x_i] = term", computes a list of (x_i,u_i) such that u_i is the
    compiled i-th projection of "term". *)
-let rec importPat term = function
-  | Process.Var v -> [(importVar v, term)]
-  | Process.Tuple (s, tl) when Term.is_tuple s ->
-     snd(List.fold_left
-	   (fun (n,tl) -> (fun tp ->
-			   match tp with
-			   | Process.Var x -> (n+1, (importVar x, Porridge.Frame.Term.proj term n) :: tl)
-			   | _ -> err "In generalized POR mode, in let p = t in ..., p must be made of (non-tested) tuples and variables only."
-			  )
-	   ) (1,[]) tl)
-  | _ -> err "In generalized POR mode, in let p = t in ..., p must be made of tuples and variables only."
+let importPat term pat =
+  let proj = ref 0 in
+  let acc = ref [] in
+  let rec aux = function
+    | Process.Var v -> acc := (importVar v, Porridge.Frame.Term.proj term !proj) :: !acc
+    | Process.Tuple (s, tl) when Term.is_tuple s ->
+       List.iter (fun t -> incr(proj); aux t) tl
+    | _ -> err "In generalized POR mode, in let p = t in ..., p must be made of tuples and variables only." in
+  aux pat ;
+  !acc
 	     
 (* Deprecated *)
 let rec importFormula = function
@@ -194,6 +193,7 @@ let tracesPersistentSleepEquiv p1 p2 =
   let sinit = make_state p1 p2 in
   Printf.printf "[G-POR] Initial state:\n" ;
   Porridge.Trace_equiv.State.pp Format.std_formatter (fst sinit) ;
+  Printf.printf "\n%!" ;
   RedLTS.traces sinit
 	       
 let isSameChannel chPOR = function

@@ -937,7 +937,7 @@ let decide_trace_equivalence process1 process2 =
   let trs =
     if !option_por_gen
     then begin
-	Printf.printf "[G-POR] Applying generalized POR engine amd computing set of reduced, symbolic traces to be explored...\n%!";
+	Printf.printf "[G-POR] Applying generalized POR engine and computing set of reduced, symbolic traces to be explored...\n%!";
 	let t = Sys.time() in
 	let p1 = Por.importProcess process1
 	and p2 = Por.importProcess process2 in
