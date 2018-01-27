@@ -9,6 +9,7 @@ Naming: `NameProtocol_nbProcInParallel_DetFlag.txt` where DetFlag:
 
 # Benchmarks
 Benchmarks for Porridge, branch `stats` (with merge from master and simple_outputs) and for Apte, branch POR2-bench (with merge from POR2).
+Done on my laptop.
 
 Legend:
  - *Old Compr (with impro.)*: compression with improper blocks elimination (i.e., `-with_por compr improper`)
@@ -30,6 +31,23 @@ Legend:
 | PA6_d	|	             |	386.59|	364.99 | M | |
 | PA6_nd1 |              |	X |	X | | |
 | PA6_nd2|	             |	X |	X | | |
+
+## After test-collapse benchs for [Porridge= f8cc08, APTE=30a16bd]
+
+| Protocol | Without POR | Old POR | Old Compr. (with impro.) | New POR (Porridge) | Comments |
+| --- | ---        | --- | --- | --- | --- |
+| PA2_d	|	 0.016       |	0.004 |	0.008| 0.001 (0) | |
+| PA2_nd2 |	 0.052       | X	  |	X    | 0.007 (0.000) | |
+| PA3_d	|	 0.616       |	0.016 |	0.02 | 0.001 (0.004) | |
+| PA3_nd1 |  0.552       |	X     |	 X   | 0.02 (0.004) | |
+| PA3_nd2|	 33.88       |	X     |	 X   | 34.08 (0.004)| |
+| PA4_d	|	T            |	0.89 |	0.90 | 0.63 (0.012) | objective completed!, weird: explos old/gen: 1865/2915 |
+| PA4_nd1 |              |	X |	X | 5.52 (0.004) | objective completed  |
+| PA4_nd2|	             |	X |	X | M? | |
+| PA6_d	|	             |	386.59|	364.99 | 209.66 (0.968) | |
+| PA6_nd1 |              |	X |	X | | |
+| PA6_nd2|	             |	X |	X | | |
+| PA7_d	|	             |	? |	? | ? TODO(4.21) | |
 
 ### Looking for costly functions
 todo
