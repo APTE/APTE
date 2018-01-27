@@ -47,7 +47,7 @@ Legend:
 | PA6_d	|	             |	386.59|	364.99 | 209.66 (0.968) | |
 | PA6_nd1 |              |	X |	X | | |
 | PA6_nd2|	             |	X |	X | | |
-| PA7_d	|	             |	? |	? | ? TODO(4.21) | |
+| PA7_d	|	             |	X |	720 | ?  | 556 (11.49) | |
 
 ### Looking for costly functions
-todo
+
